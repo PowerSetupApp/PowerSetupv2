@@ -1,0 +1,153 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==========================================
+// Result (Ergebnis)
+// ==========================================
+model Result {
+  id              String   @id @default(uuid())
+  version         Int      @default(1)
+  
+  // Formular-Eingaben (JSONB)
+  formData        Json
+  
+  // Berechnete Werte
+  calculations    Json?
+  
+  // Produktempfehlungen (IDs + Snapshot)
+  recommendations Json?
+  
+  // Schaltplan-Daten
+  schematicData   Json?
+  pdfUrl          String?
+  
+  // Credits
+  creditsUsed     Int      @default(0)
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  expiresAt       DateTime // 90 Tage nach Erstellung
+  
+  // Relations
+  creditBalance   CreditBalance?
+  creditUsages    CreditUsage[]
+}
+
+// ==========================================
+// Product (Produkt)
+// ==========================================
+model Product {
+  id              String   @id @default(uuid())
+  name            String
+  description     String?
+  imageUrl        String?
+  affiliateUrl    String
+  price           Float?
+  
+  // Kategorie
+  categoryId      String
+  category        Category @relation(fields: [categoryId], references: [id])
+  
+  // Technische Daten (JSONB) - Zod-validiert
+  specVersion     Int      @default(1)
+  specs           Json
+  
+  // Status
+  isActive        Boolean  @default(true)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([categoryId])
+  @@index([isActive])
+}
+
+// ==========================================
+// Category (Kategorie)
+// ==========================================
+model Category {
+  id          String    @id @default(uuid())
+  name        String
+  slug        String    @unique
+  icon        String?
+  sortOrder   Int       @default(0)
+  
+  products    Product[]
+}
+
+// ==========================================
+// CreditPurchase (Kauf)
+// ==========================================
+model CreditPurchase {
+  id              String   @id @default(uuid())
+  resultId        String
+  
+  // PayPal
+  paypalOrderId   String   @unique
+  paypalStatus    String
+  
+  // Paket
+  packageType     String   // "single", "starter", "pro"
+  credits         Int
+  amount          Float
+  currency        String   @default("EUR")
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([resultId])
+}
+
+// ==========================================
+// CreditBalance (Guthaben pro Result)
+// ==========================================
+model CreditBalance {
+  id              String   @id @default(uuid())
+  resultId        String   @unique
+  result          Result   @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  
+  balance         Int      @default(0)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ==========================================
+// CreditUsage (Verwendung)
+// ==========================================
+model CreditUsage {
+  id              String   @id @default(uuid())
+  resultId        String
+  result          Result   @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  
+  amount          Int
+  action          String   // "pdf_generation", "regeneration"
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([resultId])
+}
+
+// ==========================================
+// PromptVersion (KI-Prompt-Versionen)
+// ==========================================
+model PromptVersion {
+  id              String   @id @default(uuid())
+  version         Int      @unique
+  
+  systemPrompt    String
+  userPromptTemplate String
+  
+  isActive        Boolean  @default(false)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
