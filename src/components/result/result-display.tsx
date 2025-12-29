@@ -487,6 +487,48 @@ export default function ResultDisplay({
                     );
                 })()}
             </div>
+
+            {/* Schematic Generation CTA */}
+            <div className="rounded-2xl bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-900 p-8 text-center text-white shadow-xl relative overflow-hidden group">
+                {/* Background Decor */}
+                <div className="absolute top-0 left-0 w-full h-full bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:30px_30px] opacity-20"></div>
+                <div className="absolute -top-24 -right-24 w-64 h-64 bg-purple-500 rounded-full blur-3xl opacity-20 group-hover:opacity-30 transition-opacity duration-1000"></div>
+                <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-500 rounded-full blur-3xl opacity-20 group-hover:opacity-30 transition-opacity duration-1000"></div>
+
+                <div className="relative z-10 max-w-2xl mx-auto space-y-6">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-indigo-200 text-sm font-medium border border-white/10 backdrop-blur-sm">
+                        <Sparkles className="w-4 h-4 text-amber-400" />
+                        <span>Empfohlenes Upgrade</span>
+                    </div>
+
+                    <h3 className="text-3xl md:text-4xl font-bold tracking-tight">
+                        Mach es offiziell: Dein professioneller Schaltplan
+                    </h3>
+
+                    <p className="text-lg text-indigo-100/90 leading-relaxed">
+                        Verwandle diese Produktliste in einen exakten, gut lesbaren Schaltplan.
+                        Inklusive aller Kabelquerschnitte, Sicherungen und Verkabelungshinweise.
+                        Perfekt für den direkten Einbau.
+                    </p>
+
+                    <div className="pt-4">
+                        <Button
+                            asChild
+                            size="lg"
+                            className="bg-white text-indigo-900 hover:bg-gray-100 hover:scale-105 transition-all duration-300 text-lg font-semibold px-8 py-6 shadow-xl shadow-indigo-900/50"
+                        >
+                            <Link href={`/result/${resultId}/schematic/checkout`}>
+                                Schaltplan konfigurieren & erstellen
+                                <ArrowLeft className="ml-2 w-5 h-5 rotate-180" />
+                            </Link>
+                        </Button>
+                    </div>
+
+                    <p className="text-sm text-indigo-300/60">
+                        Überprüfe deine Auswahl im nächsten Schritt, bevor der Plan erstellt wird.
+                    </p>
+                </div>
+            </div>
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8 border-t border-gray-200 dark:border-gray-700">
                 <Button variant="outline" size="lg" asChild className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800">

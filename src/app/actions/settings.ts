@@ -20,10 +20,12 @@ export interface AIModel {
 export interface AISettings {
     provider: "google" | "openai";
     model: string;
+    imageModel: string; // New: Image Generation Model
     geminiApiKey: string;
     openaiApiKey: string;
     systemPrompt: string;
     userPromptTemplate: string;
+    imagePromptTemplate: string; // New: Image Prompt
 }
 
 // ==========================================
@@ -64,6 +66,18 @@ export async function getAvailableGeminiModels(apiKey?: string): Promise<AIModel
 }
 
 /**
+ * Holt die verfügbaren Gemini-Image-Modelle
+ * Currently hardcoded as listing them via API is tricky or requires Vertex AI.
+ */
+export async function getAvailableGeminiImageModels(apiKey?: string): Promise<AIModel[]> {
+    // Placeholder defaults
+    return [
+        { id: "imagen-3.0-generate-001", name: "imagen-3.0-generate-001", displayName: "Imagen 3 (Vertex/Studio)", provider: "google" },
+    ];
+}
+
+
+/**
  * Holt die verfügbaren OpenAI-Modelle
  */
 export async function getAvailableOpenAIModels(apiKey: string): Promise<AIModel[]> {
@@ -96,6 +110,40 @@ export async function getAvailableOpenAIModels(apiKey: string): Promise<AIModel[
     }
 }
 
+/**
+ * Holt die verfügbaren OpenAI-Bilder-Modelle
+ */
+export async function getAvailableOpenAIImageModels(apiKey: string): Promise<AIModel[]> {
+    const defaultModels: AIModel[] = [
+        { id: "dall-e-3", name: "dall-e-3", displayName: "DALL·E 3", provider: "openai" },
+        { id: "dall-e-2", name: "dall-e-2", displayName: "DALL·E 2", provider: "openai" },
+    ];
+
+    if (!apiKey) return defaultModels;
+
+    try {
+        const openai = new OpenAI({ apiKey });
+        const list = await openai.models.list();
+
+        const fetched = list.data
+            .filter(m => m.id.includes("dall-e"))
+            .map(m => ({
+                id: m.id,
+                name: m.id,
+                displayName: m.id.toUpperCase(), // e.g. DALL-E-3
+                provider: "openai" as const
+            }))
+            .sort((a, b) => b.name.localeCompare(a.name));
+
+        if (fetched.length > 0) return fetched;
+        return defaultModels;
+
+    } catch (error) {
+        console.warn("Failed to fetch OpenAI image models, using defaults.", error);
+        return defaultModels;
+    }
+}
+
 
 /**
  * Holt die aktuellen KI-Einstellungen (Modell + Prompt + Keys)
@@ -104,10 +152,12 @@ export async function getAISettings(): Promise<AISettings> {
     const defaults: AISettings = {
         provider: "google",
         model: "models/gemini-2.0-flash-exp",
+        imageModel: "dall-e-3", // Default image model
         geminiApiKey: process.env.GEMINI_API_KEY || "", // Fallback to env
         openaiApiKey: process.env.OPENAI_API_KEY || "",
         systemPrompt: "",
         userPromptTemplate: "",
+        imagePromptTemplate: "", // Default empty
     };
 
     try {
@@ -115,11 +165,13 @@ export async function getAISettings(): Promise<AISettings> {
         if (!prisma.systemSetting) return defaults;
 
         // Fetch all relevant settings in parallel or bulk
-        const [provider, model, geminiKey, openaiKey] = await Promise.all([
+        const [provider, model, imageModel, geminiKey, openaiKey, imagePrompt] = await Promise.all([
             prisma.systemSetting.findUnique({ where: { key: "ai_provider" } }),
             prisma.systemSetting.findUnique({ where: { key: "ai_model" } }),
+            prisma.systemSetting.findUnique({ where: { key: "ai_image_model" } }),
             prisma.systemSetting.findUnique({ where: { key: "gemini_api_key" } }),
             prisma.systemSetting.findUnique({ where: { key: "openai_api_key" } }),
+            prisma.systemSetting.findUnique({ where: { key: "ai_image_prompt_template" } }),
         ]);
 
         const activePrompt = await prisma.promptVersion.findFirst({
@@ -130,10 +182,12 @@ export async function getAISettings(): Promise<AISettings> {
         return {
             provider: (provider?.value as "google" | "openai") || defaults.provider,
             model: model?.value || defaults.model,
+            imageModel: imageModel?.value || defaults.imageModel,
             geminiApiKey: geminiKey?.value || defaults.geminiApiKey,
             openaiApiKey: openaiKey?.value || defaults.openaiApiKey,
             systemPrompt: activePrompt?.systemPrompt || defaults.systemPrompt,
             userPromptTemplate: activePrompt?.userPromptTemplate || defaults.userPromptTemplate,
+            imagePromptTemplate: imagePrompt?.value || defaults.imagePromptTemplate,
         };
     } catch (error) {
         console.warn("Failed to fetch AI settings:", error);
@@ -147,15 +201,19 @@ export async function getAISettings(): Promise<AISettings> {
 export async function updateAISettings(
     provider: "google" | "openai",
     model: string,
+    imageModel: string,
     geminiApiKey: string,
     openaiApiKey: string,
-    userPromptTemplate: string
+    userPromptTemplate: string,
+    imagePromptTemplate: string
 ) {
     // 1. Update Settings
     await prisma.systemSetting.upsert({ where: { key: "ai_provider" }, update: { value: provider }, create: { key: "ai_provider", value: provider } });
     await prisma.systemSetting.upsert({ where: { key: "ai_model" }, update: { value: model }, create: { key: "ai_model", value: model } });
+    await prisma.systemSetting.upsert({ where: { key: "ai_image_model" }, update: { value: imageModel }, create: { key: "ai_image_model", value: imageModel } });
     await prisma.systemSetting.upsert({ where: { key: "gemini_api_key" }, update: { value: geminiApiKey }, create: { key: "gemini_api_key", value: geminiApiKey } });
     await prisma.systemSetting.upsert({ where: { key: "openai_api_key" }, update: { value: openaiApiKey }, create: { key: "openai_api_key", value: openaiApiKey } });
+    await prisma.systemSetting.upsert({ where: { key: "ai_image_prompt_template" }, update: { value: imagePromptTemplate }, create: { key: "ai_image_prompt_template", value: imagePromptTemplate } });
 
     // 2. Update Prompt
     // Disable old active prompts

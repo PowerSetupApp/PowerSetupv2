@@ -199,6 +199,7 @@ export interface AIInput {
     // Pre-formatted strings for updated prompt templates
     formattedPrompt?: string;
     productContext?: string;
+    selectedProductsContext?: string;
 }
 
 export interface AISelectedProduct {
@@ -280,6 +281,10 @@ export function buildPrompt(template: string, input: AIInput): string {
 
     if (input.productContext) {
         prompt = prompt.replace(/\{\{PRODUCT_CONTEXT\}\}/g, input.productContext);
+    }
+
+    if (input.selectedProductsContext) {
+        prompt = prompt.replace(/\{\{SELECTED_PRODUCTS\}\}/g, input.selectedProductsContext);
     }
 
     // Legacy Placeholders (Backward Compatibility)

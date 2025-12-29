@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Prisma } from "@prisma/client";
-import { formatFormDataForAI, formatFormDataCompact } from "@/lib/format-for-ai";
+import { formatFormDataForAI, formatFormDataCompact, formatProductsForAI, type AIProductContext } from "@/lib/format-for-ai";
 
 interface ResultJsonViewerProps {
     resultId: string;
@@ -13,9 +13,10 @@ interface ResultJsonViewerProps {
     schematicData: Prisma.JsonValue;
     productContext?: string;
     fullPrompt?: string;
+    products?: any[];
 }
 
-type ViewMode = "formatted" | "json" | "compact" | "products" | "full_prompt";
+type ViewMode = "formatted" | "json" | "compact" | "products" | "full_prompt" | "selected_products_context" | "user_selection";
 
 export default function ResultJsonViewer({
     resultId,
@@ -25,6 +26,7 @@ export default function ResultJsonViewer({
     schematicData,
     productContext,
     fullPrompt,
+    products,
 }: ResultJsonViewerProps) {
     const [isGenerating, setIsGenerating] = useState(false);
     const [aiResponse, setAiResponse] = useState<object | null>(null);
@@ -76,6 +78,40 @@ export default function ResultJsonViewer({
         }
     }, [formData]);
 
+    // Format Selected Products for AI Context
+    const selectedProductsContext = useMemo(() => {
+        if (!activeRecommendations || !activeRecommendations.selectedProducts || !products) return null;
+
+        try {
+            console.log("--- DEBUG Products Context ---");
+            console.log("Products available:", products.length);
+            console.log("Recommendations selected:", activeRecommendations.selectedProducts);
+
+            // FIX: The recommendations use 'productId', but the DB products use 'id'
+            const selectedIds = new Set(activeRecommendations.selectedProducts.map((p: any) => p.productId));
+            const selectedItems = products.filter((p: any) => selectedIds.has(p.id));
+
+            console.log("Matched Items:", selectedItems.length);
+
+            if (selectedItems.length === 0) return "Keine passenden Produkte in der Datenbank gefunden.";
+
+            // Map to AIProductContext shape
+            const contextItems: AIProductContext[] = selectedItems.map((p: any) => ({
+                id: p.id,
+                name: p.name,
+                category: p.category ? { name: p.category.name, slug: p.category.slug } : { name: 'Unbekannt', slug: 'unknown' },
+                price: p.price,
+                specs: p.specs,
+                imageUrl: p.imageUrl
+            }));
+
+            return formatProductsForAI(contextItems);
+        } catch (e) {
+            console.error("Error formatting selected products:", e);
+            return "Fehler beim Formatieren der ausgewählten Produkte.";
+        }
+    }, [activeRecommendations, products]);
+
     const handleGenerateAI = async () => {
         // ALERT to verify click
         alert("Button Clicked! Check Console.");
@@ -102,6 +138,25 @@ export default function ResultJsonViewer({
         }
     };
 
+    // Format User Selected Products for AI Context
+    const userSelectionContext = useMemo(() => {
+        const sel = (schematicData as any)?.userSelection; // array of IDs
+        if (!sel || !Array.isArray(sel) || !products) return null;
+
+        const selectedItems = products.filter((p: any) => sel.includes(p.id));
+        if (selectedItems.length === 0) return "Keine Auswahl gespeichert.";
+
+        const contextItems: AIProductContext[] = selectedItems.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            category: p.category ? { name: p.category.name, slug: p.category.slug } : { name: 'Unbekannt', slug: 'unknown' },
+            price: p.price,
+            specs: p.specs
+        }));
+
+        return formatProductsForAI(contextItems);
+    }, [schematicData, products]);
+
     return (
         <div className="space-y-6">
             {/* ... (Selected Products) ... */}
@@ -119,12 +174,22 @@ export default function ResultJsonViewer({
                 </Button>
                 {productContext && (
                     <Button variant={viewMode === "products" ? "default" : "outline"} onClick={() => setViewMode("products")}>
-                        📦 Produkte
+                        📦 Alle Produkte (Kontext)
                     </Button>
                 )}
                 {fullPrompt && (
                     <Button variant={viewMode === "full_prompt" ? "default" : "outline"} onClick={() => setViewMode("full_prompt")}>
                         🔮 Kompletter Prompt
+                    </Button>
+                )}
+                {selectedProductsContext && (
+                    <Button variant={viewMode === "selected_products_context" ? "default" : "outline"} onClick={() => setViewMode("selected_products_context")}>
+                        ✨ Vorgeschlagene Produkte
+                    </Button>
+                )}
+                {userSelectionContext && (
+                    <Button variant={viewMode === "user_selection" ? "default" : "outline"} onClick={() => setViewMode("user_selection")}>
+                        🛒 Ausgewählte Produkte (Final)
                     </Button>
                 )}
             </div>
@@ -139,8 +204,13 @@ export default function ResultJsonViewer({
             {/* Main Content based on view mode */}
             {viewMode === "formatted" && (
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-                    <h2 className="text-lg font-semibold p-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
-                        🤖 KI-Prompt-Format
+                    <h2 className="text-lg font-semibold p-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2 justify-between">
+                        <div className="flex items-center gap-2">
+                            🤖 KI-Prompt-Format
+                        </div>
+                        <span className="font-mono text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-500">
+                            {"{{PROMPT_FORMAT}}"}
+                        </span>
                     </h2>
                     <pre className="p-4 overflow-x-auto text-sm font-mono whitespace-pre-wrap bg-gray-50 dark:bg-gray-900 rounded-b-lg">
                         {formattedText}
@@ -170,8 +240,13 @@ export default function ResultJsonViewer({
 
             {viewMode === "products" && productContext && (
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-                    <h2 className="text-lg font-semibold p-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
-                        📦 Produkte für KI-Kontext
+                    <h2 className="text-lg font-semibold p-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2 justify-between">
+                        <div className="flex items-center gap-2">
+                            📦 Produkte für KI-Kontext
+                        </div>
+                        <span className="font-mono text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-500">
+                            {"{{PRODUCT_CONTEXT}}"}
+                        </span>
                     </h2>
                     <pre className="p-4 overflow-x-auto text-sm font-mono whitespace-pre-wrap bg-gray-50 dark:bg-gray-900 rounded-b-lg">
                         {productContext}
@@ -189,6 +264,36 @@ export default function ResultJsonViewer({
                     </h2>
                     <pre className="p-4 overflow-x-auto text-sm font-mono whitespace-pre-wrap bg-gray-50 dark:bg-gray-900 rounded-b-lg">
                         {fullPrompt}
+                    </pre>
+                </div>
+            )}
+
+            {viewMode === "selected_products_context" && selectedProductsContext && (
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+                    <h2 className="text-lg font-semibold p-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
+                        ✨ Vorgeschlagene Produkte (KI-Vorschlag)
+                        <span className="text-sm font-normal text-muted-foreground">
+                            (Basis vor User-Auswahl)
+                        </span>
+                    </h2>
+                    <pre className="p-4 overflow-x-auto text-sm font-mono whitespace-pre-wrap bg-gray-50 dark:bg-gray-900 rounded-b-lg">
+                        {selectedProductsContext}
+                    </pre>
+                </div>
+            )}
+
+            {viewMode === "user_selection" && userSelectionContext && (
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+                    <h2 className="text-lg font-semibold p-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2 justify-between">
+                        <div className="flex items-center gap-2">
+                            🛒 Ausgewählte Produkte (Benutzer)
+                            <span className="text-sm font-normal text-muted-foreground">
+                                (Final für Schaltplan)
+                            </span>
+                        </div>
+                    </h2>
+                    <pre className="p-4 overflow-x-auto text-sm font-mono whitespace-pre-wrap bg-gray-50 dark:bg-gray-900 rounded-b-lg">
+                        {userSelectionContext}
                     </pre>
                 </div>
             )}

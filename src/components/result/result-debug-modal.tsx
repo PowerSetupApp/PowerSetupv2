@@ -21,6 +21,7 @@ interface ResultDebugModalProps {
     schematicData: Prisma.JsonValue;
     productContext?: string;
     fullPrompt?: string;
+    products?: any[]; // Allow generic array to avoid complex imports in client component
 }
 
 export default function ResultDebugModal(props: ResultDebugModalProps) {

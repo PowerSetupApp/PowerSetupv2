@@ -496,6 +496,7 @@ export interface AIProductContext {
     category: { name: string; slug: string };
     price: number | null;
     specs: string | null;
+    imageUrl?: string | null;
 }
 
 export function formatProductsForAI(products: AIProductContext[]): string {
@@ -535,6 +536,7 @@ export function formatProductsForAI(products: AIProductContext[]): string {
 **Name:** ${p.name}
 **Kategorie:** ${p.category.slug} (${p.category.name})
 **Preis:** ${p.price ? p.price + ' €' : 'Kein Preis'}
+**Bild-URL:** ${p.imageUrl || 'Kein Bild verfügbar'}
 
 ### Spezifikationen
 ${specsFormatted}

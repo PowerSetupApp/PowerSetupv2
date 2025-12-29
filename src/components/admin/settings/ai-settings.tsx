@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
 import { Label } from "@/components/ui/label";
 import { Loader2, RefreshCw, Save } from "lucide-react";
-import { getAISettings, getAvailableGeminiModels, getAvailableOpenAIModels, updateAISettings, type AIModel } from "@/app/actions/settings";
+import { getAISettings, getAvailableGeminiModels, getAvailableOpenAIModels, getAvailableGeminiImageModels, getAvailableOpenAIImageModels, updateAISettings, type AIModel } from "@/app/actions/settings";
 
 const PLACEHOLDERS = [
     "{{PROMPT_FORMAT}}",  // Das formatierte Anfrage-Format
@@ -30,10 +30,13 @@ export function AISettings() {
     const [geminiKey, setGeminiKey] = useState("");
     const [openaiKey, setOpenaiKey] = useState("");
     const [selectedModel, setSelectedModel] = useState("");
+    const [selectedImageModel, setSelectedImageModel] = useState("");
     const [userPrompt, setUserPrompt] = useState("");
+    const [imagePrompt, setImagePrompt] = useState("");
 
     // Available Models
     const [models, setModels] = useState<AIModel[]>([]);
+    const [imageModels, setImageModels] = useState<AIModel[]>([]);
 
     const loadData = async () => {
         setLoading(true);
@@ -43,7 +46,9 @@ export function AISettings() {
             setGeminiKey(settings.geminiApiKey);
             setOpenaiKey(settings.openaiApiKey);
             setSelectedModel(settings.model);
+            setSelectedImageModel(settings.imageModel);
             setUserPrompt(settings.userPromptTemplate);
+            setImagePrompt(settings.imagePromptTemplate);
 
             // Fetch initial models based on loaded settings
             await fetchModels(settings.provider, settings.geminiApiKey, settings.openaiApiKey);
@@ -58,12 +63,16 @@ export function AISettings() {
         setFetchingModels(true);
         try {
             let fetched: AIModel[] = [];
+            let fetchedImages: AIModel[] = [];
             if (currentProvider === "google") {
                 fetched = await getAvailableGeminiModels(gKey);
+                fetchedImages = await getAvailableGeminiImageModels(gKey);
             } else {
                 fetched = await getAvailableOpenAIModels(oKey);
+                fetchedImages = await getAvailableOpenAIImageModels(oKey);
             }
             setModels(fetched);
+            setImageModels(fetchedImages);
         } catch (e) {
             console.error("Failed to fetch models", e);
         } finally {
@@ -85,7 +94,7 @@ export function AISettings() {
     const handleSave = async () => {
         setSaving(true);
         try {
-            await updateAISettings(provider, selectedModel, geminiKey, openaiKey, userPrompt);
+            await updateAISettings(provider, selectedModel, selectedImageModel, geminiKey, openaiKey, userPrompt, imagePrompt);
         } catch (error) {
             console.error("Failed to save settings:", error);
         } finally {
@@ -95,6 +104,10 @@ export function AISettings() {
 
     const insertPlaceholder = (ph: string) => {
         setUserPrompt((prev) => prev + ph);
+    };
+
+    const insertImagePlaceholder = (ph: string) => {
+        setImagePrompt((prev) => prev + ph);
     };
 
     if (loading) {
@@ -163,7 +176,7 @@ export function AISettings() {
             {/* 2. Model Selection */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Modell-Auswahl ({provider === "google" ? "Google" : "OpenAI"})</CardTitle>
+                    <CardTitle>Produktempfehlung Modell</CardTitle>
                     <CardDescription>Wähle das Modell für die Berechnungen.</CardDescription>
                 </CardHeader>
                 <CardContent className="flex gap-4 items-center">
@@ -193,11 +206,44 @@ export function AISettings() {
                 </CardContent>
             </Card>
 
+            {/* 2b. Image Model Selection */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Bildgenerierung Modell</CardTitle>
+                    <CardDescription>Wähle das Modell für die Erstellung von Bildern (z.B. Schaltpläne).</CardDescription>
+                </CardHeader>
+                <CardContent className="flex gap-4 items-center">
+                    <div className="flex-1 max-w-sm">
+                        <Select value={selectedImageModel} onValueChange={setSelectedImageModel}>
+                            <SelectTrigger>
+                                <SelectValue placeholder={fetchingModels ? "Lade Modelle..." : "Bild-Modell wählen"} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {imageModels.map((m) => (
+                                    <SelectItem key={m.id} value={m.name}>
+                                        {m.displayName}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => fetchModels(provider, geminiKey, openaiKey)}
+                        title="Modelle aktualisieren"
+                        disabled={fetchingModels}
+                    >
+                        {fetchingModels ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                    </Button>
+                </CardContent>
+            </Card>
+
             {/* 3. Prompt Template */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Prompt Template</CardTitle>
-                    <CardDescription>Konfiguriere das Verhalten der KI. Nutze die Platzhalter unten.</CardDescription>
+                    <CardTitle>Prompt Template (Empfehlungen)</CardTitle>
+                    <CardDescription>Konfiguriere das Verhalten der KI für Produktempfehlungen.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="space-y-2">
@@ -218,6 +264,37 @@ export function AISettings() {
                             value={userPrompt}
                             onChange={(e) => setUserPrompt(e.target.value)}
                             rows={12}
+                            className="font-mono text-sm"
+                        />
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* 4. Image Prompt Template */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Prompt Template (Bildgenerierung)</CardTitle>
+                    <CardDescription>Konfiguriere das Verhalten der KI für Bildgenerierung (z.B. Schaltplan).</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="space-y-2">
+                        <Label>KI-Prompt</Label>
+                        <div className="flex flex-wrap gap-2 mb-2">
+                            {PLACEHOLDERS.concat(["{{SELECTED_PRODUCTS}}"]).map((ph) => (
+                                <button
+                                    key={ph}
+                                    onClick={() => insertImagePlaceholder(ph)}
+                                    className="text-xs bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded border font-mono"
+                                    type="button"
+                                >
+                                    {ph}
+                                </button>
+                            ))}
+                        </div>
+                        <Textarea
+                            value={imagePrompt}
+                            onChange={(e) => setImagePrompt(e.target.value)}
+                            rows={6}
                             className="font-mono text-sm"
                         />
                     </div>

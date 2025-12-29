@@ -109,6 +109,7 @@ export default async function ResultPage({ params }: ResultPageProps) {
                     schematicData={result.schematicData}
                     productContext={productContext}
                     fullPrompt={fullPrompt}
+                    products={products}
                 />
             </div>
         </main>
