@@ -7,6 +7,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // url      = env("DATABASE_URL")
 }
 
 // ==========================================
@@ -49,6 +50,7 @@ model Product {
   id              String   @id @default(uuid())
   name            String
   description     String?
+  icon            String?
   imageUrl        String?
   affiliateUrl    String
   price           Float?
@@ -59,7 +61,7 @@ model Product {
   
   // Technische Daten (JSONB) - Zod-validiert
   specVersion     Int      @default(1)
-  specs           Json
+  specs           String   @default("")
   
   // Status
   isActive        Boolean  @default(true)
@@ -150,4 +152,67 @@ model PromptVersion {
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+// ==========================================
+// ConsumerCategory (Verbraucher-Kategorien im Wizard)
+// ==========================================
+model ConsumerCategory {
+  id        String    @id @default(uuid())
+  name      String    // "Multimedia & Arbeit", "Küche", etc.
+  slug      String    @unique
+  icon      String?
+  sortOrder Int       @default(0)
+  
+  devices   ConsumerDevice[]
+}
+
+// ==========================================
+// ConsumerDevice (Verbraucher-Geräte im Wizard)
+// ==========================================
+model ConsumerDevice {
+  id                  String    @id @default(uuid())
+  name                String    // "Laptop", "LED Beleuchtung"
+  i18nKey             String?   // Optional: Für Hardcoded Translations
+  icon                String?
+  
+  // Default-Werte für den Wizard
+  defaultPower        Int       @default(50)
+  defaultVoltage      String    @default("12V") // "12V" | "24V" | "48V" | "230V"
+  defaultHoursPerDay  Float     @default(2)
+  stepHours           Float     @default(0.5)
+  
+  // UI-Optionen
+  showHoursField      Boolean   @default(true)
+  showFixedOption     Boolean   @default(true)
+  isCooling           Boolean   @default(false)
+  
+  // Suche
+  keywords            String[]  @default([])
+  
+  // Sortierung
+  sortOrder           Int       @default(0)
+  isActive            Boolean   @default(true)
+  isFeatured          Boolean   @default(false)
+  
+  // Relation
+  categoryId          String
+  category            ConsumerCategory @relation(fields: [categoryId], references: [id])
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  @@index([categoryId])
+  @@index([isActive])
+}
+
+
+// ==========================================
+// System Settings (Globale Einstellungen)
+// ==========================================
+model SystemSetting {
+  key       String   @id
+  value     String
+  
+  updatedAt DateTime @updatedAt
 }

@@ -123,3 +123,12 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Utility class for hiding scrollbars */
+.scrollbar-none {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}

@@ -102,7 +102,7 @@
 
 ---
 
-## ☐ Punkt 5: Wizard-Layout & Navigation
+## ✅ Punkt 5: Wizard-Layout & Navigation *(erledigt)*
 
 **Lies zuerst:**
 - [PRD_01_UX_Formular.md](./docs/PRD_01_UX_Formular.md) – Design-Prinzipien, Fortschrittsanzeige
@@ -120,7 +120,7 @@
 
 ---
 
-## ☐ Punkt 6: Formular Schritt 1-3 (Fahrzeug, Spannung, Energie)
+## ✅ Punkt 6: Formular Schritt 1-3 (Fahrzeug, Spannung, Energie) *(erledigt)*
 
 **Lies zuerst:**
 - [PRD_01_UX_Formular.md](./docs/PRD_01_UX_Formular.md) – Schritt 1, 2, 3 Details
@@ -143,7 +143,7 @@
 
 ---
 
-## ☐ Punkt 7: Formular Schritt 4 (Verbraucher)
+## ✅ Punkt 7: Formular Schritt 4 (Verbraucher) *(erledigt)*
 
 **Lies zuerst:**
 - [PRD_01_UX_Formular.md](./docs/PRD_01_UX_Formular.md) – Schritt 4: Verbraucher mit allen Kategorien
@@ -162,7 +162,7 @@
 
 ---
 
-## ☐ Punkt 8: Formular Schritt 5-6 (Nutzung, Autarkie)
+## ✅ Punkt 8: Formular Schritt 5-6 (Nutzung, Autarkie) *(erledigt)*
 
 **Lies zuerst:**
 - [PRD_01_UX_Formular.md](./docs/PRD_01_UX_Formular.md) – Schritt 5 und 6
@@ -181,7 +181,7 @@
 
 ---
 
-## ☐ Punkt 9: Formular Schritt 7-8 (Komfort, Schaltplan-Stil)
+## ✅ Punkt 9: Formular Schritt 7-8 (Komfort, Schaltplan-Stil) *(erledigt)*
 
 **Lies zuerst:**
 - [PRD_01_UX_Formular.md](./docs/PRD_01_UX_Formular.md) – Schritt 7, 8, optionale Zusatzfragen
@@ -203,7 +203,7 @@
 
 ---
 
-## ☐ Punkt 10: Result-API (CRUD)
+## ✅ Punkt 10: Result-API (CRUD) *(erledigt)*
 
 **Lies zuerst:**
 - [PRD_02_Datenbank.md](./docs/PRD_02_Datenbank.md) – Result Model, Daten-Lifecycle
@@ -239,7 +239,7 @@
 
 ---
 
-## ☐ Punkt 12: KI-Integration (Gemini)
+## ✅ Punkt 12: KI-Integration (Gemini) *(erledigt)*
 
 **Lies zuerst:**
 - [PRD_03_KI_Schaltplan.md](./docs/PRD_03_KI_Schaltplan.md) – KI-Prompt-Struktur, erwartete Antwort
@@ -278,7 +278,7 @@
 
 ---
 
-## ☐ Punkt 14: Ergebnis-Seite
+## [/] Punkt 14: Ergebnis-Seite *(in progress)*
 
 **Lies zuerst:**
 - [PRD_01_UX_Formular.md](./docs/PRD_01_UX_Formular.md) – Ergebnis-Seite (kostenlos)
@@ -332,7 +332,7 @@
 
 ---
 
-## ☐ Punkt 17: Admin Dashboard (Basis)
+## ✅ Punkt 17: Admin Dashboard (Basis) *(erledigt)*
 
 **Lies zuerst:**
 - [PRD_00_Overview.md](./docs/PRD_00_Overview.md) – MVP Scope
@@ -426,7 +426,7 @@
 1. End-to-End Test: Formular → Ergebnis → Kauf → PDF
 2. Mobile-Test auf echten Geräten
 3. PayPal Sandbox → Production wechseln
-4. Domain konfigurieren (powersetup.de)
+4. Domain konfigurieren (powersetup.app)
 5. Monitoring aktivieren (Vercel Analytics)
 
 **Erfolgskriterien:**

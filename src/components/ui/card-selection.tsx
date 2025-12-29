@@ -7,7 +7,7 @@ export interface CardOption<T extends string = string> {
     value: T;
     icon: React.ReactNode;
     title: string;
-    description: string;
+    description?: string;
     badge?: string;
 }
 

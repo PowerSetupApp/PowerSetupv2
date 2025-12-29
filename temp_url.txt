@@ -1,0 +1,1 @@
+postgres://88ad4510091244e8979b9ba4471cdcf4:WGP9MYb8ey(&AcJ{@aws-0-eu-central-1.pooler.supabase.com:5432/postgres?sslmode=require
