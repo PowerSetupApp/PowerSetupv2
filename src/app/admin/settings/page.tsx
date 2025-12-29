@@ -2,6 +2,8 @@ import { AISettings } from "@/components/admin/settings/ai-settings";
 import { AmazonSettings } from "@/components/admin/settings/amazon-settings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+export const dynamic = 'force-dynamic';
+
 export default function AdminSettingsPage() {
     return (
         <div className="container mx-auto py-6 max-w-4xl space-y-8">

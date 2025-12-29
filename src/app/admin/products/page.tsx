@@ -14,6 +14,8 @@ interface ProductsPageProps {
     }>;
 }
 
+export const dynamic = 'force-dynamic';
+
 export default async function ProductsPage(props: ProductsPageProps) {
     const searchParams = await props.searchParams;
     const { categoryId, sort, order } = searchParams;

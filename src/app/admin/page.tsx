@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Package, FolderTree, FileText, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminDashboard() {
     // Fetch statistics
     const [productCount, categoryCount, resultCount] = await Promise.all([

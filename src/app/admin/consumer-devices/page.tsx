@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Plus, Pencil, Trash2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+export const dynamic = 'force-dynamic';
+
 export default async function ConsumerDevicesPage() {
     const categories = await prisma.consumerCategory.findMany({
         include: {
