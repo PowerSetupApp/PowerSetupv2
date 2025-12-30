@@ -160,7 +160,7 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
             console.error("Error submitting wizard:", error);
             // Show error to user
             if (error instanceof Error) {
-                alert(`Fehler: ${error.message}\n\nBitte überprüfen Sie Ihre Eingaben.`);
+                alert(`Fehler: ${error.message}\n\nBitte überprüfe deine Eingaben.`);
             }
             setIsSubmitting(false);
         }

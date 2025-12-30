@@ -201,7 +201,7 @@ export const useWizardStore = create<WizardState>()(
 
             comfortLevel: 'standard',
             schematicPreference: 'simplified',
-            batteryPreference: 'any',
+            batteryPreference: 'lifepo4',
 
             // Travel Behavior Defaults
             travelBehavior: {
@@ -243,7 +243,7 @@ export const useWizardStore = create<WizardState>()(
                 },
                 comfortLevel: 'standard',
                 schematicPreference: 'simplified',
-                batteryPreference: 'any',
+                batteryPreference: 'lifepo4',
                 travelBehavior: {
                     season: 'all_year',
                     tripDuration: 'week',

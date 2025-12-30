@@ -97,7 +97,7 @@ export function Step5Autarky() {
                     />
 
                     <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
-                        <strong>Hinweis:</strong> Je mehr Tage Sie autark stehen möchten, desto größer müssen Batterie und Solaranlage dimensioniert werden.
+                        <strong>Hinweis:</strong> Je mehr Tage du autark stehen möchtest, desto größer müssen Batterie und Solaranlage dimensioniert werden.
                     </p>
                 </div>
 
