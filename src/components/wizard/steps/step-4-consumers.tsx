@@ -10,10 +10,12 @@ import { Button } from "@/components/ui/button";
 import { NumberStepper } from "@/components/ui/number-stepper";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { cn } from "@/lib/utils";
-import { Plus, Trash2, Copy, Search, Sparkles, Loader2, AlertCircle, Lightbulb, Laptop, Zap, Info } from "lucide-react";
+import { Plus, Trash2, Copy, Search, Sparkles, Loader2, AlertCircle, Lightbulb, Laptop, Zap, Info, ChevronDown, AlertTriangle } from "lucide-react";
 import { DeviceSearchModal } from "../device-search-modal";
 import { CardSelection } from "@/components/ui/card-selection";
 import type { PresetDevice } from "@/lib/data/preset-devices";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 
 // Types matching the API response
 interface ApiConsumerDevice {
@@ -76,8 +78,11 @@ function SectionHeader({
     );
 }
 
+import { useRouter } from "next/navigation";
+
 export function Step4Consumers() {
     const t = useTranslations("Wizard.Step4");
+    const router = useRouter();
     const { consumers, toggleConsumer, updateConsumer, addConsumer, removeConsumer, systemVoltage, simultaneousLoad, setSimultaneousLoad, syncConsumers } = useWizardStore();
 
     // Data State
@@ -88,6 +93,10 @@ export function Step4Consumers() {
     // Modal & custom form state
     const [isModalOpen, setIsModalOpen] = React.useState(false);
     const [showCustomForm, setShowCustomForm] = React.useState(false);
+
+    // High power warning modal state
+    const [showHighPowerWarning, setShowHighPowerWarning] = React.useState(false);
+    const [warningDismissed, setWarningDismissed] = React.useState(false);
 
     // Form state for new custom device
     const [customName, setCustomName] = React.useState("");
@@ -143,6 +152,25 @@ export function Step4Consumers() {
             }
         });
     }, [systemVoltage, consumers, updateConsumer]);
+
+    // Calculate total 230V power consumption
+    const total230VPower = React.useMemo(() => {
+        return consumers
+            .filter(c => c.voltage === '230V')
+            .reduce((sum, c) => sum + c.power, 0);
+    }, [consumers]);
+
+    // Show high power warning modal when 230V > 2000W and system is 12V
+    React.useEffect(() => {
+        const shouldWarn = total230VPower > 2000 && systemVoltage === '12V' && !warningDismissed;
+        if (shouldWarn) {
+            setShowHighPowerWarning(true);
+        }
+        // Reset dismissed state if user reduces power below threshold
+        if (total230VPower <= 2000) {
+            setWarningDismissed(false);
+        }
+    }, [total230VPower, systemVoltage, warningDismissed]);
 
     // IntersectionObserver for sticky header detection
     React.useEffect(() => {
@@ -746,6 +774,65 @@ export function Step4Consumers() {
                     columns={3}
                 />
             </div>
+
+            {/* High Power Warning Modal */}
+            <Dialog open={showHighPowerWarning} onOpenChange={(open) => {
+                setShowHighPowerWarning(open);
+                if (!open) setWarningDismissed(true);
+            }}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <div className="flex items-center gap-3">
+                            <div className="h-12 w-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                                <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                            </div>
+                            <DialogTitle className="text-lg">{t("HighPowerWarning.title")}</DialogTitle>
+                        </div>
+                    </DialogHeader>
+
+                    <div className="space-y-4">
+                        <p className="text-muted-foreground">
+                            {t("HighPowerWarning.suggestion")}
+                        </p>
+
+                        <Accordion type="single" collapsible className="w-full">
+                            <AccordionItem value="details" className="border-0">
+                                <AccordionTrigger className="py-2 text-sm text-primary hover:no-underline">
+                                    {t("HighPowerWarning.learn_more")}
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                    <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground whitespace-pre-line">
+                                        {t("HighPowerWarning.details")}
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
+                        </Accordion>
+                    </div>
+
+                    <DialogFooter className="flex-col sm:flex-row gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setShowHighPowerWarning(false);
+                                setWarningDismissed(true);
+                            }}
+                            className="w-full sm:w-auto"
+                        >
+                            {t("HighPowerWarning.close")}
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setShowHighPowerWarning(false);
+                                setWarningDismissed(true);
+                                router.push('/wizard/2');
+                            }}
+                            className="w-full sm:w-auto"
+                        >
+                            {t("HighPowerWarning.go_to_step2")}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Device Search Modal */}
             <DeviceSearchModal

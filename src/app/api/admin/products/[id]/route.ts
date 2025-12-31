@@ -93,17 +93,23 @@ export async function DELETE(
 
         if (product?.imageUrl) {
             try {
-                // Extract filename from URL (assuming /uploads/filename.ext format)
-                const filename = product.imageUrl.split('/').pop();
-                if (filename) {
-                    const { unlink } = await import("fs/promises");
-                    const { join } = await import("path");
+                // Check if it's a Vercel Blob URL (simple check)
+                if (product.imageUrl.includes('vercel-storage.com')) {
+                    const { del } = await import("@vercel/blob");
+                    await del(product.imageUrl);
+                } else if (product.imageUrl.startsWith("/uploads/")) {
+                    // Legacy local file deletion
+                    // Extract filename from URL (assuming /uploads/filename.ext format)
+                    const filename = product.imageUrl.split('/').pop();
+                    if (filename) {
+                        const { unlink } = await import("fs/promises");
+                        const { join } = await import("path");
 
-                    const filepath = join(process.cwd(), "public/uploads", filename);
-                    await unlink(filepath).catch(e => {
-                        console.warn("Could not delete image file:", filepath, e);
-                        // Continue ensuring product is deleted even if file deletion fails
-                    });
+                        const filepath = join(process.cwd(), "public/uploads", filename);
+                        await unlink(filepath).catch(e => {
+                            console.warn("Could not delete image file:", filepath, e);
+                        });
+                    }
                 }
             } catch (err) {
                 console.error("Error cleaning up image:", err);

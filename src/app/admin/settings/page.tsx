@@ -1,5 +1,6 @@
 import { AISettings } from "@/components/admin/settings/ai-settings";
 import { AmazonSettings } from "@/components/admin/settings/amazon-settings";
+import { PricingSettings } from "@/components/admin/settings/pricing-settings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const dynamic = 'force-dynamic';
@@ -17,11 +18,15 @@ export default function AdminSettingsPage() {
             <Tabs defaultValue="ai" className="w-full">
                 <TabsList>
                     <TabsTrigger value="ai">KI & Modelle</TabsTrigger>
+                    <TabsTrigger value="pricing">Preise</TabsTrigger>
                     <TabsTrigger value="amazon">Amazon</TabsTrigger>
                     <TabsTrigger value="general" disabled>Allgemein</TabsTrigger>
                 </TabsList>
                 <TabsContent value="ai" className="mt-6">
                     <AISettings />
+                </TabsContent>
+                <TabsContent value="pricing" className="mt-6">
+                    <PricingSettings />
                 </TabsContent>
                 <TabsContent value="amazon" className="mt-6">
                     <AmazonSettings />

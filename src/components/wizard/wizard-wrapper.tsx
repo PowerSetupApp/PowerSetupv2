@@ -18,7 +18,6 @@ const STEPS: Step[] = [
     { id: 6, label: "Autarkie", shortLabel: "Autarkie" },
     { id: 7, label: "Komfort", shortLabel: "Komfort" },
     { id: 8, label: "Solar", shortLabel: "Solar" },
-    { id: 9, label: "Schaltplan", shortLabel: "Plan" },
 ];
 
 interface WizardWrapperProps {

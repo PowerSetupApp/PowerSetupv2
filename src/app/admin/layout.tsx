@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LayoutDashboard, Package, FolderTree, Image, LogOut, Zap, Tags, Settings } from "lucide-react";
+import { LayoutDashboard, Package, FolderTree, Image, LogOut, Zap, Tags, Settings, FileText } from "lucide-react";
 
 export default function AdminLayout({
     children,
@@ -55,7 +55,15 @@ export default function AdminLayout({
                         href="/admin/consumer-categories"
                         className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-muted transition-colors"
                     >
+                        <Tags className="h-5 w-5" />
                         Verbr.-Kategorien
+                    </Link>
+                    <Link
+                        href="/admin/results"
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-muted transition-colors"
+                    >
+                        <FileText className="h-5 w-5" />
+                        Ergebnisse
                     </Link>
                     <Link
                         href="/admin/settings"

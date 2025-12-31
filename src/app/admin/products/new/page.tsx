@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Save, Loader2, Image as ImageIcon, Smile } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Image as ImageIcon, Smile, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { MediaModal } from "@/components/admin/media-modal";
 import { EmojiPickerModal } from "@/components/admin/emoji-picker-modal";
@@ -25,6 +25,7 @@ export default function NewProductPage() {
     const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
     const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
     const [isEmojiModalOpen, setIsEmojiModalOpen] = useState(false);
+    const [isOptimizing, setIsOptimizing] = useState(false);
 
     const [formData, setFormData] = useState({
         name: "",
@@ -88,6 +89,26 @@ export default function NewProductPage() {
         setFormData({ ...formData, imageUrl: url });
     };
 
+    const handleOptimizeSpecs = async () => {
+        if (!formData.specs.trim()) return;
+        setIsOptimizing(true);
+        try {
+            const res = await fetch("/api/admin/optimize-specs", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ specs: formData.specs }),
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setFormData({ ...formData, specs: data.optimizedSpecs });
+            }
+        } catch (err) {
+            console.error("Optimization failed", err);
+        } finally {
+            setIsOptimizing(false);
+        }
+    };
+
     return (
         <div className="max-w-2xl space-y-6">
             <div className="flex items-center gap-4">
@@ -126,15 +147,7 @@ export default function NewProductPage() {
                         )}
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="description">Beschreibung</Label>
-                        <Textarea
-                            id="description"
-                            value={formData.description}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            rows={3}
-                        />
-                    </div>
+
 
                     <div className="space-y-2">
                         <Label htmlFor="categoryId">Kategorie *</Label>
@@ -246,7 +259,19 @@ export default function NewProductPage() {
                 </div>
 
                 <div className="bg-card rounded-xl border p-6 space-y-4">
-                    <h2 className="font-semibold">Technische Spezifikationen (Markdown)</h2>
+                    <div className="flex items-center justify-between">
+                        <h2 className="font-semibold">Technische Spezifikationen (Markdown)</h2>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleOptimizeSpecs}
+                            disabled={isOptimizing || !formData.specs.trim()}
+                        >
+                            {isOptimizing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                            Mit KI optimieren
+                        </Button>
+                    </div>
                     <Textarea
                         value={formData.specs}
                         onChange={(e) => setFormData({ ...formData, specs: e.target.value })}

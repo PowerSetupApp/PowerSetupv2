@@ -15,7 +15,6 @@ export function Step3Energy() {
         { value: "solar", label: t("options.solar"), icon: "☀️", sublabel: t("options.solar_sub") },
         { value: "alternator", label: t("options.alternator"), icon: "⚡", sublabel: t("options.alternator_sub") },
         { value: "shore_power", label: t("options.shore_power"), icon: "🔌", sublabel: t("options.shore_power_sub") },
-        { value: "generator", label: t("options.generator"), icon: "⛽", sublabel: t("options.generator_sub") },
     ];
 
     const ALTERNATOR_OPTIONS = [

@@ -100,6 +100,14 @@
                 "cancel": "Abbrechen",
                 "finish": "Fertig"
             },
+            "HighPowerWarning": {
+                "title": "Hohe 230V-Leistung erkannt",
+                "suggestion": "Bei über 2000W 230V-Verbrauch empfehlen wir ein 24V-System, um dünnere Kabel verwenden zu können.",
+                "learn_more": "Mehr erfahren",
+                "details": "Bei hoher 230V-Leistung fließen große Ströme durch die DC-Seite (Batterie → Wechselrichter). Bei einem 12V-System bedeuten 2000W etwa 170A Strom – das erfordert sehr dicke und teure Kabel. Ein 24V-System halbiert den erforderlichen Strom auf ~85A, was deutlich dünnere Kabel ermöglicht.\n\nGute Nachricht: Die meisten DC-Verbraucher im Camperausbau (USB-Steckdosen, LED-Beleuchtung, Kompressorkühlboxen) unterstützen sowohl 12V als auch 24V Eingangsspannung.",
+                "go_to_step2": "Zur Spannungsauswahl",
+                "close": "Verstanden"
+            },
             "Consumers": {
                 "led": "LED Beleuchtung",
                 "led_hint": "Hinweis: Gesamte Beleuchtung zusammenfassen (nicht einzeln).",
@@ -222,13 +230,14 @@
         "Step8": {
             "title": "Kabelwege & Platzierung",
             "subtitle": "Schätze die Entfernung zwischen den Komponenten.",
-            "starter_service": "Starter- zu Versorgerbatterie",
+            "starter_service": "Starterbatterie zu Ladebooster",
+            "booster_service": "Ladebooster zu Versorgerbatterie",
             "service_inverter": "Versorgerbatterie zu Wechselrichter",
             "service_inverter_note": "Empfohlen maximal 1m für geringe Verluste.",
             "solar_regulator": "Solar zu Laderegler",
             "boiler_label": "Warmwasserboiler",
             "pump_label": "Wasserpumpe",
-            "fusebox_label": "Batterie zu Sicherungskasten",
+            "fusebox_label": "Versorgerbatterie zu Sicherungskasten",
             "custom_prefix": "Sicherungskasten zu"
         },
         "Step9": {

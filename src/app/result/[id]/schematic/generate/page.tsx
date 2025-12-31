@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { formatFormDataForAI, formatProductsForAI, type AIProductContext } from "@/lib/format-for-ai";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { GenerateButton } from "@/components/schematic/generate-button";
 
 interface SchematicGeneratePageProps {
     params: Promise<{ id: string }>;
@@ -121,16 +122,7 @@ export default async function SchematicGeneratePage({ params }: SchematicGenerat
                 {/* Final CTA */}
                 <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 z-50">
                     <div className="container mx-auto max-w-4xl flex justify-end">
-                        <Button
-                            size="lg"
-                            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg w-full sm:w-auto"
-                            asChild
-                        >
-                            <Link href={`/result/${id}?generateSchematic=true`}>
-                                <Sparkles className="mr-2 w-4 h-4" />
-                                Starten & Schaltplan erstellen
-                            </Link>
-                        </Button>
+                        <GenerateButton resultId={id} />
                     </div>
                 </div>
                 <div className="h-24"></div>

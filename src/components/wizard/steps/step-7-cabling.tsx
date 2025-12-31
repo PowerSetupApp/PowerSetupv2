@@ -15,6 +15,7 @@ export function Step7Cabling() {
 
     const hasAlternator = energySources.includes('alternator');
     const hasSolar = energySources.includes('solar');
+    const hasShorePower = energySources.includes('shore_power');
 
     // Filter out 230V devices entirely from cabling step
     const relevantConsumers = consumers.filter(c => c.voltage !== '230V');
@@ -46,12 +47,13 @@ export function Step7Cabling() {
                 {/* 1. Starter -> Service (B2B) */}
                 {hasAlternator && (
                     <div className="space-y-4 p-4 border rounded-lg bg-card/50">
+                        {/* 1a. Starter -> Booster */}
                         <div className="flex items-center gap-3 mb-2">
                             <div className="p-2 bg-primary/10 rounded-full">
                                 <Cable className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                                <Label className="text-base font-semibold">{t("starter_service")}</Label>
+                                <Label className="text-base font-semibold">Starterbatterie ↔ Ladebooster</Label>
                             </div>
                             <span className="ml-auto font-mono text-lg font-bold text-primary">
                                 {cableLengths.starterToService}m
@@ -65,6 +67,29 @@ export function Step7Cabling() {
                             onValueChange={(val) => updateLength('starterToService', val[0])}
                             className="py-2"
                         />
+
+                        {/* 1b. Booster -> Service Battery */}
+                        <div className="mt-6 pt-4 border-t border-dashed">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="p-2 bg-primary/10 rounded-full">
+                                    <Cable className="h-5 w-5 text-primary" />
+                                </div>
+                                <div>
+                                    <Label className="text-base font-semibold">Ladebooster ↔ Versorgerbatterie</Label>
+                                </div>
+                                <span className="ml-auto font-mono text-lg font-bold text-primary">
+                                    {cableLengths.boosterToService || 1}m
+                                </span>
+                            </div>
+                            <Slider
+                                value={[cableLengths.boosterToService || 1]}
+                                min={0.5}
+                                max={5}
+                                step={0.5}
+                                onValueChange={(val) => updateLength('boosterToService', val[0])}
+                                className="py-2"
+                            />
+                        </div>
                     </div>
                 )}
 
@@ -76,7 +101,7 @@ export function Step7Cabling() {
                                 <Zap className="h-5 w-5 text-primary" />
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-base font-semibold">{t("service_inverter")}</Label>
+                                <Label className="text-base font-semibold">Versorgerbatterie ↔ Wechselrichter</Label>
                                 <p className="text-xs text-yellow-600 dark:text-yellow-400 font-medium">
                                     {t("service_inverter_note")}
                                 </p>
@@ -99,12 +124,13 @@ export function Step7Cabling() {
                 {/* 3. Solar -> Regulator */}
                 {hasSolar && (
                     <div className="space-y-4 p-4 border rounded-lg bg-card/50">
+                        {/* 3a. PV -> Regulator */}
                         <div className="flex items-center gap-3 mb-2">
                             <div className="p-2 bg-primary/10 rounded-full">
                                 <Sun className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                                <Label className="text-base font-semibold">{t("solar_regulator")}</Label>
+                                <Label className="text-base font-semibold">Solarmodul (PV) ↔ Solar-Laderegler</Label>
                             </div>
                             <span className="ml-auto font-mono text-lg font-bold text-primary">
                                 {cableLengths.solarToRegulator}m
@@ -118,6 +144,54 @@ export function Step7Cabling() {
                             onValueChange={(val) => updateLength('solarToRegulator', val[0])}
                             className="py-2"
                         />
+
+                        {/* 3b. Regulator -> Service Battery (NEW) */}
+                        <div className="mt-6 pt-4 border-t border-dashed">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="p-2 bg-primary/10 rounded-full">
+                                    <Cable className="h-5 w-5 text-primary" />
+                                </div>
+                                <div>
+                                    <Label className="text-base font-semibold">Solar-Laderegler ↔ Versorgerbatterie</Label>
+                                </div>
+                                <span className="ml-auto font-mono text-lg font-bold text-primary">
+                                    {cableLengths.serviceToRegulator || 1}m
+                                </span>
+                            </div>
+                            <Slider
+                                value={[cableLengths.serviceToRegulator || 1]}
+                                min={0.5}
+                                max={5}
+                                step={0.5}
+                                onValueChange={(val) => updateLength('serviceToRegulator', val[0])}
+                                className="py-2"
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* 5. Shore Power -> Service Battery (NEW) */}
+                {hasShorePower && (
+                    <div className="space-y-4 p-4 border rounded-lg bg-card/50">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-primary/10 rounded-full">
+                                <Plug2 className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                                <Label className="text-base font-semibold">Batterieladegerät ↔ Versorgerbatterie</Label>
+                            </div>
+                            <span className="ml-auto font-mono text-lg font-bold text-primary">
+                                {cableLengths.chargerToService || 1.5}m
+                            </span>
+                        </div>
+                        <Slider
+                            value={[cableLengths.chargerToService || 1.5]}
+                            min={0.5}
+                            max={5}
+                            step={0.5}
+                            onValueChange={(val) => updateLength('chargerToService', val[0])}
+                            className="py-2"
+                        />
                     </div>
                 )}
 
@@ -128,7 +202,7 @@ export function Step7Cabling() {
                             <Zap className="h-5 w-5 text-primary" />
                         </div>
                         <div>
-                            <Label className="text-base font-semibold">{t("fusebox_label")}</Label>
+                            <Label className="text-base font-semibold">Versorgerbatterie ↔ Sicherungskasten</Label>
                         </div>
                         <span className="ml-auto font-mono text-lg font-bold text-primary">
                             {cableLengths.batteryToFuseBox || 1}m
@@ -146,59 +220,7 @@ export function Step7Cabling() {
 
                 {/* --- OPTIONAL DEVICES (Only if selected & fixed & NOT 230V) --- */}
 
-                {/* Boiler */}
-                {hasFixedBoiler && (
-                    <div className="space-y-4 p-4 border rounded-lg bg-card/50 animate-in fade-in slide-in-from-left-2">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-primary/10 rounded-full">
-                                <Droplets className="h-5 w-5 text-primary" />
-                            </div>
-                            <div className="overflow-hidden">
-                                <Label className="text-base font-semibold truncate block">
-                                    {t("custom_prefix")} {t("boiler_label")}
-                                </Label>
-                            </div>
-                            <span className="ml-auto font-mono text-lg font-bold text-primary">
-                                {cableLengths.boiler || 3}m
-                            </span>
-                        </div>
-                        <Slider
-                            value={[cableLengths.boiler || 3]}
-                            min={1}
-                            max={15}
-                            step={0.5}
-                            onValueChange={(val) => updateLength('boiler', val[0])}
-                            className="py-2"
-                        />
-                    </div>
-                )}
 
-                {/* Water Pump */}
-                {hasFixedPump && (
-                    <div className="space-y-4 p-4 border rounded-lg bg-card/50 animate-in fade-in slide-in-from-left-2">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-primary/10 rounded-full">
-                                <Droplets className="h-5 w-5 text-primary" />
-                            </div>
-                            <div className="overflow-hidden">
-                                <Label className="text-base font-semibold truncate block">
-                                    {t("custom_prefix")} {t("pump_label")}
-                                </Label>
-                            </div>
-                            <span className="ml-auto font-mono text-lg font-bold text-primary">
-                                {cableLengths.waterPump || 3}m
-                            </span>
-                        </div>
-                        <Slider
-                            value={[cableLengths.waterPump || 3]}
-                            min={1}
-                            max={15}
-                            step={0.5}
-                            onValueChange={(val) => updateLength('waterPump', val[0])}
-                            className="py-2"
-                        />
-                    </div>
-                )}
 
                 {/* --- DYNAMIC CONSUMERS --- */}
                 {dynamicConsumers.length > 0 && (

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
+import { put } from "@vercel/blob";
 
 export async function POST(request: NextRequest) {
     try {
@@ -14,39 +13,15 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const originalName = file.name;
-        // Split name and extension
-        const lastDotIndex = originalName.lastIndexOf(".");
-        const namePart = lastDotIndex !== -1 ? originalName.substring(0, lastDotIndex) : originalName;
-        const extension = lastDotIndex !== -1 ? originalName.substring(lastDotIndex + 1).toLowerCase() : "bin";
-
-        // Sanitize name for SEO: lowercase, replace spaces/specials with dashes, alphanumeric only
-        const sanitizedName = namePart
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-") // Replace non-alphanumeric chars with dashes
-            .replace(/^-+|-+$/g, ""); // Trim dashes from start/end
-
-        // Add short random suffix for uniqueness
-        const uniqueSuffix = crypto.randomUUID().split("-")[0];
-        const filename = `${sanitizedName || "upload"}-${uniqueSuffix}.${extension}`;
-
-        // Ensure uploads directory exists
-        const uploadDir = join(process.cwd(), "public/uploads");
-        try {
-            await mkdir(uploadDir, { recursive: true });
-        } catch (e) {
-            // Ignore if exists
-        }
-
-        const filepath = join(uploadDir, filename);
-        await writeFile(filepath, buffer);
-
-        const url = `/uploads/${filename}`;
+        // Upload to Vercel Blob
+        const blob = await put(file.name, file, {
+            access: 'public',
+            addRandomSuffix: true // Default is true, but explicit is good
+        });
 
         return NextResponse.json({
-            url,
-            name: originalName,
+            url: blob.url,
+            name: file.name,
         });
     } catch (error) {
         console.error("Upload error:", error);

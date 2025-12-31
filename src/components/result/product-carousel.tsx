@@ -31,6 +31,18 @@ export function ProductCarousel({ products, categoryName }: ProductCarouselProps
     const isMissing = currentProduct?.isMissing ||
         (typeof currentProduct?.id === 'string' && currentProduct.id.startsWith("missing-"));
 
+    const formatDescription = (text: string | null) => {
+        if (!text) return "Keine Beschreibung verfügbar.";
+
+        let formatted = text;
+        // Replace **text** with <strong>text</strong>
+        formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        // Replace newlines with <br /> to preserve formatting in HTML mode
+        formatted = formatted.replace(/\n/g, '<br />');
+
+        return formatted;
+    };
+
     return (
         <div className="relative">
             {/* Carousel Container - Fixed single card view */}
@@ -88,11 +100,17 @@ export function ProductCarousel({ products, categoryName }: ProductCarouselProps
                                     <h3 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
                                         {currentProduct?.name}
                                     </h3>
+
+                                    {/* Amount / Quantity Display */}
+                                    {(currentProduct?.amount || currentProduct?.quantity) && (
+                                        <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-200 text-sm font-bold rounded-md w-fit">
+                                            <span>📦</span>
+                                            <span>{currentProduct.amount || currentProduct.quantity}</span>
+                                        </div>
+                                    )}
                                 </div>
 
-                                <div className="prose prose-sm dark:prose-invert text-gray-500 dark:text-gray-400 text-sm">
-                                    <p>{currentProduct?.description || "Keine Beschreibung verfügbar."}</p>
-                                </div>
+
 
                                 {currentProduct?.explanation && (
                                     <div className="bg-indigo-50 dark:bg-indigo-900/10 p-3 rounded-lg text-xs text-indigo-800 dark:text-indigo-300 font-medium border border-indigo-100 dark:border-indigo-900/30">

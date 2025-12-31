@@ -15,7 +15,7 @@ import { getAISettings } from "@/app/actions/settings";
 export async function generateProductSelection(
     input: AIInput,
     promptTemplate: string
-): Promise<any> {
+): Promise<{ data: any; usage?: { inputTokens: number; outputTokens: number }; model: string }> {
     const settings = await getAISettings();
     const provider = settings.provider; // "google" | "openai"
 
@@ -33,7 +33,7 @@ Antworte mit einer Liste der passenden Produkt-IDs (UUIDs) im angeforderten JSON
     console.log(`--- AI Request (${provider.toUpperCase()}) ---`);
 
     try {
-        let textCallback: () => Promise<string>;
+        let textCallback: () => Promise<{ text: string; usage?: { inputTokens: number; outputTokens: number } }>;
 
         if (provider === "openai") {
             const apiKey = settings.openaiApiKey;
@@ -55,8 +55,15 @@ Antworte mit einer Liste der passenden Produkt-IDs (UUIDs) im angeforderten JSON
                     temperature: temperature,
                     response_format: { type: "json_object" }
                 });
-                return response.choices[0]?.message?.content || "";
+                return {
+                    text: response.choices[0]?.message?.content || "",
+                    usage: {
+                        inputTokens: response.usage?.prompt_tokens || 0,
+                        outputTokens: response.usage?.completion_tokens || 0,
+                    }
+                };
             };
+
 
         } else {
             // Default: Google Gemini
@@ -71,7 +78,15 @@ Antworte mit einer Liste der passenden Produkt-IDs (UUIDs) im angeforderten JSON
                 const result = await model.generateContent({
                     contents: [{ role: "user", parts: [{ text: fullPromptContent }] }],
                 });
-                return result.response.text();
+                const response = await result.response;
+                const metadata = response.usageMetadata;
+                return {
+                    text: response.text(),
+                    usage: {
+                        inputTokens: metadata?.promptTokenCount || 0,
+                        outputTokens: metadata?.candidatesTokenCount || 0,
+                    }
+                };
             };
         }
 
@@ -83,7 +98,8 @@ Antworte mit einer Liste der passenden Produkt-IDs (UUIDs) im angeforderten JSON
         while (attempt < maxRetries) {
             try {
                 console.log(`Attempt ${attempt + 1}/${maxRetries}...`);
-                const text = await textCallback();
+                const response = await textCallback();
+                const text = response.text;
                 console.log("--- AI Raw Response ---");
                 console.log(text.substring(0, 500) + "...");
 
@@ -94,18 +110,18 @@ Antworte mit einer Liste der passenden Produkt-IDs (UUIDs) im angeforderten JSON
                     // Support NEW productGroups format
                     if (json && json.productGroups) {
                         console.log("--- Parsed JSON Product Groups ---", Object.keys(json.productGroups));
-                        return json;
+                        return { data: json, usage: response.usage, model: settings.model || provider };
                     }
 
                     // Support OLD selectedIds format
                     if (json && Array.isArray(json.selectedIds)) {
                         console.log("--- Parsed JSON IDs ---", json.selectedIds);
-                        return json.selectedIds;
+                        return { data: json.selectedIds, usage: response.usage, model: settings.model || provider };
                     }
 
                     // Fallback for flat array
                     if (Array.isArray(json) && typeof json[0] === 'string') {
-                        return json;
+                        return { data: json, usage: response.usage, model: settings.model || provider };
                     }
                 } catch (e) {
                     console.warn("Could not parse JSON response, falling back to Regex extraction.");
@@ -117,7 +133,7 @@ Antworte mit einer Liste der passenden Produkt-IDs (UUIDs) im angeforderten JSON
                 console.log("--- Extracted UUIDs (Regex) ---", matches);
 
                 if (matches && matches.length > 0) {
-                    return Array.from(new Set(matches));
+                    return { data: Array.from(new Set(matches)), usage: response.usage, model: settings.model || provider };
                 }
 
                 console.warn("AI returned text but no UUIDs found.");

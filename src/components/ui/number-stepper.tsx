@@ -47,7 +47,7 @@ export function NumberStepper({
                 onClick={decrease}
                 disabled={value <= min}
                 className={cn(
-                    "flex items-center justify-center h-10 w-10 rounded-md border transition-colors",
+                    "flex items-center justify-center h-10 w-10 rounded-md border transition-colors cursor-pointer",
                     "bg-muted hover:bg-muted/80 active:bg-muted/60",
                     "disabled:opacity-50 disabled:cursor-not-allowed",
                     "touch-manipulation" // Improves touch response
@@ -65,7 +65,7 @@ export function NumberStepper({
                 onClick={increase}
                 disabled={value >= max}
                 className={cn(
-                    "flex items-center justify-center h-10 w-10 rounded-md border transition-colors",
+                    "flex items-center justify-center h-10 w-10 rounded-md border transition-colors cursor-pointer",
                     "bg-muted hover:bg-muted/80 active:bg-muted/60",
                     "disabled:opacity-50 disabled:cursor-not-allowed",
                     "touch-manipulation"

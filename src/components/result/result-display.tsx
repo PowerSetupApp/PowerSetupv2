@@ -7,6 +7,7 @@ import { Copy, Share2, Check, ArrowLeft, Plus, RefreshCw, Loader2, Sparkles } fr
 import Link from "next/link";
 import Image from "next/image";
 import { ProductCarousel } from "./product-carousel";
+import { CableGrid } from "./cable-grid";
 import { useRouter } from "next/navigation";
 
 interface Product {
@@ -138,21 +139,71 @@ export default function ResultDisplay({
 
             const id = rec.productId || rec.id;
 
-            // DEDUPLICATION
-            if (seenIds.has(id)) return null;
-            seenIds.add(id);
+            // DEDUPLICATION LOGIC MODIFIED
+            // We want to allow duplicates IF they are explicitly recommended (e.g. multiple cables).
+            // But we still want to avoid accidental duplicates for general listing if not intended.
+            // Current approach: Allow ALL explicitly recommended items. Dedup only 'optionals' or unflagged ones?
+            // Actually, simplest is to allow deduplication KEYED by (id + index) or just allow mapped list to have duplicates.
+            // But `products.find` is expensive if list is huge? No, it's fine.
+
+            // Allow same ID if it is a different "recommendation instance" (meaning it might have a different reason)
+            // So we effectively REMOVE string deduplication for the mapping phase.
+            // We will handle grouping/deduping visually later if needed.
+            // seenIds.add(id); // REMOVED check
 
             const product = products.find((p) => p.id === id);
             if (!product) return null;
 
             const categorySlug = product.category?.slug || (typeof rec.category === 'string' ? rec.category : product.category?.name?.toLowerCase()) || '';
 
+            // ROBUSTNESS: Extract Amount from Reason if default is "1" but text says otherwise
+            let finalAmount = rec.amount || rec.quantity;
+
+            // NEW: Check for explicit length field (for cables)
+            if (rec.length) {
+                finalAmount = `${rec.length} Meter`;
+            }
+
+            const explanationText = rec.reason || rec.explanation || '';
+
+            // If amount is missing or "1" (or "1 Stück"), check if reason implies more
+            if (!finalAmount || String(finalAmount) === '1' || finalAmount === '1 Stück') {
+                // Regex for "2 Stück", "2x", "2 Modi" etc.
+                const quantityMatch = explanationText.match(/(\d+)\s*(?:Stück|Stk|x(?!\d)|Modul)/i);
+                // x(?!\d) prevents matching dimensions like 100x200
+
+                // Specific text numbers
+                const textNumbers: Record<string, string> = {
+                    'zwei': '2', 'drei': '3', 'vier': '4', 'fünf': '5', 'sechs': '6'
+                };
+
+                let foundQty = null;
+
+                if (quantityMatch && parseInt(quantityMatch[1]) > 1) {
+                    foundQty = quantityMatch[1];
+                } else {
+                    // Check text words
+                    for (const [word, digit] of Object.entries(textNumbers)) {
+                        if (explanationText.toLowerCase().includes(`${word} stück`) || explanationText.toLowerCase().includes(`${word} module`)) {
+                            foundQty = digit;
+                            break;
+                        }
+                    }
+                }
+
+                if (foundQty) {
+                    finalAmount = `${foundQty} Stück`;
+                }
+            }
+
             return {
                 ...product,
                 affiliateUrl: rec.affiliateUrl || product.affiliateUrl,
                 categorySlug: categorySlug, // Use robust slug
-                explanation: rec.reason || rec.explanation,
-                reason: rec.reason,
+                explanation: explanationText,
+                reason: explanationText,
+                amount: finalAmount,
+                quantity: finalAmount, // Sync both
                 originalIsRecommended: rec.isRecommended, // Store original AI decision
                 isOptional: rec.isOptional,
                 categoryLabel: product.category?.name
@@ -194,6 +245,13 @@ export default function ResultDisplay({
                     isRecommended = true;
                 }
 
+                // SPECIAL RULE: For "Kabel" (cables), we typically want ALL returned cables to be recommended,
+                // because the AI usually lists the specific set needed (red, black, different sizes).
+                // Unless explicitly marked as optional by AI, we assume they are needed.
+                if ((slug === 'cable' || slug === 'kabel' || slug.includes('cable')) && !item.isOptional) {
+                    isRecommended = true;
+                }
+
                 return {
                     ...item,
                     isRecommended,
@@ -219,11 +277,15 @@ export default function ResultDisplay({
             return;
         }
 
-        console.log("Starting Loading Animation Steps");
+        // Expanded steps for more engagement
         const steps = [
-            { t: 100, s: 1 }, // Start Analyzing immediately
-            { t: 4000, s: 2 }, // After 4s, Picking Products
-            { t: 9000, s: 3 }, // After 9s, Finalizing
+            { t: 0, s: 1 },    // Start Analyzing
+            { t: 2500, s: 2 }, // Check Requirements
+            { t: 5000, s: 3 }, // Solar Calculation
+            { t: 7500, s: 4 }, // Battery Type
+            { t: 10000, s: 5 }, // Dimensioning
+            { t: 12500, s: 6 }, // Product Search
+            { t: 15500, s: 7 }, // Finalizing
         ];
 
         const timeouts = steps.map(step => setTimeout(() => setCreationStep(step.s), step.t));
@@ -288,36 +350,68 @@ export default function ResultDisplay({
     // Show loading state ONLY if we are actually generating OR if we have no response yet.
     const showLoading = isGenerating || (!hasResponse && !hasResults);
 
+    // Loading UI
     if (showLoading) {
+        const steps = [
+            "Initialisiere System-Analyse...",
+            "Prüfe Energiebedarf & Autarkiewünsche...",
+            "Berechne optimale Solarleistung...",
+            "Wähle passende Batterie-Technologie...",
+            "Dimensioniere Kabelquerschnitte...",
+            "Suche verfügbare Produkte...",
+            "Finalisiere dein individuelles Setup..."
+        ];
+
+        const currentText = steps[Math.min(creationStep - 1, steps.length - 1)] || steps[0];
+        const progressPercent = Math.min((creationStep / steps.length) * 100, 100);
+
         return (
-            <div className="max-w-xl mx-auto py-24 px-4 text-center space-y-8">
-                <div className="relative w-32 h-32 mx-auto">
-                    <div className="absolute inset-0 bg-indigo-100 dark:bg-indigo-900/30 rounded-full animate-ping opacity-20 duration-1000"></div>
-                    <div className="relative flex items-center justify-center w-32 h-32 bg-indigo-50 dark:bg-gray-800 rounded-full border-4 border-indigo-100 dark:border-indigo-900">
-                        {creationStep === 1 && <Sparkles className="w-12 h-12 text-indigo-600 animate-pulse" />}
-                        {creationStep === 2 && <Loader2 className="w-12 h-12 text-indigo-600 animate-spin" />}
-                        {creationStep === 3 && <Check className="w-12 h-12 text-green-500 animate-bounce" />}
-                        {creationStep === 0 && <Loader2 className="w-12 h-12 text-gray-400 animate-spin" />}
+            <div className="max-w-xl mx-auto py-24 px-4 text-center space-y-10 animate-in fade-in duration-700">
+                {/* Visual Icon Halo */}
+                <div className="relative w-40 h-40 mx-auto">
+                    <div className="absolute inset-0 bg-indigo-100 dark:bg-indigo-900/20 rounded-full animate-[ping_3s_ease-in-out_infinite] opacity-30"></div>
+                    <div className="absolute inset-4 bg-indigo-50 dark:bg-indigo-900/10 rounded-full animate-[pulse_2s_ease-in-out_infinite] opacity-50"></div>
+                    <div className="relative flex items-center justify-center w-full h-full bg-white dark:bg-gray-800 rounded-full border-4 border-indigo-100 dark:border-indigo-900 shadow-xl">
+                        {creationStep < 6 ? (
+                            <Loader2 className="w-16 h-16 text-indigo-600 animate-[spin_3s_linear_infinite]" />
+                        ) : (
+                            <Sparkles className="w-16 h-16 text-amber-400 animate-pulse" />
+                        )}
                     </div>
                 </div>
 
-                <div className="space-y-3">
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white transition-all duration-500">
-                        {creationStep === 0 && "Initialisiere..."}
-                        {creationStep === 1 && "Analysiere deine Anforderungen..."}
-                        {creationStep === 2 && "Suche passende Komponenten..."}
-                        {creationStep === 3 && "Erstelle dein Setup..."}
-                    </h2>
-                    <p className="text-gray-500 dark:text-gray-400">
-                        Das kann einen Moment dauern. Die KI stellt dein individuelles Paket zusammen.
-                    </p>
-                </div>
+                <div className="space-y-6">
+                    <div className="space-y-2">
+                        {/* Dynamic Step Title */}
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white min-h-[3rem] items-center flex justify-center">
+                            {currentText}
+                        </h2>
+                        <p className="text-gray-500 dark:text-gray-400">
+                            Wir erstellen deinen perfekten Schaltplan.
+                        </p>
+                    </div>
 
-                <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2 overflow-hidden max-w-sm mx-auto">
-                    <div
-                        className="h-full bg-indigo-600 transition-all duration-1000 ease-out"
-                        style={{ width: `${creationStep === 0 ? 5 : creationStep * 33}%` }}
-                    ></div>
+                    {/* Progress Bar */}
+                    <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-3 overflow-hidden shadow-inner max-w-md mx-auto">
+                        <div
+                            className="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-700 ease-out shadow-lg"
+                            style={{ width: `${progressPercent}%` }}
+                        ></div>
+                    </div>
+
+                    {/* Checklist of completed steps */}
+                    <div className="flex flex-col items-start w-fit mx-auto space-y-3 pt-6">
+                        {steps.map((text, idx) => (
+                            (idx + 1) < creationStep && (
+                                <div key={idx} className="flex items-center gap-3 text-left animate-in slide-in-from-bottom-2 fade-in duration-500">
+                                    <div className="h-6 w-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0">
+                                        <Check className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+                                    </div>
+                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{text.replace("...", "")}</span>
+                                </div>
+                            )
+                        ))}
+                    </div>
                 </div>
             </div>
         );
@@ -387,7 +481,14 @@ export default function ResultDisplay({
                 {(() => {
                     // 1. Group Products
                     const grouped = selectedProducts.reduce((acc: Record<string, any[]>, product: any) => {
-                        const key = product.categorySlug || product.category?.name || 'Andere';
+                        let key = product.categorySlug || product.category?.name || 'Andere';
+
+                        // User Request: Merge all cable types (Solar cables, etc.) into one "Cable" group
+                        const lowerKey = String(key).toLowerCase();
+                        if (lowerKey.includes('cable') || lowerKey.includes('kabel')) {
+                            key = 'cable';
+                        }
+
                         const safeKey = String(key);
                         if (!acc[safeKey]) acc[safeKey] = [];
                         acc[safeKey].push(product);
@@ -402,21 +503,29 @@ export default function ResultDisplay({
                         const recommendedItems = products.filter(p => p.isRecommended);
                         const optionalItems = products.filter(p => !p.isRecommended);
 
-                        if (recommendedItems.length > 0) {
-                            // SPLIT STRATEGY: 
-                            // Create a separate group for EACH recommended item so they appear "stacked"
-                            recommendedItems.forEach((recItem, index) => {
-                                const groupProducts = [recItem];
-                                // Attach alternatives/optionals ONLY to the first recommendation group
-                                // to avoid duplicating them or cluttering the UI.
-                                if (index === 0) {
-                                    groupProducts.push(...optionalItems);
-                                }
+                        // Checks for "Cable/Kabel" category
+                        const isCableCategory = key.toLowerCase().includes('cable') || key.toLowerCase().includes('kabel');
 
-                                // Ensure unique keys for React
-                                const uniqueKey = index === 0 ? key : `${key}_${index}`;
-                                mainGroups.push([uniqueKey, groupProducts]);
-                            });
+                        if (recommendedItems.length > 0) {
+                            if (isCableCategory) {
+                                // DO NOT SPLIT CABLES
+                                // Keep all recommended cables AND optional cables in one group
+                                mainGroups.push([key, [...recommendedItems, ...optionalItems]]);
+                            } else {
+                                // SPLIT STRATEGY for other products (e.g. Inverters, Batteries):
+                                // Create a separate group for EACH recommended item so they appear "stacked"
+                                recommendedItems.forEach((recItem, index) => {
+                                    const groupProducts = [recItem];
+                                    // Attach alternatives/optionals ONLY to the first recommendation group
+                                    if (index === 0) {
+                                        groupProducts.push(...optionalItems);
+                                    }
+
+                                    // Ensure unique keys for React
+                                    const uniqueKey = index === 0 ? key : `${key}_${index}`;
+                                    mainGroups.push([uniqueKey, groupProducts]);
+                                });
+                            }
                         } else {
                             // No recommended items -> purely optional group
                             optionalGroups.push([key, products]);
@@ -435,11 +544,16 @@ export default function ResultDisplay({
                         // Check if group is optional to add specific header/notice
                         const isOptionalGroup = products[0]?.isOptional;
 
+                        const isCableCategory = groupKey === 'cable' || categoryName.toLowerCase().includes('kabel') || categoryName.toLowerCase().includes('cable');
+
+                        // Force generic title for merged cable group
+                        const displayTitle = isCableCategory ? 'Kabel' : categoryName;
+
                         return (
                             <div key={groupKey} className="space-y-4">
                                 <div className="flex items-center justify-between border-b pb-2 border-gray-100 dark:border-gray-800">
                                     <h3 className="text-2xl font-bold text-gray-800 dark:text-white capitalize">
-                                        {categoryName}
+                                        {displayTitle}
                                     </h3>
                                     {isOptionalGroup && (
                                         <span className="text-xs font-medium px-2 py-1 bg-blue-100 text-blue-700 rounded-full dark:bg-blue-900 dark:text-blue-300">
@@ -454,10 +568,17 @@ export default function ResultDisplay({
                                     </div>
                                 )}
 
-                                <ProductCarousel
-                                    products={sortedProducts}
-                                    categoryName={categoryName}
-                                />
+                                {isCableCategory ? (
+                                    <CableGrid
+                                        products={sortedProducts}
+                                        cableLengths={(userConfig as any)?.cableLengths}
+                                    />
+                                ) : (
+                                    <ProductCarousel
+                                        products={sortedProducts}
+                                        categoryName={categoryName}
+                                    />
+                                )}
                             </div>
                         );
                     };

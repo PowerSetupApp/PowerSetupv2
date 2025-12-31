@@ -26,6 +26,7 @@ export interface AISettings {
     systemPrompt: string;
     userPromptTemplate: string;
     imagePromptTemplate: string; // New: Image Prompt
+    specsOptimizationPrompt: string;
 }
 
 // ==========================================
@@ -158,6 +159,7 @@ export async function getAISettings(): Promise<AISettings> {
         systemPrompt: "",
         userPromptTemplate: "",
         imagePromptTemplate: "", // Default empty
+        specsOptimizationPrompt: "Optimiere den folgenden Text für KI-Verarbeitung. Reduziere auf die wesentlichen technischen Daten. Ausgabe als kompakte Zeilen ohne Markdown.\n\nText:\n{{INPUT}}",
     };
 
     try {
@@ -165,13 +167,14 @@ export async function getAISettings(): Promise<AISettings> {
         if (!prisma.systemSetting) return defaults;
 
         // Fetch all relevant settings in parallel or bulk
-        const [provider, model, imageModel, geminiKey, openaiKey, imagePrompt] = await Promise.all([
+        const [provider, model, imageModel, geminiKey, openaiKey, imagePrompt, specsPrompt] = await Promise.all([
             prisma.systemSetting.findUnique({ where: { key: "ai_provider" } }),
             prisma.systemSetting.findUnique({ where: { key: "ai_model" } }),
             prisma.systemSetting.findUnique({ where: { key: "ai_image_model" } }),
             prisma.systemSetting.findUnique({ where: { key: "gemini_api_key" } }),
             prisma.systemSetting.findUnique({ where: { key: "openai_api_key" } }),
             prisma.systemSetting.findUnique({ where: { key: "ai_image_prompt_template" } }),
+            prisma.systemSetting.findUnique({ where: { key: "ai_specs_optimization_prompt" } }),
         ]);
 
         const activePrompt = await prisma.promptVersion.findFirst({
@@ -188,6 +191,7 @@ export async function getAISettings(): Promise<AISettings> {
             systemPrompt: activePrompt?.systemPrompt || defaults.systemPrompt,
             userPromptTemplate: activePrompt?.userPromptTemplate || defaults.userPromptTemplate,
             imagePromptTemplate: imagePrompt?.value || defaults.imagePromptTemplate,
+            specsOptimizationPrompt: specsPrompt?.value || defaults.specsOptimizationPrompt,
         };
     } catch (error) {
         console.warn("Failed to fetch AI settings:", error);
@@ -205,7 +209,8 @@ export async function updateAISettings(
     geminiApiKey: string,
     openaiApiKey: string,
     userPromptTemplate: string,
-    imagePromptTemplate: string
+    imagePromptTemplate: string,
+    specsOptimizationPrompt: string
 ) {
     // 1. Update Settings
     await prisma.systemSetting.upsert({ where: { key: "ai_provider" }, update: { value: provider }, create: { key: "ai_provider", value: provider } });
@@ -214,6 +219,7 @@ export async function updateAISettings(
     await prisma.systemSetting.upsert({ where: { key: "gemini_api_key" }, update: { value: geminiApiKey }, create: { key: "gemini_api_key", value: geminiApiKey } });
     await prisma.systemSetting.upsert({ where: { key: "openai_api_key" }, update: { value: openaiApiKey }, create: { key: "openai_api_key", value: openaiApiKey } });
     await prisma.systemSetting.upsert({ where: { key: "ai_image_prompt_template" }, update: { value: imagePromptTemplate }, create: { key: "ai_image_prompt_template", value: imagePromptTemplate } });
+    await prisma.systemSetting.upsert({ where: { key: "ai_specs_optimization_prompt" }, update: { value: specsOptimizationPrompt }, create: { key: "ai_specs_optimization_prompt", value: specsOptimizationPrompt } });
 
     // 2. Update Prompt
     // Disable old active prompts
@@ -236,4 +242,149 @@ export async function updateAISettings(
 
     revalidatePath("/admin/settings");
     return { success: true };
+}
+
+// ==========================================
+// Model Pricing Actions
+// ==========================================
+
+export interface ModelPricingData {
+    id: string;
+    modelId: string;
+    displayName: string | null;
+    provider: string;
+    inputPrice: number;
+    outputPrice: number;
+    updatedAt: Date;
+}
+
+/**
+ * Holt alle gespeicherten Modell-Preise
+ */
+export async function getModelPricing(): Promise<ModelPricingData[]> {
+    const pricing = await prisma.modelPricing.findMany({
+        orderBy: [
+            { provider: 'asc' },
+            { modelId: 'asc' }
+        ]
+    });
+    return pricing;
+}
+
+/**
+ * Aktualisiert den Preis für ein einzelnes Modell
+ */
+export async function updateModelPricing(
+    modelId: string,
+    inputPrice: number,
+    outputPrice: number
+): Promise<{ success: boolean }> {
+    await prisma.modelPricing.update({
+        where: { modelId },
+        data: { inputPrice, outputPrice }
+    });
+    revalidatePath("/admin/settings");
+    return { success: true };
+}
+
+/**
+ * Holt Modelle vom Provider und erstellt Preiseinträge mit bekannten Standardpreisen
+ */
+export async function fetchAndSaveModelPricing(provider: "openai" | "google"): Promise<{ success: boolean; count: number }> {
+    try {
+        // Known pricing defaults (USD per 1M tokens) - manually maintained
+        const KNOWN_PRICING: Record<string, { input: number; output: number }> = {
+            // GPT-4o family
+            "gpt-4o": { input: 2.50, output: 10.00 },
+            "gpt-4o-mini": { input: 0.15, output: 0.60 },
+            "gpt-4o-2024-08-06": { input: 2.50, output: 10.00 },
+            "gpt-4o-2024-05-13": { input: 5.00, output: 15.00 },
+            // GPT-4 family
+            "gpt-4-turbo": { input: 10.00, output: 30.00 },
+            "gpt-4": { input: 30.00, output: 60.00 },
+            "gpt-4-32k": { input: 60.00, output: 120.00 },
+            // GPT-3.5 family
+            "gpt-3.5-turbo": { input: 0.50, output: 1.50 },
+            "gpt-3.5-turbo-0125": { input: 0.50, output: 1.50 },
+            // GPT-5 family (from user screenshot)
+            "gpt-5.1": { input: 1.25, output: 10.00 },
+            "gpt-5.2": { input: 1.75, output: 14.00 },
+            "gpt-5": { input: 1.25, output: 10.00 },
+            "gpt-5-mini": { input: 0.25, output: 2.00 },
+            // Gemini family
+            "gemini-2.0-flash-exp": { input: 0, output: 0 },
+            "gemini-1.5-pro": { input: 3.50, output: 10.50 },
+            "gemini-1.5-flash": { input: 0.075, output: 0.30 },
+        };
+
+        let models: string[] = [];
+
+        if (provider === "openai") {
+            // Get API key from settings
+            const apiKeySetting = await prisma.systemSetting.findUnique({
+                where: { key: "openai_api_key" }
+            });
+
+            if (apiKeySetting?.value) {
+                const openai = new OpenAI({ apiKey: apiKeySetting.value });
+                const list = await openai.models.list();
+                models = list.data
+                    .filter(m => m.id.includes("gpt"))
+                    .map(m => m.id);
+            }
+        } else {
+            // For Google, use hardcoded list since API listing is limited
+            models = ["gemini-2.0-flash-exp", "gemini-1.5-pro", "gemini-1.5-flash"];
+        }
+
+        let count = 0;
+        for (const modelId of models) {
+            const pricing = KNOWN_PRICING[modelId] || { input: 0, output: 0 };
+
+            await prisma.modelPricing.upsert({
+                where: { modelId },
+                create: {
+                    modelId,
+                    displayName: modelId.toUpperCase(),
+                    provider,
+                    inputPrice: pricing.input,
+                    outputPrice: pricing.output
+                },
+                update: {
+                    // Only update if prices are currently 0 (don't overwrite manual edits)
+                    ...(pricing.input > 0 ? { inputPrice: pricing.input } : {}),
+                    ...(pricing.output > 0 ? { outputPrice: pricing.output } : {})
+                }
+            });
+            count++;
+        }
+
+        revalidatePath("/admin/settings");
+        return { success: true, count };
+
+    } catch (error) {
+        console.error("Failed to fetch models:", error);
+        return { success: false, count: 0 };
+    }
+}
+
+/**
+ * Erstellt leere Preiseinträge für eine Liste von Modellen (falls nicht vorhanden)
+ */
+export async function ensureModelPricingExists(
+    models: { id: string; displayName?: string; provider: "openai" | "google" }[]
+): Promise<void> {
+    for (const model of models) {
+        await prisma.modelPricing.upsert({
+            where: { modelId: model.id },
+            create: {
+                modelId: model.id,
+                displayName: model.displayName || model.id,
+                provider: model.provider,
+                inputPrice: 0,
+                outputPrice: 0
+            },
+            update: {} // Don't overwrite existing prices
+        });
+    }
 }

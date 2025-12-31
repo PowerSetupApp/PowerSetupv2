@@ -49,7 +49,7 @@ export function SegmentedControl<T extends string = string>({
                     type="button"
                     onClick={() => onChange(option.value)}
                     className={cn(
-                        "flex items-center justify-center gap-2 px-6 rounded-lg",
+                        "flex items-center justify-center gap-2 px-6 rounded-lg cursor-pointer",
                         "transition-all duration-200",
                         "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
                         "min-w-[80px]",

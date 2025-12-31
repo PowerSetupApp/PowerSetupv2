@@ -16,7 +16,7 @@ interface ResultJsonViewerProps {
     products?: any[];
 }
 
-type ViewMode = "formatted" | "json" | "compact" | "products" | "full_prompt" | "selected_products_context" | "user_selection";
+type ViewMode = "formatted" | "json" | "compact" | "products" | "full_prompt" | "selected_products_context" | "user_selection" | "decisions";
 
 export default function ResultJsonViewer({
     resultId,
@@ -192,6 +192,9 @@ export default function ResultJsonViewer({
                         🛒 Ausgewählte Produkte (Final)
                     </Button>
                 )}
+                <Button variant={viewMode === "decisions" ? "default" : "outline"} onClick={() => setViewMode("decisions")}>
+                    🧠 Begründungen
+                </Button>
             </div>
 
             {/* Compact Summary */}
@@ -295,6 +298,48 @@ export default function ResultJsonViewer({
                     <pre className="p-4 overflow-x-auto text-sm font-mono whitespace-pre-wrap bg-gray-50 dark:bg-gray-900 rounded-b-lg">
                         {userSelectionContext}
                     </pre>
+                </div>
+            )}
+
+            {viewMode === "decisions" && (
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+                    <h2 className="text-lg font-semibold p-4 border-b border-gray-200 dark:border-gray-700">
+                        🧠 KI-Entscheidungen & Begründungen
+                    </h2>
+                    <div className="p-4 space-y-4">
+                        {(() => {
+                            if (!activeRecommendations) return <p className="text-muted-foreground">Keine Empfehlungen vorhanden.</p>;
+
+                            let items: any[] = [];
+                            if (activeRecommendations.productGroups) {
+                                Object.entries(activeRecommendations.productGroups).forEach(([slug, groupItems]: [string, any]) => {
+                                    if (Array.isArray(groupItems)) items.push(...groupItems);
+                                });
+                            } else if (Array.isArray(activeRecommendations.selectedProducts)) {
+                                items = activeRecommendations.selectedProducts;
+                            }
+
+                            if (items.length === 0) return <p>Keine Produkte ausgewählt.</p>;
+
+                            return items.map((item: any, idx: number) => {
+                                // Find product name if possible
+                                const product = products?.find(p => p.id === (item.productId || item.id));
+                                const name = product?.name || item.name || item.id;
+                                const reason = item.reason || item.explanation || "Keine Begründung geliefert.";
+
+                                return (
+                                    <div key={idx} className="border-b border-gray-100 dark:border-gray-700 last:border-0 pb-4 last:pb-0">
+                                        <h4 className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-1">
+                                            {name}
+                                        </h4>
+                                        <p className="text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-900/50 p-3 rounded">
+                                            "{reason}"
+                                        </p>
+                                    </div>
+                                );
+                            });
+                        })()}
+                    </div>
                 </div>
             )}
 

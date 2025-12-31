@@ -132,9 +132,6 @@ export default async function ProductsPage(props: ProductsPageProps) {
                                             )}
                                             <div>
                                                 <p className="font-medium">{product.name}</p>
-                                                <p className="text-sm text-muted-foreground line-clamp-1">
-                                                    {product.description || "Keine Beschreibung"}
-                                                </p>
                                             </div>
                                         </div>
                                     </td>

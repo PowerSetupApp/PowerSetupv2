@@ -67,7 +67,7 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
     const stepIndex = stepParam ? parseInt(stepParam) : 1;
 
     // Validation: Step must be a number between 1 and 10 (now 10 steps total)
-    if (isNaN(stepIndex) || stepIndex < 1 || stepIndex > 10) {
+    if (isNaN(stepIndex) || stepIndex < 1 || stepIndex > 9) {
         redirect("/wizard/1");
     }
     // Sync URL with store on mount/change
@@ -87,8 +87,7 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
         { id: 6, label: "Autarkie" },
         { id: 7, label: "Solar" },
         { id: 8, label: "Kabel" },
-        { id: 9, label: "Budget" },
-        { id: 10, label: "Schaltplan" }
+        { id: 9, label: "Budget" }
     ];
 
     const completedSteps = steps.filter(s => s.id < stepIndex).map(s => s.id);
@@ -107,7 +106,7 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
             nextStep = 8;
         }
 
-        if (nextStep <= 10) {
+        if (nextStep <= 9) {
             router.push(`/wizard/${nextStep}`);
         }
     };
@@ -179,7 +178,7 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
         }
     };
 
-    const isLastStep = stepIndex === 10;
+    const isLastStep = stepIndex === 9;
 
     return (
         <div className="container max-w-2xl mx-auto py-8 space-y-8 min-h-screen flex flex-col">
@@ -200,7 +199,6 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
                 {stepIndex === 7 && <Step6Solar />}
                 {stepIndex === 8 && <Step7Cabling />}
                 {stepIndex === 9 && <Step8Comfort />}
-                {stepIndex === 10 && <Step9Schematic />}
             </div>
 
             {/* Footer Navigation */}

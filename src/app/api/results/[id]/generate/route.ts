@@ -123,13 +123,12 @@ export async function POST(
         // I will do that in the next step.
         // For now, let's write the route logic assuming `generateProductSelection` returns the full JSON object or we change how we call it.
 
-        const aiResponseRaw = await generateProductSelection(
+        const { data: aiResponseRaw, usage, model } = await generateProductSelection(
             { ...calculationInput, formattedPrompt, productContext },
             settings.userPromptTemplate
         );
 
-        // We need to cast or parse. 
-        // If I update generateProductSelection to return `any`, then:
+        // We need to cast or parse.
         const aiResponse = aiResponseRaw as any;
 
         const selectedProductsEnriched: any[] = [];
@@ -245,6 +244,9 @@ export async function POST(
                 recommendations: JSON.parse(JSON.stringify(recommendations)),
                 schematicData: {},
                 version: result.version + 1,
+                aiModel: model,
+                inputTokens: usage?.inputTokens || 0,
+                outputTokens: usage?.outputTokens || 0,
             },
         });
 
@@ -256,7 +258,9 @@ export async function POST(
             result: updatedResult,
             debugInfo: {
                 provider: settings.provider,
-                model: settings.model,
+                model: model,
+                inputTokens: usage?.inputTokens,
+                outputTokens: usage?.outputTokens,
                 hasGeminiKey: !!settings.geminiApiKey,
                 hasOpenAIKey: !!settings.openaiApiKey,
                 amazonTag: amazonPartnerTag,

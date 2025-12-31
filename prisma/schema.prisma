@@ -30,6 +30,11 @@ model Result {
   schematicData   Json?
   pdfUrl          String?
   
+  // KI-Metriken
+  aiModel         String?  // z.B. "gpt-4o", "gemini-1.5-pro"
+  inputTokens     Int?
+  outputTokens    Int?
+  
   // Credits
   creditsUsed     Int      @default(0)
   
@@ -215,4 +220,18 @@ model SystemSetting {
   value     String
   
   updatedAt DateTime @updatedAt
+}
+
+// ==========================================
+// Model Pricing (KI-Modell Preise)
+// ==========================================
+model ModelPricing {
+  id            String   @id @default(uuid())
+  modelId       String   @unique  // z.B. "gpt-5.1", "gemini-2.0-flash"
+  displayName   String?
+  provider      String            // "openai" | "google"
+  inputPrice    Float    @default(0)  // USD pro 1M Tokens
+  outputPrice   Float    @default(0)  // USD pro 1M Tokens
+  
+  updatedAt     DateTime @updatedAt
 }

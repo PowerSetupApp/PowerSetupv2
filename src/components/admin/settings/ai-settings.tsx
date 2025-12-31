@@ -33,6 +33,7 @@ export function AISettings() {
     const [selectedImageModel, setSelectedImageModel] = useState("");
     const [userPrompt, setUserPrompt] = useState("");
     const [imagePrompt, setImagePrompt] = useState("");
+    const [specsPrompt, setSpecsPrompt] = useState("");
 
     // Available Models
     const [models, setModels] = useState<AIModel[]>([]);
@@ -49,6 +50,7 @@ export function AISettings() {
             setSelectedImageModel(settings.imageModel);
             setUserPrompt(settings.userPromptTemplate);
             setImagePrompt(settings.imagePromptTemplate);
+            setSpecsPrompt(settings.specsOptimizationPrompt);
 
             // Fetch initial models based on loaded settings
             await fetchModels(settings.provider, settings.geminiApiKey, settings.openaiApiKey);
@@ -94,7 +96,7 @@ export function AISettings() {
     const handleSave = async () => {
         setSaving(true);
         try {
-            await updateAISettings(provider, selectedModel, selectedImageModel, geminiKey, openaiKey, userPrompt, imagePrompt);
+            await updateAISettings(provider, selectedModel, selectedImageModel, geminiKey, openaiKey, userPrompt, imagePrompt, specsPrompt);
         } catch (error) {
             console.error("Failed to save settings:", error);
         } finally {
@@ -294,6 +296,34 @@ export function AISettings() {
                         <Textarea
                             value={imagePrompt}
                             onChange={(e) => setImagePrompt(e.target.value)}
+                            rows={6}
+                            className="font-mono text-sm"
+                        />
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* 5. Specs Optimization Prompt */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Prompt Template (Produkt-Specs Optimierung)</CardTitle>
+                    <CardDescription>Dieser Prompt wird verwendet, um Produkt-Spezifikationen zu komprimieren. Nutze {"{{INPUT}}"} als Platzhalter.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="space-y-2">
+                        <Label>KI-Prompt</Label>
+                        <div className="flex flex-wrap gap-2 mb-2">
+                            <button
+                                onClick={() => setSpecsPrompt((prev) => prev + "{{INPUT}}")}
+                                className="text-xs bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded border font-mono"
+                                type="button"
+                            >
+                                {"{{INPUT}}"}
+                            </button>
+                        </div>
+                        <Textarea
+                            value={specsPrompt}
+                            onChange={(e) => setSpecsPrompt(e.target.value)}
                             rows={6}
                             className="font-mono text-sm"
                         />

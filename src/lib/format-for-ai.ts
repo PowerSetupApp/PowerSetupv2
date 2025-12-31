@@ -34,8 +34,11 @@ interface SolarBag {
 
 interface CableLengths {
     starterToService: number;
+    boosterToService?: number;
     serviceToInverter: number;
     solarToRegulator: number;
+    serviceToRegulator?: number;
+    chargerToService?: number;
     boiler?: number;
     waterPump?: number;
     batteryToFuseBox?: number;
@@ -44,6 +47,7 @@ interface CableLengths {
 
 interface FormData {
     vehicleType: string | null;
+    vehicleVoltage: string; // New field
     systemVoltage: string;
     energySources: string[];
     consumers: Consumer[];
@@ -179,7 +183,8 @@ export function formatFormDataForAI(data: FormData): string {
     // --- Section 1: Vehicle & Basic Setup ---
     sections.push('## FAHRZEUG & GRUNDEINSTELLUNG');
     sections.push(`Fahrzeugtyp: ${VEHICLE_TYPES[data.vehicleType || ''] || 'Nicht angegeben'}`);
-    sections.push(`Systemspannung: ${data.systemVoltage}`);
+    sections.push(`Fahrzeugspannung (Starterbatterie): ${data.vehicleVoltage || '12V'}`);
+    sections.push(`Systemspannung (Aufbau): ${data.systemVoltage}`);
     sections.push(`Batterietyp-Präferenz: ${BATTERY_TYPES[data.batteryPreference] || 'Keine Angabe'}`);
     if (data.batterySpaceSize) {
         sections.push(`Batterie-Einbauraum: ${BATTERY_SPACE_SIZES[data.batterySpaceSize] || data.batterySpaceSize}`);
@@ -281,28 +286,30 @@ export function formatFormDataForAI(data: FormData): string {
 
     // --- Section 7: Cable Lengths ---
     sections.push('\n## KABELLÄNGEN');
-    sections.push(`Starterbatterie → Aufbaubatterie: ${data.cableLengths.starterToService} Meter`);
+
+    if (data.energySources.includes('alternator')) {
+        sections.push(`Starterbatterie → Ladebooster: ${data.cableLengths.starterToService} Meter`);
+        sections.push(`Ladebooster → Versorgerbatterie: ${data.cableLengths.boosterToService || 1} Meter`);
+    } else if (data.cableLengths.starterToService > 0) {
+        sections.push(`Starterbatterie → Versorgerbatterie: ${data.cableLengths.starterToService} Meter`);
+    }
 
     const consumersRequire230V = data.consumers.some(c => c.voltage === '230V');
     if (consumersRequire230V) {
-        sections.push(`Aufbaubatterie → Wechselrichter: ${data.cableLengths.serviceToInverter} Meter`);
-    } else {
-        // Explicitly note that no inverter cabling is needed to avoid confusion
-        // sections.push(`(Kein Wechselrichter benötigt -> Keine Verkabelung angegeben)`);
+        sections.push(`Versorgerbatterie → Wechselrichter: ${data.cableLengths.serviceToInverter} Meter`);
     }
 
     if (data.energySources.includes('solar')) {
         sections.push(`Solarmodule → Laderegler: ${data.cableLengths.solarToRegulator} Meter`);
     }
 
-    if (data.cableLengths.boiler) {
-        sections.push(`Boiler-Anschluss: ${data.cableLengths.boiler} Meter`);
-    }
-    if (data.cableLengths.waterPump) {
-        sections.push(`Wasserpumpe: ${data.cableLengths.waterPump} Meter`);
-    }
+
     if (data.cableLengths.batteryToFuseBox) {
-        sections.push(`Batterie → Sicherungskasten: ${data.cableLengths.batteryToFuseBox} Meter`);
+        sections.push(`Versorgerbatterie ↔ Sicherungskasten: ${data.cableLengths.batteryToFuseBox} Meter`);
+    }
+
+    if (data.cableLengths.serviceToRegulator) {
+        sections.push(`Solar-Laderegler ↔ Versorgerbatterie: ${data.cableLengths.serviceToRegulator} Meter`);
     }
 
     // Custom cable lengths
@@ -347,6 +354,15 @@ export function formatFormDataForAI(data: FormData): string {
 
     if (hasAlternator) mustHave.push('Ladebooster (category: ladebooster)');
     if (hasShorePower) mustHave.push('Ladegerät (category: charger)');
+
+    // Always require cables if lengths are present (which they usually are in this step)
+    // We check if any cable length is > 0
+    const hasCables = Object.values(data.cableLengths).some(val =>
+        (typeof val === 'number' && val > 0) || (typeof val === 'object' && Object.values(val as Record<string, number>).some((v: number) => v > 0))
+    );
+    if (hasCables) {
+        mustHave.push('Kabel & Montagematerial (category: cable)');
+    }
 
     sections.push('**MUSS-Komponenten (Erforderlich):**');
     mustHave.forEach(item => sections.push(`- [MUSS] ${item}`));
@@ -413,7 +429,15 @@ export function formatFormDataForAI(data: FormData): string {
     const needsInverter = data.consumers.some(c => c.voltage === '230V');
     if (!needsInverter) {
         sections.push('- **WECHSELRICHTER-SPERRE:** Es sind KEINE 230V-Verbraucher gelistet -> Empfehle KEINEN Wechselrichter! (Auch nicht als "Nice-to-Have").');
+    } else {
+        sections.push('- **KABEL-DIMENSIONIERUNG WECHSELRICHTER (CRITICAL):**');
+        sections.push('  - Berechne das Kabel von der Batterie zum Wechselrichter **EXAKT** basierend auf der **DAUERLEISTUNG DES GEWÄHLTEN INVERTERS**!');
+        sections.push('  - Beispiel: Gewählter Inverter hat 500W -> Kabel für 500W berechnen.');
+        sections.push('  - Beispiel: Gewählter Inverter hat 3000W -> Kabel für 3000W berechnen.');
+        sections.push('  - Ignoriere den aktuellen Verbraucher-Wert, falls dieser niedriger ist.');
+        sections.push('  - **WICHTIG:** Überdimensioniere NICHT für "einen späteren stärkeren Wechselrichter". Berechne nur für das HIER gewählte Gerät!');
     }
+
 
     if (!data.energySources.includes('solar')) {
         sections.push('- **SOLAR-SPERRE:** Kein Solar als Energiequelle gewählt -> Empfehle KEINE Laderegler und KEINE Module!');
@@ -453,14 +477,23 @@ export function formatFormDataForAI(data: FormData): string {
         sections.push('- **Ziel:** Solide, zuverlässige Technik zu einem fairen Preis.');
     }
 
-    // 3. Ladebooster Special Case (12V Alternator -> 24V System)
-    if (data.systemVoltage === '24V' && data.energySources.includes('alternator')) {
-        sections.push('\n**3. SONDERFALL LADEBOOSTER (WICHTIG):**');
-        sections.push('- Ausgangssituation: Lichtmaschine ist 12V, Bordbatterie ist 24V.');
-        sections.push('- **DU MUSST EINEN "12V AUF 24V" LADEBOOSTER WÄHLEN!**');
-        sections.push('- Ein Standard "12V/12V" Booster ist UNGEEIGNET und DARF NICHT empfohlen werden.');
-        sections.push('- Achte auf "Input: 12V" und "Output: 24V" in den Specs.');
+    // 3. Ladebooster Special Case (Voltage conversion)
+    if (data.energySources.includes('alternator')) {
+        const vVehicle = data.vehicleVoltage || '12V';
+        const vSystem = data.systemVoltage;
+
+        sections.push('\n**3. SONDERFALL LADEBOOSTER (WICHTIG - SPANNUNGSMATCHING):**');
+        sections.push(`- Ausgangssituation: Fahrzeug/Lichtmaschine hat **${vVehicle}**, Aufbaubatterie hat **${vSystem}**.`);
+
+        if (vVehicle !== vSystem) {
+            sections.push(`- **ACHTUNG WANDLUNG NÖTIG:** Du MUSST einen Ladebooster wählen, der von **${vVehicle}** (Input) auf **${vSystem}** (Output) lädt.`);
+            sections.push(`- Ein Standard "12V auf 12V" Booster ist hier **FALSCH**!`);
+            sections.push(`- Suche nach Produkten mit Titel wie "${vVehicle} auf ${vSystem}" oder checke die Specs.`);
+        } else {
+            sections.push(`- Spannung ist gleich (${vVehicle}). Wähle einen Standard ${vVehicle}-Ladebooster.`);
+        }
     }
+
 
     if (data.systemVoltage === '24V' && data.consumers.some(c => c.voltage === '12V' || c.category === 'usb')) {
         sections.push('4. **DC-DC Wandler:** Da 12V/USB Verbraucher vorhanden sind, aber das System 24V hat, beachte dies bei der Konzept-Erstellung (ggf. Hinweis auf Wandler).');

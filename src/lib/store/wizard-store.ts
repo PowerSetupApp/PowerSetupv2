@@ -5,7 +5,7 @@ import { persist } from 'zustand/middleware';
 
 export type VehicleType = 'campervan' | 'motorhome' | 'caravan' | 'boat' | 'offroad';
 export type Voltage = '12V' | '24V' | '48V';
-export type EnergySource = 'solar' | 'alternator' | 'shore_power' | 'generator';
+export type EnergySource = 'solar' | 'alternator' | 'shore_power';
 export type AutarchyLevel = 'weekend' | 'holiday' | 'full';
 export type ComfortLevel = 'budget' | 'standard' | 'premium';
 export type SchematicType = 'simplified' | 'technical';
@@ -66,9 +66,14 @@ export interface SolarBag {
 }
 
 export interface CableLengths {
-    starterToService: number; // For B2B Charger
+    starterToService: number; // For B2B Charger (Starter -> Booster)
+    boosterToService?: number; // Booster -> Service Battery
     serviceToInverter: number; // For Inverter (critical)
     solarToRegulator: number; // From roof to regulator
+    serviceToRegulator?: number; // Regulator -> Service Battery
+    chargerToService?: number;   // Shore Power Charger -> Service Battery
+
+    // New Standard Consumers
 
     // New Standard Consumers
     boiler?: number;
@@ -82,6 +87,7 @@ export interface CableLengths {
 export interface WizardState {
     // Step 1: Vehicle
     vehicleType: VehicleType | null;
+    vehicleVoltage: Voltage; // New: Vehicle Board Voltage
 
     // Step 2: System Voltage
     systemVoltage: Voltage;
@@ -127,6 +133,7 @@ export interface WizardState {
     // Actions
     setTravelBehavior: (behavior: Partial<TravelBehavior>) => void;
     setVehicleType: (type: VehicleType) => void;
+    setVehicleVoltage: (voltage: Voltage) => void;
     setSystemVoltage: (voltage: Voltage) => void;
     toggleEnergySource: (source: EnergySource) => void;
     setEnergySources: (sources: EnergySource[]) => void;
@@ -175,6 +182,7 @@ export const useWizardStore = create<WizardState>()(
         (set) => ({
             // Defaults
             vehicleType: null,
+            vehicleVoltage: '12V', // Default to 12V
             systemVoltage: '12V',
             energySources: [],
             consumers: [],
@@ -191,8 +199,10 @@ export const useWizardStore = create<WizardState>()(
 
             cableLengths: {
                 starterToService: 3,
+                boosterToService: 1,
                 serviceToInverter: 0.5,
                 solarToRegulator: 5,
+                chargerToService: 1.5,
                 boiler: 3,
                 waterPump: 3,
                 batteryToFuseBox: 1,
@@ -221,6 +231,7 @@ export const useWizardStore = create<WizardState>()(
             // Actions
             reset: () => set({
                 vehicleType: null,
+                vehicleVoltage: '12V',
                 systemVoltage: '12V',
                 energySources: [],
                 consumers: [],
@@ -234,8 +245,10 @@ export const useWizardStore = create<WizardState>()(
                 solarBags: [],
                 cableLengths: {
                     starterToService: 3,
+                    boosterToService: 1,
                     serviceToInverter: 0.5,
                     solarToRegulator: 5,
+                    chargerToService: 1.5,
                     boiler: 3,
                     waterPump: 3,
                     batteryToFuseBox: 1,
@@ -257,6 +270,7 @@ export const useWizardStore = create<WizardState>()(
             }),
 
             setVehicleType: (type) => set({ vehicleType: type }),
+            setVehicleVoltage: (voltage) => set({ vehicleVoltage: voltage }),
             setSystemVoltage: (voltage) => set({ systemVoltage: voltage }),
             setEnergySources: (sources) => set({ energySources: sources }),
             toggleEnergySource: (source) =>
