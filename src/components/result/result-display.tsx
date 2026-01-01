@@ -15,7 +15,7 @@ interface Product {
     name: string;
     description: string | null;
     imageUrl: string | null;
-    affiliateUrl: string;
+    affiliateUrl: string | null;
     price: number | null;
     category: {
         name: string;
