@@ -13,6 +13,16 @@ const ProductSchema = z.object({
     categoryId: z.string().uuid("Ungültige Kategorie-ID"),
     specs: z.string().optional(),
     isActive: z.boolean().optional(),
+    // Filter fields
+    powerW: z.number().nullable().optional(),
+    capacityAh: z.number().nullable().optional(),
+    voltageV: z.number().nullable().optional(),
+    batteryType: z.string().nullable().optional(),
+    currentA: z.number().nullable().optional(),
+    crossSectionMm2: z.number().nullable().optional(),
+    solarWp: z.number().nullable().optional(),
+    supportedVoltages: z.array(z.number()).nullable().optional(),
+    maxDischargeA: z.number().nullable().optional(),
 });
 
 // GET /api/admin/products - List all products
@@ -80,6 +90,16 @@ export async function POST(request: NextRequest) {
                 price: parseResult.data.price,
                 categoryId: parseResult.data.categoryId,
                 specs: parseResult.data.specs || "",
+                // Filter fields
+                powerW: parseResult.data.powerW ?? null,
+                capacityAh: parseResult.data.capacityAh ?? null,
+                voltageV: parseResult.data.voltageV ?? null,
+                batteryType: parseResult.data.batteryType ?? null,
+                currentA: parseResult.data.currentA ?? null,
+                crossSectionMm2: parseResult.data.crossSectionMm2 ?? null,
+                solarWp: parseResult.data.solarWp ?? null,
+                supportedVoltages: parseResult.data.supportedVoltages ?? null,
+                maxDischargeA: parseResult.data.maxDischargeA ?? null,
             },
             include: {
                 category: true,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { FormDataSchema } from "@/lib/schemas/result";
+import { calculateSystemRequirements, type WizardInput } from "@/lib/requirements-engine";
 
 // POST /api/results - Neues Result erstellen
 export async function POST(request: NextRequest) {
@@ -27,6 +28,17 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Calculate system requirements algorithmically
+        let calculations = null;
+        try {
+            const wizardInput = parseResult.data as unknown as WizardInput;
+            calculations = await calculateSystemRequirements(wizardInput);
+            console.log("Calculated requirements:", JSON.stringify(calculations, null, 2));
+        } catch (calcError) {
+            console.error("Requirements calculation failed:", calcError);
+            // Continue without calculations - AI will fall back to its own logic
+        }
+
         // expiresAt = createdAt + 90 Tage
         const now = new Date();
         const expiresAt = new Date(now);
@@ -36,6 +48,8 @@ export async function POST(request: NextRequest) {
         const result = await prisma.result.create({
             data: {
                 formData: parseResult.data,
+                // Serialize to plain JSON object for Prisma
+                ...(calculations && { calculations: JSON.parse(JSON.stringify(calculations)) }),
                 expiresAt,
             },
         });

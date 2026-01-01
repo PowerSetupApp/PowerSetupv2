@@ -216,6 +216,7 @@ export interface AIInput {
     formattedPrompt?: string;
     productContext?: string;
     selectedProductsContext?: string;
+    requirementsContext?: string; // NEW: Pre-calculated algorithm requirements
 }
 
 export interface AISelectedProduct {
@@ -301,6 +302,14 @@ export function buildPrompt(template: string, input: AIInput): string {
 
     if (input.selectedProductsContext) {
         prompt = prompt.replace(/\{\{SELECTED_PRODUCTS\}\}/g, input.selectedProductsContext);
+    }
+
+    // NEW: Inject pre-calculated algorithm requirements
+    if (input.requirementsContext) {
+        prompt = prompt.replace(/\{\{REQUIREMENTS\}\}/g, input.requirementsContext);
+    } else {
+        // Remove placeholder if no requirements available
+        prompt = prompt.replace(/\{\{REQUIREMENTS\}\}/g, '');
     }
 
     // Legacy Placeholders (Backward Compatibility)

@@ -19,6 +19,9 @@ import { ProgressSteps } from "@/components/ui/progress-steps";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
+import { AlgorithmResultModal } from "@/components/wizard/algorithm-result-modal";
+import { testAlgorithmCalculations } from "@/app/actions/test-algorithm";
+import { type SystemRequirements } from "@/lib/requirements-engine";
 
 function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
     const t = useTranslations("Wizard");
@@ -26,11 +29,19 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
     const searchParams = useSearchParams();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Algorithm test modal state
+    const [showAlgorithmModal, setShowAlgorithmModal] = useState(false);
+    const [algorithmResult, setAlgorithmResult] = useState<SystemRequirements | null>(null);
+    const [algorithmError, setAlgorithmError] = useState<string | null>(null);
+    const [algorithmLoading, setAlgorithmLoading] = useState(false);
+    const [pendingFormData, setPendingFormData] = useState<any>(null);
+
     const {
         currentStep,
         setStep,
         energySources,
         vehicleType,
+        vehicleVoltage,
         systemVoltage,
         consumers,
         autarchyGoal,
@@ -115,11 +126,15 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
         if (isSubmitting) return;
 
         setIsSubmitting(true);
+        setAlgorithmLoading(true);
+        setAlgorithmError(null);
+        setAlgorithmResult(null);
 
         try {
             // Collect all form data
             const formData = {
                 vehicleType,
+                vehicleVoltage,
                 systemVoltage,
                 energySources,
                 consumers,
@@ -135,15 +150,51 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
                 schematicPreference,
                 batteryPreference,
                 travelBehavior,
+                // Defaults for fields not yet in wizard store
+                alternatorSize: 'unknown',
+                simultaneousLoad: 'moderate',
+                batterySpaceSize: 'medium',
+                roofAreas: solarDimensions ? [{ id: 'main', name: 'Hauptfläche', length: solarDimensions.length, width: solarDimensions.width }] : [],
             };
 
+            // Store form data for later submission
+            setPendingFormData(formData);
+
+            // Test algorithm first
+            const result = await testAlgorithmCalculations(formData);
+
+            if (result.success && result.data) {
+                setAlgorithmResult(result.data);
+                setShowAlgorithmModal(true);
+            } else {
+                setAlgorithmError(result.error || "Unbekannter Fehler");
+                setShowAlgorithmModal(true);
+            }
+        } catch (error) {
+            console.error("Error calculating:", error);
+            setAlgorithmError(error instanceof Error ? error.message : String(error));
+            setShowAlgorithmModal(true);
+        } finally {
+            setAlgorithmLoading(false);
+            setIsSubmitting(false);
+        }
+    };
+
+    // Handle continuing to actual submission after viewing algorithm results
+    const handleContinueToSubmit = async () => {
+        if (!pendingFormData) return;
+
+        setShowAlgorithmModal(false);
+        setIsSubmitting(true);
+
+        try {
             // POST to API
             const response = await fetch("/api/results", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ formData }),
+                body: JSON.stringify({ formData: pendingFormData }),
             });
 
             if (!response.ok) {
@@ -157,7 +208,6 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
             router.push(`/result/${result.id}`);
         } catch (error) {
             console.error("Error submitting wizard:", error);
-            // Show error to user
             if (error instanceof Error) {
                 alert(`Fehler: ${error.message}\n\nBitte überprüfe deine Eingaben.`);
             }
@@ -232,6 +282,16 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
                     </Button>
                 </div>
             </div>
+
+            {/* Algorithm Test Modal */}
+            <AlgorithmResultModal
+                open={showAlgorithmModal}
+                onClose={() => setShowAlgorithmModal(false)}
+                onContinue={handleContinueToSubmit}
+                data={algorithmResult}
+                isLoading={algorithmLoading}
+                error={algorithmError}
+            />
         </div>
     );
 }

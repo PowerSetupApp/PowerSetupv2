@@ -144,7 +144,7 @@ export function Step4Consumers() {
     React.useEffect(() => {
         consumers.forEach(c => {
             // Skip 230V devices (they are independent of system voltage)
-            if (c.voltage === '230V') return;
+            if (c.voltage === 230) return;
 
             // If voltage doesn't match system voltage, migrate it
             if (c.voltage !== systemVoltage) {
@@ -156,13 +156,13 @@ export function Step4Consumers() {
     // Calculate total 230V power consumption
     const total230VPower = React.useMemo(() => {
         return consumers
-            .filter(c => c.voltage === '230V')
+            .filter(c => c.voltage === 230)
             .reduce((sum, c) => sum + c.power, 0);
     }, [consumers]);
 
     // Show high power warning modal when 230V > 2000W and system is 12V
     React.useEffect(() => {
-        const shouldWarn = total230VPower > 2000 && systemVoltage === '12V' && !warningDismissed;
+        const shouldWarn = total230VPower > 2000 && systemVoltage === 12 && !warningDismissed;
         if (shouldWarn) {
             setShowHighPowerWarning(true);
         }
@@ -207,8 +207,8 @@ export function Step4Consumers() {
 
     // Voltage options: system voltage + 230V
     const voltageOptions = [
-        { value: systemVoltage, label: systemVoltage },
-        { value: "230V" as const, label: "230V" },
+        { value: systemVoltage, label: `${systemVoltage}V` },
+        { value: 230 as const, label: "230V" },
     ];
 
     // Cooling method options
@@ -228,7 +228,7 @@ export function Step4Consumers() {
             name: getDisplayName(device),
             power: device.defaultPower,
             // If device default is 230V, keep it. Otherwise (12V/24V/etc), adapt to system voltage.
-            voltage: device.defaultVoltage === '230V' ? '230V' : systemVoltage,
+            voltage: device.defaultVoltage === '230V' ? 230 : systemVoltage,
             usageHoursPerDay: device.defaultHoursPerDay,
             usage: "medium",
             isFixed: device.showFixedOption ? false : false, // Default false, user can enable
@@ -275,7 +275,7 @@ export function Step4Consumers() {
                 category: "custom",
                 name: device.name,
                 power: device.defaultPower,
-                voltage: device.defaultVoltage === '230V' ? '230V' : systemVoltage,
+                voltage: device.defaultVoltage === '230V' ? 230 : systemVoltage,
                 usageHoursPerDay: device.defaultHours,
                 usage: "medium",
                 isFixed: false,
@@ -611,7 +611,7 @@ export function Step4Consumers() {
                                             onChange={setCustomPower}
                                             min={1}
                                             max={5000}
-                                            step={customVoltage === '230V' ? 50 : 10}
+                                            step={customVoltage === 230 ? 50 : 10}
                                             suffix="W"
                                         />
                                     </div>
@@ -699,7 +699,7 @@ export function Step4Consumers() {
                                                         onChange={(v) => updateConsumer(c.id, { power: v })}
                                                         min={1}
                                                         max={5000}
-                                                        step={c.voltage === '230V' ? 50 : 10}
+                                                        step={c.voltage === 230 ? 50 : 10}
                                                         suffix="W"
                                                     />
                                                 </div>

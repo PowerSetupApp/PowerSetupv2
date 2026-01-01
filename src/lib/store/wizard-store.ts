@@ -4,12 +4,12 @@ import { persist } from 'zustand/middleware';
 // --- Types based on PRD ---
 
 export type VehicleType = 'campervan' | 'motorhome' | 'caravan' | 'boat' | 'offroad';
-export type Voltage = '12V' | '24V' | '48V';
+export type Voltage = 12 | 24 | 48;
 export type EnergySource = 'solar' | 'alternator' | 'shore_power';
 export type AutarchyLevel = 'weekend' | 'holiday' | 'full';
 export type ComfortLevel = 'budget' | 'standard' | 'premium';
 export type SchematicType = 'simplified' | 'technical';
-export type BatteryType = 'agm' | 'lifepo4' | 'gel' | 'lead_acid' | 'any';
+export type BatteryType = 'agm' | 'lifepo4' | 'gel' | 'any';
 
 // Additional Questions for AI Accuracy
 export type SimultaneousLoad = 'low' | 'moderate' | 'high';
@@ -35,7 +35,7 @@ export interface Consumer {
     category: string;
     name: string;
     power: number; // Watts
-    voltage: '12V' | '24V' | '48V' | '230V'; // Operating voltage
+    voltage: 12 | 24 | 48 | 230; // Operating voltage
     usageHoursPerDay: number; // Average hours per day
     usage: 'low' | 'medium' | 'high' | 'constant'; // Preset for predefined devices
     isFixed?: boolean; // If true, requires cable planning in Step 7
@@ -182,8 +182,8 @@ export const useWizardStore = create<WizardState>()(
         (set) => ({
             // Defaults
             vehicleType: null,
-            vehicleVoltage: '12V', // Default to 12V
-            systemVoltage: '12V',
+            vehicleVoltage: 12, // Default to 12V
+            systemVoltage: 12,
             energySources: [],
             consumers: [],
             autarchyGoal: 'weekend',
@@ -202,6 +202,7 @@ export const useWizardStore = create<WizardState>()(
                 boosterToService: 1,
                 serviceToInverter: 0.5,
                 solarToRegulator: 5,
+                serviceToRegulator: 1.5, // NEW: Regulator -> Service Battery
                 chargerToService: 1.5,
                 boiler: 3,
                 waterPump: 3,
@@ -231,8 +232,8 @@ export const useWizardStore = create<WizardState>()(
             // Actions
             reset: () => set({
                 vehicleType: null,
-                vehicleVoltage: '12V',
-                systemVoltage: '12V',
+                vehicleVoltage: 12,
+                systemVoltage: 12,
                 energySources: [],
                 consumers: [],
                 autarchyGoal: 'weekend',
@@ -248,6 +249,7 @@ export const useWizardStore = create<WizardState>()(
                     boosterToService: 1,
                     serviceToInverter: 0.5,
                     solarToRegulator: 5,
+                    serviceToRegulator: 1.5, // NEW
                     chargerToService: 1.5,
                     boiler: 3,
                     waterPump: 3,

@@ -12,6 +12,16 @@ const UpdateProductSchema = z.object({
     categoryId: z.string().uuid().optional(),
     specs: z.string().optional(),
     isActive: z.boolean().optional(),
+    // Filter fields
+    powerW: z.number().nullable().optional(),
+    capacityAh: z.number().nullable().optional(),
+    voltageV: z.number().nullable().optional(),
+    batteryType: z.string().nullable().optional(),
+    currentA: z.number().nullable().optional(),
+    crossSectionMm2: z.number().nullable().optional(),
+    solarWp: z.number().nullable().optional(),
+    supportedVoltages: z.array(z.number()).nullable().optional(),
+    maxDischargeA: z.number().nullable().optional(),
 });
 
 // GET /api/admin/products/[id] - Get single product
@@ -60,18 +70,26 @@ export async function PATCH(
                 { status: 400 }
             );
         }
+        // Transform categoryId to Prisma relation syntax
+        const { categoryId, ...restData } = parseResult.data;
+        const updateData: any = { ...restData };
+        if (categoryId) {
+            updateData.category = { connect: { id: categoryId } };
+        }
 
         const product = await prisma.product.update({
             where: { id },
-            data: parseResult.data,
+            data: updateData,
             include: { category: true },
         });
 
         return NextResponse.json(product);
     } catch (error) {
         console.error("Error updating product:", error);
+        // Return actual error for debugging
+        const errorMessage = error instanceof Error ? error.message : String(error);
         return NextResponse.json(
-            { error: "Interner Serverfehler" },
+            { error: "Interner Serverfehler", details: errorMessage },
             { status: 500 }
         );
     }

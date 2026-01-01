@@ -8,7 +8,7 @@ interface Consumer {
     category: string;
     name: string;
     power: number;
-    voltage: string;
+    voltage: 12 | 24 | 48 | 230;
     usageHoursPerDay: number;
     usage: string;
     isFixed?: boolean;
@@ -47,8 +47,8 @@ interface CableLengths {
 
 interface FormData {
     vehicleType: string | null;
-    vehicleVoltage: string; // New field
-    systemVoltage: string;
+    vehicleVoltage: 12 | 24; // New field
+    systemVoltage: 12 | 24 | 48;
     energySources: string[];
     consumers: Consumer[];
     autarchyGoal: string;
@@ -101,7 +101,6 @@ const BATTERY_TYPES: Record<string, string> = {
     agm: 'AGM-Batterie',
     lifepo4: 'LiFePO4 (Lithium)',
     gel: 'Gel-Batterie',
-    lead_acid: 'Blei-Säure',
     any: 'Keine Präferenz (KI entscheidet)',
 };
 
@@ -294,7 +293,7 @@ export function formatFormDataForAI(data: FormData): string {
         sections.push(`Starterbatterie → Versorgerbatterie: ${data.cableLengths.starterToService} Meter`);
     }
 
-    const consumersRequire230V = data.consumers.some(c => c.voltage === '230V');
+    const consumersRequire230V = data.consumers.some(c => c.voltage === 230);
     if (consumersRequire230V) {
         sections.push(`Versorgerbatterie → Wechselrichter: ${data.cableLengths.serviceToInverter} Meter`);
     }
@@ -324,7 +323,7 @@ export function formatFormDataForAI(data: FormData): string {
     // Analyzes the setup to guide the AI on what is strictly necessary vs. optional upgrades
     sections.push('\n## SYSTEM-ANFORDERUNGEN & UPGRADE-OPTIONEN');
 
-    const has230V = data.consumers.some(c => c.voltage === '230V');
+    const has230V = data.consumers.some(c => c.voltage === 230);
     const hasSolar = data.energySources.includes('solar');
     const hasAlternator = data.energySources.includes('alternator');
     const hasShorePower = data.energySources.includes('shore_power');
@@ -426,7 +425,7 @@ export function formatFormDataForAI(data: FormData): string {
     sections.push('  - Das Feld `isRecommended` entscheidet über die Anzeige. Setze es mit Sorgfalt!');
 
     // Specific Triggers
-    const needsInverter = data.consumers.some(c => c.voltage === '230V');
+    const needsInverter = data.consumers.some(c => c.voltage === 230);
     if (!needsInverter) {
         sections.push('- **WECHSELRICHTER-SPERRE:** Es sind KEINE 230V-Verbraucher gelistet -> Empfehle KEINEN Wechselrichter! (Auch nicht als "Nice-to-Have").');
     } else {
@@ -495,7 +494,7 @@ export function formatFormDataForAI(data: FormData): string {
     }
 
 
-    if (data.systemVoltage === '24V' && data.consumers.some(c => c.voltage === '12V' || c.category === 'usb')) {
+    if (data.systemVoltage === 24 && data.consumers.some(c => c.voltage === 12 || c.category === 'usb')) {
         sections.push('4. **DC-DC Wandler:** Da 12V/USB Verbraucher vorhanden sind, aber das System 24V hat, beachte dies bei der Konzept-Erstellung (ggf. Hinweis auf Wandler).');
     }
 
@@ -577,3 +576,139 @@ ${specsFormatted}
 ---`;
     }).join('\n\n');
 }
+
+/**
+ * Formats pre-calculated system requirements for AI prompt.
+ * CRITICAL: This tells the AI NOT to recalculate but to use these values for product matching.
+ */
+export interface SystemRequirementsForAI {
+    dailyWh: number;
+    battery: {
+        minCapacityAh: number;
+        maxCapacityAh: number;
+        type: string;
+        voltage: number;
+    };
+    inverter?: {
+        recommendedW: number;
+        needed: boolean;
+    } | null;
+    booster?: {
+        currentA: number;
+        inputVoltage: number;
+        outputVoltage: number;
+        needsConversion: boolean;
+    } | null;
+    charger?: {
+        recommendedCurrentA: number;
+    } | null;
+    solarController?: {
+        recommendedCurrentA: number;
+        type: 'MPPT' | 'PWM';
+        needsSeparatePortableController: boolean;
+    } | null;
+    solarModules?: {
+        requiredWp: number;
+        recommendation: string;
+    } | null;
+    cables?: {
+        route: string;
+        displayName: string;
+        recommendedCrossSection: number;
+        currentA: number;
+    }[];
+}
+
+export function formatSystemRequirementsForAI(requirements: SystemRequirementsForAI | null): string {
+    if (!requirements) {
+        return ''; // No pre-calculated requirements available
+    }
+
+    const sections: string[] = [];
+
+    sections.push('## ⚠️ VORBERECHNETE SYSTEM-ANFORDERUNGEN (VERBINDLICH!)');
+    sections.push('');
+    sections.push('> **WICHTIG:** Die folgenden Werte wurden ALGORITHMISCH berechnet und sind VERBINDLICH.');
+    sections.push('> **DU MUSST DIESE WERTE FÜR DIE PRODUKTAUSWAHL VERWENDEN!**');
+    sections.push('> Führe KEINE eigenen Berechnungen durch, wähle nur passende Produkte aus.');
+    sections.push('');
+
+    // Daily consumption
+    sections.push(`### Täglicher Verbrauch: **${requirements.dailyWh} Wh/Tag**`);
+    sections.push('');
+
+    // Battery
+    sections.push('### Batterie');
+    sections.push(`- **Minimale Kapazität:** ${requirements.battery.minCapacityAh} Ah`);
+    sections.push(`- **Maximale Kapazität (Platz):** ${requirements.battery.maxCapacityAh} Ah`);
+    sections.push(`- **Typ:** ${requirements.battery.type.toUpperCase()}`);
+    sections.push(`- **Systemspannung:** ${requirements.battery.voltage}V`);
+    sections.push(`→ Wähle eine ${requirements.battery.type.toUpperCase()}-Batterie mit mindestens ${requirements.battery.minCapacityAh}Ah!`);
+    sections.push('');
+
+    // Inverter
+    if (requirements.inverter?.needed) {
+        sections.push('### Wechselrichter');
+        sections.push(`- **Benötigte Dauerleistung:** ${requirements.inverter.recommendedW}W`);
+        sections.push(`→ Wähle einen Wechselrichter mit MINDESTENS ${requirements.inverter.recommendedW}W **DAUERLEISTUNG**!`);
+        sections.push('→ **VERBOT:** Peak-Leistung ist NICHT relevant für resistive Lasten. Nur DAUERLEISTUNG zählt!');
+        sections.push('');
+    }
+
+    // Booster
+    if (requirements.booster) {
+        sections.push('### Ladebooster (B2B)');
+        sections.push(`- **Ladestrom:** ${requirements.booster.currentA}A`);
+        sections.push(`- **Eingang:** ${requirements.booster.inputVoltage}V (Fahrzeugbordnetz)`);
+        sections.push(`- **Ausgang:** ${requirements.booster.outputVoltage}V (Versorgerbatterie)`);
+        if (requirements.booster.needsConversion) {
+            sections.push(`→ **ACHTUNG:** Spannungswandlung erforderlich (${requirements.booster.inputVoltage}V → ${requirements.booster.outputVoltage}V)!`);
+        }
+        sections.push(`→ Wähle einen Ladebooster mit ${requirements.booster.currentA}A!`);
+        sections.push('');
+    }
+
+    // Charger
+    if (requirements.charger) {
+        sections.push('### Landstrom-Ladegerät');
+        sections.push(`- **Empfohlener Ladestrom:** ${requirements.charger.recommendedCurrentA}A`);
+        sections.push(`→ Wähle ein Ladegerät mit ${requirements.charger.recommendedCurrentA}A!`);
+        sections.push('');
+    }
+
+    // Solar Controller
+    if (requirements.solarController) {
+        sections.push('### Solar-Laderegler');
+        sections.push(`- **Empfohlener Strom:** ${requirements.solarController.recommendedCurrentA}A`);
+        sections.push(`- **Typ:** ${requirements.solarController.type}`);
+        if (requirements.solarController.needsSeparatePortableController) {
+            sections.push('→ **HINWEIS:** Gemischtes Setup - ggf. separater Regler für Solartaschen empfehlen!');
+        }
+        sections.push(`→ Wähle einen ${requirements.solarController.type}-Regler mit mindestens ${requirements.solarController.recommendedCurrentA}A!`);
+        sections.push('');
+    }
+
+    // Solar Modules
+    if (requirements.solarModules) {
+        sections.push('### Solarmodule');
+        sections.push(`- **Benötigte Leistung:** ${requirements.solarModules.requiredWp}Wp`);
+        sections.push(`- **Empfehlung:** ${requirements.solarModules.recommendation}`);
+        sections.push('');
+    }
+
+    // Cables
+    if (requirements.cables && requirements.cables.length > 0) {
+        sections.push('### Kabel-Querschnitte (VERBINDLICH!)');
+        requirements.cables.forEach(cable => {
+            sections.push(`- **${cable.displayName}:** ${cable.recommendedCrossSection}mm² (für ${cable.currentA}A)`);
+        });
+        sections.push('→ Die Querschnitte sind bereits auf Standard-Größen aufgerundet. KEINE weitere Anpassung!');
+        sections.push('');
+    }
+
+    sections.push('---');
+    sections.push('');
+
+    return sections.join('\n');
+}
+

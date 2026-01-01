@@ -36,6 +36,16 @@ export default function NewProductPage() {
         price: "",
         categoryId: "",
         specs: "",
+        // Filter fields
+        powerW: "",
+        capacityAh: "",
+        voltageV: "",
+        batteryType: "",
+        currentA: "",
+        crossSectionMm2: "",
+        solarWp: "",
+        supportedVoltages: [] as number[],
+        maxDischargeA: "",
     });
 
     useEffect(() => {
@@ -66,6 +76,16 @@ export default function NewProductPage() {
                     price: formData.price ? parseFloat(formData.price) : undefined,
                     categoryId: formData.categoryId,
                     specs: formData.specs,
+                    // Filter fields
+                    powerW: formData.powerW ? parseInt(formData.powerW) : null,
+                    capacityAh: formData.capacityAh ? parseInt(formData.capacityAh) : null,
+                    voltageV: formData.voltageV ? parseInt(formData.voltageV) : null,
+                    batteryType: formData.batteryType && formData.batteryType !== "" ? formData.batteryType : null,
+                    currentA: formData.currentA ? parseInt(formData.currentA) : null,
+                    crossSectionMm2: formData.crossSectionMm2 ? parseFloat(formData.crossSectionMm2) : null,
+                    solarWp: formData.solarWp ? parseInt(formData.solarWp) : null,
+                    supportedVoltages: formData.supportedVoltages && formData.supportedVoltages.length > 0 ? formData.supportedVoltages : null,
+                    maxDischargeA: formData.maxDischargeA ? parseInt(formData.maxDischargeA) : null,
                 }),
             });
 
@@ -207,6 +227,171 @@ export default function NewProductPage() {
                         </div>
                     </div>
                 </div>
+
+                {/* Filter Values Card - Conditional based on category */}
+                {formData.categoryId && (() => {
+                    const selectedCategory = categories.find(c => c.id === formData.categoryId);
+                    const slug = selectedCategory?.slug || "";
+
+                    const showPowerW = slug.startsWith("wechselrichter");
+                    const showBattery = slug.startsWith("batterie");
+                    const showCurrentA = slug.includes("laderegler") || slug.includes("ladebooster") || slug.includes("ladegeraet") || slug.includes("charger") || slug.includes("booster");
+                    const showCable = slug.startsWith("kabel") || slug.includes("cable");
+                    const showSolarWp = (slug.includes("solar") || slug.includes("panel") || slug.includes("modul")) && !slug.includes("regler");
+
+                    if (!showPowerW && !showBattery && !showCurrentA && !showCable && !showSolarWp) return null;
+
+                    return (
+                        <div className="bg-card rounded-xl border p-6 space-y-4">
+                            <div>
+                                <h2 className="font-semibold">Filter-Werte</h2>
+                                <p className="text-sm text-muted-foreground">
+                                    Diese Werte werden für die Vorfilterung vor der KI-Auswahl verwendet.
+                                </p>
+                            </div>
+
+                            {showPowerW && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="powerW">Dauerleistung (W)</Label>
+                                    <Input
+                                        id="powerW"
+                                        type="number"
+                                        min="0"
+                                        value={formData.powerW}
+                                        onChange={(e) => setFormData({ ...formData, powerW: e.target.value })}
+                                        placeholder="z.B. 2000"
+                                    />
+                                    <p className="text-xs text-muted-foreground">Die maximale Dauerleistung des Wechselrichters</p>
+                                </div>
+                            )}
+
+                            {showBattery && (
+                                <>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="capacityAh">Kapazität (Ah)</Label>
+                                        <Input
+                                            id="capacityAh"
+                                            type="number"
+                                            min="0"
+                                            value={formData.capacityAh}
+                                            onChange={(e) => setFormData({ ...formData, capacityAh: e.target.value })}
+                                            placeholder="z.B. 200"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="voltageV">Spannung (V)</Label>
+                                        <select
+                                            id="voltageV"
+                                            value={formData.voltageV}
+                                            onChange={(e) => setFormData({ ...formData, voltageV: e.target.value })}
+                                            className="w-full px-3 py-2 border rounded-md bg-background"
+                                        >
+                                            <option value="">Bitte wählen...</option>
+                                            <option value="12">12V</option>
+                                            <option value="24">24V</option>
+                                            <option value="48">48V</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="batteryType">Batterietyp</Label>
+                                        <select
+                                            id="batteryType"
+                                            value={formData.batteryType}
+                                            onChange={(e) => setFormData({ ...formData, batteryType: e.target.value })}
+                                            className="w-full px-3 py-2 border rounded-md bg-background"
+                                        >
+                                            <option value="">Bitte wählen...</option>
+                                            <option value="lifepo4">LiFePO4</option>
+                                            <option value="agm">AGM</option>
+                                            <option value="gel">GEL</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="maxDischargeA">Max. Entladestrom (A)</Label>
+                                        <Input
+                                            id="maxDischargeA"
+                                            type="number"
+                                            min="0"
+                                            value={formData.maxDischargeA}
+                                            onChange={(e) => setFormData({ ...formData, maxDischargeA: e.target.value })}
+                                            placeholder="z.B. 200"
+                                        />
+                                        <p className="text-xs text-muted-foreground">Maximaler Strom, den das BMS erlaubt</p>
+                                    </div>
+                                </>
+                            )}
+
+                            {showCurrentA && (
+                                <>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="currentA">Ladestrom (A)</Label>
+                                        <Input
+                                            id="currentA"
+                                            type="number"
+                                            min="0"
+                                            value={formData.currentA}
+                                            onChange={(e) => setFormData({ ...formData, currentA: e.target.value })}
+                                            placeholder="z.B. 40"
+                                        />
+                                        <p className="text-xs text-muted-foreground">Max. Strom, der zur Batterie fließt</p>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Unterstützte Spannungen</Label>
+                                        <div className="flex gap-4">
+                                            {[12, 24, 48].map(v => (
+                                                <label key={v} className="flex items-center gap-2 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={formData.supportedVoltages.includes(v)}
+                                                        onChange={(e) => {
+                                                            const newVoltages = e.target.checked
+                                                                ? [...formData.supportedVoltages, v]
+                                                                : formData.supportedVoltages.filter(x => x !== v);
+                                                            setFormData({ ...formData, supportedVoltages: newVoltages.sort((a, b) => a - b) });
+                                                        }}
+                                                        className="h-4 w-4"
+                                                    />
+                                                    <span>{v}V</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                        <p className="text-xs text-muted-foreground">Welche Batterie-Spannungen werden unterstützt?</p>
+                                    </div>
+                                </>
+                            )}
+
+                            {showCable && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="crossSectionMm2">Querschnitt (mm²)</Label>
+                                    <Input
+                                        id="crossSectionMm2"
+                                        type="number"
+                                        min="0"
+                                        step="0.5"
+                                        value={formData.crossSectionMm2}
+                                        onChange={(e) => setFormData({ ...formData, crossSectionMm2: e.target.value })}
+                                        placeholder="z.B. 25"
+                                    />
+                                </div>
+                            )}
+
+                            {showSolarWp && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="solarWp">Leistung (Wp)</Label>
+                                    <Input
+                                        id="solarWp"
+                                        type="number"
+                                        min="0"
+                                        value={formData.solarWp}
+                                        onChange={(e) => setFormData({ ...formData, solarWp: e.target.value })}
+                                        placeholder="z.B. 200"
+                                    />
+                                    <p className="text-xs text-muted-foreground">Nennleistung des Solarmoduls</p>
+                                </div>
+                            )}
+                        </div>
+                    );
+                })()}
 
                 <div className="bg-card rounded-xl border p-6 space-y-4">
                     <h2 className="font-semibold">Bild & Links</h2>

@@ -29,6 +29,7 @@ interface ResultDisplayProps {
     recommendations: any; // Using any for flexibility with JSON structure
     products: Product[];
     userConfig?: any; // FormData from DB
+    calculations?: any; // SystemRequirements from DB
     // onGenerate is now internal or optional if we want to override
 }
 
@@ -38,6 +39,7 @@ export default function ResultDisplay({
     recommendations,
     products,
     userConfig,
+    calculations,
 }: ResultDisplayProps) {
     const router = useRouter();
     const [copied, setCopied] = useState(false);
@@ -117,7 +119,7 @@ export default function ResultDisplay({
             }
 
             // 4. 230V -> Inverter
-            const has230V = userConfig.consumers?.some((c: any) => c.voltage === '230V');
+            const has230V = userConfig.consumers?.some((c: any) => c.voltage === 230);
             if (has230V) mandatoryCategories.add('inverter');
             if (has230V) mandatoryCategories.add('wechselrichter');
 
@@ -456,6 +458,54 @@ export default function ResultDisplay({
                 <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
                     Basierend auf deinen Angaben haben wir die perfekt aufeinander abgestimmten Komponenten für dich ausgewählt.
                 </p>
+
+                {/* System Analysis Summary */}
+                {calculations && (
+                    <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-left max-w-5xl mx-auto">
+                        <Card className="p-4 border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="text-sm text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Tagesverbrauch</div>
+                            <div className="text-3xl font-bold mt-1 text-gray-900 dark:text-gray-100">{Math.ceil(calculations.dailyWh)} Wh</div>
+                            <div className="text-xs text-gray-400 mt-1">Voraussichtlicher Bedarf</div>
+                        </Card>
+                        <Card className="p-4 border-l-4 border-l-green-500 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="text-sm text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Batterie-Empfehlung</div>
+                            <div className="text-3xl font-bold mt-1 text-gray-900 dark:text-gray-100">
+                                {calculations.battery?.recommendedCapacityAh || calculations.battery?.minCapacityAh} Ah
+                            </div>
+                            <div className="text-xs text-gray-400 mt-1">
+                                {calculations.battery?.hasSolar ? 'Inkl. Solar-Puffer' : 'Ohne Solar-Input'}
+                            </div>
+                        </Card>
+                        <Card className="p-4 border-l-4 border-l-yellow-500 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="text-sm text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Solar-Leistung</div>
+                            {calculations.solarModules ? (
+                                <>
+                                    <div className="text-3xl font-bold mt-1 text-gray-900 dark:text-gray-100">{Math.ceil(calculations.solarModules.requiredWp)} Wp</div>
+                                    <div className="text-xs text-gray-400 mt-1">Empfohlenes Minimum</div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="text-3xl font-bold mt-1 text-gray-400">-</div>
+                                    <div className="text-xs text-gray-400 mt-1">Nicht gewählt</div>
+                                </>
+                            )}
+                        </Card>
+                        <Card className="p-4 border-l-4 border-l-purple-500 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="text-sm text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Wechselrichter</div>
+                            {calculations.inverter ? (
+                                <>
+                                    <div className="text-3xl font-bold mt-1 text-gray-900 dark:text-gray-100">{calculations.inverter.recommendedW} W</div>
+                                    <div className="text-xs text-gray-400 mt-1">Für 230V Geräte</div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="text-3xl font-bold mt-1 text-gray-400">-</div>
+                                    <div className="text-xs text-gray-400 mt-1">Nicht benötigt</div>
+                                </>
+                            )}
+                        </Card>
+                    </div>
+                )}
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
                     <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-2 text-sm text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700">

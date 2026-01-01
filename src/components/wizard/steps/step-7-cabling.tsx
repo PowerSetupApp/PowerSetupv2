@@ -18,7 +18,7 @@ export function Step7Cabling() {
     const hasShorePower = energySources.includes('shore_power');
 
     // Filter out 230V devices entirely from cabling step
-    const relevantConsumers = consumers.filter(c => c.voltage !== '230V');
+    const relevantConsumers = consumers.filter(c => c.voltage !== 230);
 
     // Check specific specific fixed consumers (must be relevant, i.e., not 230V)
     const hasFixedBoiler = relevantConsumers.some(c => c.id === 'boiler' && c.isFixed);
@@ -94,7 +94,7 @@ export function Step7Cabling() {
                 )}
 
                 {/* 2. Service -> Inverter (Only if 230V needed) */}
-                {consumers.some(c => c.voltage === '230V') && (
+                {consumers.some(c => c.voltage === 230) && (
                     <div className="space-y-4 p-4 border rounded-lg bg-card/50">
                         <div className="flex items-center gap-3 mb-2">
                             <div className="p-2 bg-primary/10 rounded-full">

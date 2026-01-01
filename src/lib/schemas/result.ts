@@ -5,15 +5,15 @@ import { z } from 'zod';
 
 // Valid enum values
 const VALID_ENERGY_SOURCES = ['solar', 'alternator', 'shore_power', 'generator'] as const;
-const VALID_VOLTAGES = ['12V', '24V', '48V', '230V'] as const;
+const VALID_VOLTAGES = [12, 24, 48, 230] as const;
 
 // Enums
 const VehicleTypeSchema = z.enum(['campervan', 'motorhome', 'caravan', 'boat', 'offroad']);
-const VoltageSchema = z.enum(['12V', '24V', '48V']);
+const VoltageSchema = z.union([z.literal(12), z.literal(24), z.literal(48)]);
 const AutarchyLevelSchema = z.enum(['weekend', 'holiday', 'full']);
 const ComfortLevelSchema = z.enum(['budget', 'standard', 'premium']);
 const SchematicTypeSchema = z.enum(['simplified', 'technical']);
-const BatteryTypeSchema = z.enum(['agm', 'lifepo4', 'gel', 'lead_acid', 'any']);
+const BatteryTypeSchema = z.enum(['agm', 'lifepo4', 'gel', 'any']);
 
 // Travel Behavior
 const TravelSeasonSchema = z.enum(['summer_only', 'all_year', 'winter_focused']);
@@ -34,7 +34,7 @@ const ConsumerSchema = z.object({
     category: z.string().default('custom'),
     name: z.string().default('Unbekannt'),
     power: z.number().default(50),
-    voltage: z.enum(VALID_VOLTAGES).default('12V'),
+    voltage: z.union([z.literal(12), z.literal(24), z.literal(48), z.literal(230)]).default(12),
     usageHoursPerDay: z.number().default(2),
     usage: z.enum(['low', 'medium', 'high', 'constant']).default('medium'),
     isFixed: z.boolean().optional().default(false),
@@ -73,7 +73,7 @@ export const FormDataSchema = z.object({
     vehicleType: VehicleTypeSchema.nullable(),
 
     // Step 2: System Voltage
-    systemVoltage: VoltageSchema.default('12V'),
+    systemVoltage: VoltageSchema.default(12),
 
     // Step 3: Energy Sources - filter invalid values
     energySources: z.preprocess(
@@ -95,10 +95,17 @@ export const FormDataSchema = z.object({
                 if (typeof c !== 'object' || c === null) return null;
                 const consumer = c as Record<string, unknown>;
 
-                // Ensure voltage is valid
-                let voltage = consumer.voltage as string;
-                if (!VALID_VOLTAGES.includes(voltage as typeof VALID_VOLTAGES[number])) {
-                    voltage = '12V';
+                // Ensure voltage is valid (handle both new numeric and legacy string formats)
+                let voltage: number = 12;
+                const rawVoltage = consumer.voltage;
+                if (typeof rawVoltage === 'number' && VALID_VOLTAGES.includes(rawVoltage as typeof VALID_VOLTAGES[number])) {
+                    voltage = rawVoltage as 12 | 24 | 48 | 230;
+                } else if (typeof rawVoltage === 'string') {
+                    // Legacy string format migration
+                    const parsed = parseInt(rawVoltage.replace('V', ''));
+                    if (VALID_VOLTAGES.includes(parsed as typeof VALID_VOLTAGES[number])) {
+                        voltage = parsed as 12 | 24 | 48 | 230;
+                    }
                 }
 
                 return {

@@ -13,7 +13,7 @@ interface DeviceSearchModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onAddDevices: (devices: PresetDevice[]) => void;
-    systemVoltage: '12V' | '24V' | '48V';
+    systemVoltage: 12 | 24 | 48;
     availableDevices: PresetDevice[]; // New prop
 }
 

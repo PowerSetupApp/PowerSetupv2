@@ -98,6 +98,7 @@ export default async function ResultPage({ params }: ResultPageProps) {
                     recommendations={recommendationsWithTags}
                     products={products}
                     userConfig={result.formData}
+                    calculations={result.calculations}
                 />
 
                 {/* Debug Modal (Hidden by default, accessible via bottom-left sticky button) */}

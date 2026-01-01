@@ -3,13 +3,13 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-export interface SegmentedControlOption<T extends string = string> {
+export interface SegmentedControlOption<T extends string | number = string> {
     value: T;
     label: string;
     icon?: React.ReactNode;
 }
 
-export interface SegmentedControlProps<T extends string = string> {
+export interface SegmentedControlProps<T extends string | number = string> {
     options: SegmentedControlOption<T>[];
     value: T;
     onChange: (value: T) => void;
@@ -23,7 +23,7 @@ export interface SegmentedControlProps<T extends string = string> {
  * - Touch-optimiert
  * - Mobile-first
  */
-export function SegmentedControl<T extends string = string>({
+export function SegmentedControl<T extends string | number = string>({
     options,
     value,
     onChange,

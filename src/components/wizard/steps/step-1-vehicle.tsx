@@ -19,8 +19,8 @@ export function Step1Vehicle() {
     ];
 
     const VOLTAGE_OPTIONS: SegmentedControlOption<Voltage>[] = [
-        { value: "12V", label: "12V (Standard)" },
-        { value: "24V", label: "24V" },
+        { value: 12, label: "12V (Standard)" },
+        { value: 24, label: "24V" },
     ];
 
     return (

@@ -106,10 +106,10 @@ export function calculateCableRequirements(
     }
 
     // 3. Versorgerbatterie → Wechselrichter
-    if (formData.consumers?.some((c: any) => c.voltage === '230V') && cableLengths.serviceToInverter) {
+    if (formData.consumers?.some((c: any) => c.voltage === 230) && cableLengths.serviceToInverter) {
         // Berechne Inverter-Leistung aus Verbrauchern
         const total230V = formData.consumers
-            .filter((c: any) => c.voltage === '230V')
+            .filter((c: any) => c.voltage === 230)
             .reduce((sum: number, c: any) => sum + (c.watt || 0), 0);
 
         // Wähle Inverter-Klasse (nächste Standard-Größe, mindestens 25% Puffer)

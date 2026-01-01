@@ -6,7 +6,8 @@ import { calculateSystemRequirements } from "@/lib/calculations";
 import { getAISettings } from "@/app/actions/settings";
 import { getGeneralSettings } from "@/app/actions/general-settings";
 import { appendAmazonTag } from "@/lib/affiliate";
-import { formatFormDataForAI, formatProductsForAI, AIProductContext, formatFormDataCompact } from "@/lib/format-for-ai";
+import { formatFormDataForAI, formatProductsForAI, AIProductContext, formatFormDataCompact, formatSystemRequirementsForAI } from "@/lib/format-for-ai";
+import { preFilterProducts, getFilterStats, type ProductWithFilter, type SystemRequirements } from "@/lib/requirements-engine";
 
 // POST /api/results/[id]/generate - Generate AI recommendations
 export async function POST(
@@ -50,7 +51,7 @@ export async function POST(
 
         const calculationInput: AIInput = {
             vehicleType: formData.vehicleType || "campervan",
-            voltage: parseInt(formData.systemVoltage?.replace("V", "") || "12"),
+            voltage: typeof formData.systemVoltage === 'number' ? formData.systemVoltage : parseInt(String(formData.systemVoltage).replace("V", "") || "12"),
             batteryType: formData.batteryPreference || "any",
             energySources: formData.energySources || [],
             consumers,
@@ -88,12 +89,26 @@ export async function POST(
             formattedPrompt = formatFormDataCompact(formData);
         }
 
-        // Prepare Full Product Context
-        const productContext = formatProductsForAI(allProducts as unknown as AIProductContext[]);
+        // Prepare Full Product Context - with pre-filtering
+        const preCalculatedRequirements = result.calculations as unknown as SystemRequirements;
+
+        // Pre-filter products based on calculated requirements
+        const filteredProducts = preFilterProducts(
+            allProducts as unknown as ProductWithFilter[],
+            preCalculatedRequirements
+        );
+
+        const filterStats = getFilterStats(allProducts.length, filteredProducts.length);
+        console.log(`[Product Pre-Filter] ${filterStats.originalCount} → ${filterStats.filteredCount} products (${filterStats.reductionPercent}% reduction)`);
+
+        const productContext = formatProductsForAI(filteredProducts as unknown as AIProductContext[]);
+
+        // Prepare Pre-calculated Requirements Context
+        const requirementsContext = formatSystemRequirementsForAI(preCalculatedRequirements as any);
 
         // Call AI
         const selectedIds = await generateProductSelection(
-            { ...calculationInput, formattedPrompt, productContext },
+            { ...calculationInput, formattedPrompt, productContext, requirementsContext },
             settings.userPromptTemplate
         );
 
@@ -124,7 +139,7 @@ export async function POST(
         // For now, let's write the route logic assuming `generateProductSelection` returns the full JSON object or we change how we call it.
 
         const { data: aiResponseRaw, usage, model } = await generateProductSelection(
-            { ...calculationInput, formattedPrompt, productContext },
+            { ...calculationInput, formattedPrompt, productContext, requirementsContext },
             settings.userPromptTemplate
         );
 
@@ -207,7 +222,7 @@ export async function POST(
         }
 
         // Inverter (if 230V consumers exist)
-        const has230VConsumers = formData.consumers?.some((c: any) => c.voltage === "230V" || c.voltage.includes("230"));
+        const has230VConsumers = formData.consumers?.some((c: any) => c.voltage === 230 || c.voltage === "230V");
         if (has230VConsumers) {
             requiredCategories.set("wechselrichter", "Wechselrichter");
         }

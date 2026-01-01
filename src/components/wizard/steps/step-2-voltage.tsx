@@ -10,16 +10,15 @@ export function Step2Voltage() {
     const t = useTranslations("Wizard.Step2");
 
     const VOLTAGE_OPTIONS: SegmentedControlOption<Voltage>[] = [
-        { value: "12V", label: t("options.12V") },
-        { value: "24V", label: t("options.24V") },
-        { value: "48V", label: t("options.48V") },
+        { value: 12, label: t("options.12V") },
+        { value: 24, label: t("options.24V") },
+        { value: 48, label: t("options.48V") },
     ];
 
     const BATTERY_OPTIONS: SegmentedControlOption<BatteryType>[] = [
         { value: "lifepo4", label: t("battery_options.lifepo4") },
         { value: "agm", label: t("battery_options.agm") },
         { value: "gel", label: t("battery_options.gel") },
-        { value: "lead_acid", label: t("battery_options.lead_acid") },
     ];
 
     return (
