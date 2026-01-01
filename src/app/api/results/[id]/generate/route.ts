@@ -189,7 +189,7 @@ export async function POST(
                         reason: "Basierend auf deinen Anforderungen ausgewählt.",
                         isRecommended: true, // Default to true for single list
                         name: product.name,
-                        affiliateUrl: appendAmazonTag(product.affiliateUrl, amazonPartnerTag),
+                        affiliateUrl: appendAmazonTag(product.affiliateUrl || "", amazonPartnerTag),
                         imageUrl: product.imageUrl,
                         price: product.price,
                         category: product.category.slug
