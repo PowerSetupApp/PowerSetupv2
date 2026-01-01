@@ -165,7 +165,7 @@ export async function POST(
                                     reason: pItem.reason || "Basierend auf deinen Anforderungen ausgewählt.",
                                     isRecommended: !!pItem.isRecommended, // Catch the flag
                                     name: product.name,
-                                    affiliateUrl: appendAmazonTag(product.affiliateUrl, amazonPartnerTag),
+                                    affiliateUrl: appendAmazonTag(product.affiliateUrl || "", amazonPartnerTag),
                                     imageUrl: product.imageUrl,
                                     price: product.price,
                                     category: product.category.slug
