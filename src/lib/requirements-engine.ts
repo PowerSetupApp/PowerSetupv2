@@ -419,42 +419,58 @@ function calculateCharger(
 
 function calculateSolarController(
     input: WizardInput,
-    settings: AlgorithmSettingsData
+    settings: AlgorithmSettingsData,
+    solarModules: SolarModulesRequirement | null
 ): SolarControllerRequirement | null {
-    if (!input.energySources.includes('solar')) {
+    if (!input.energySources.includes('solar') || !solarModules) {
         return null;
     }
 
-    // Calculate roof Wp
-    const wpPerM2 = input.roofModuleType === 'rigid'
-        ? settings.wpPerM2Rigid
-        : settings.wpPerM2Flexible;
+    // Determine the "Planned" Wp (sizing target)
+    // Instead of maxing out the roof, we target the required amount + buffer
+    const bufferFactor = 1.2; // 20% oversized for good yield
+    const targetWp = solarModules.requiredWp * bufferFactor;
 
-    const roofWp = input.roofAreas.reduce((sum, area) => {
-        const m2 = (area.length * area.width) / 10000; // cm² to m²
-        return sum + (m2 * wpPerM2);
-    }, 0);
+    // Portable is explicit, so we count it fully if present
+    const portableWp = solarModules.portableWp;
 
-    // Calculate portable Wp
-    const portableWp = input.solarBags.reduce((sum, bag) => sum + bag.power, 0);
+    // Calculate how much roof solar we plan to install
+    // We cover the remaining need with roof solar, limited by available roof space
+    // If portable covers everything, we might still want some roof solar? 
+    // For now, let's just ensure we meet the target.
+    const remainingNeedWp = Math.max(0, targetWp - portableWp);
 
-    const totalWp = roofWp + portableWp;
+    // We plan for the lesser of: What we need vs. What fits on the roof
+    const plannedRoofWp = Math.min(solarModules.maxRoofWp, remainingNeedWp);
+
+    // However, if the user explicitly defined roof areas, but the calculated need is tiny,
+    // we should probably enforce a sane minimum system size if roof space allows.
+    // E.g. at least 200W if space fits 200W.
+    const saneMinimumRoofWp = Math.min(solarModules.maxRoofWp, 200);
+    const finalPlannedRoofWp = Math.max(plannedRoofWp, saneMinimumRoofWp);
+
+    // Total logic sizing Wp
+    const sizingTotalWp = portableWp + finalPlannedRoofWp;
+
+    // --- RE-CALCULATE ACTUAL FITTED VALUES ---
+    // The previous logic just summed everything. Now we use the sizingTotalWp for controller sizing.
+    // Note: We intentionally DO NOT use totalAvailableWp anymore for the controller current calculation.
 
     // Current calculation: Wp / Voltage * 1.25 safety factor
-    const currentA = (totalWp / input.systemVoltage) * 1.25;
+    const currentA = (sizingTotalWp / input.systemVoltage) * 1.25;
     const recommendedCurrentA = roundToControllerClass(currentA);
 
     // MPPT for larger systems, PWM for smaller
-    const type: 'MPPT' | 'PWM' = totalWp > 200 ? 'MPPT' : 'PWM';
+    const type: 'MPPT' | 'PWM' = sizingTotalWp > 200 ? 'MPPT' : 'PWM';
 
     // Separate controller for portable if mixed setup
     const needsSeparatePortableController =
-        input.solarSetupType === 'mixed' && portableWp > 0 && roofWp > 0;
+        input.solarSetupType === 'mixed' && portableWp > 0 && finalPlannedRoofWp > 0;
 
     return {
         needed: true,
-        totalWp: Math.ceil(totalWp),
-        roofWp: Math.ceil(roofWp),
+        totalWp: Math.ceil(sizingTotalWp),
+        roofWp: Math.ceil(finalPlannedRoofWp), // Update this to reflect planned, not max
         portableWp: Math.ceil(portableWp),
         currentA: Math.ceil(currentA),
         recommendedCurrentA,
@@ -714,11 +730,11 @@ export async function calculateSystemRequirements(input: WizardInput): Promise<S
     // 5. Calculate charger (if shore power)
     const charger = calculateCharger(input, battery);
 
-    // 6. Calculate solar controller (if solar)
-    const solarController = calculateSolarController(input, settings);
-
-    // 7. Calculate solar modules (if solar)
+    // 6. Calculate solar modules (if solar) - MOVED UP BEFORE CONTROLLER
     const solarModules = calculateSolarModules(input, dailyWh, settings);
+
+    // 7. Calculate solar controller (if solar) - NOW DEPENDS ON MODULES
+    const solarController = calculateSolarController(input, settings, solarModules);
 
     // 8. Calculate cables
     const cables = calculateCables(

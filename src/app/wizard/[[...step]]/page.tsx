@@ -11,6 +11,7 @@ import { Step6Solar } from "@/components/wizard/steps/step-6-solar";
 import { Step7Cabling } from "@/components/wizard/steps/step-7-cabling";
 import { Step8Comfort } from "@/components/wizard/steps/step-8-comfort";
 import { Step9Schematic } from "@/components/wizard/steps/step-9-schematic";
+import { Step10Recommendation } from "@/components/wizard/steps/step-10-recommendation";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useWizardStore } from "@/lib/store/wizard-store";
@@ -19,22 +20,13 @@ import { ProgressSteps } from "@/components/ui/progress-steps";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
-import { AlgorithmResultModal } from "@/components/wizard/algorithm-result-modal";
-import { testAlgorithmCalculations } from "@/app/actions/test-algorithm";
-import { type SystemRequirements } from "@/lib/requirements-engine";
+// import { AlgorithmResultModal } from "@/components/wizard/algorithm-result-modal";
 
 function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
     const t = useTranslations("Wizard");
     const router = useRouter();
     const searchParams = useSearchParams();
     const [isSubmitting, setIsSubmitting] = useState(false);
-
-    // Algorithm test modal state
-    const [showAlgorithmModal, setShowAlgorithmModal] = useState(false);
-    const [algorithmResult, setAlgorithmResult] = useState<SystemRequirements | null>(null);
-    const [algorithmError, setAlgorithmError] = useState<string | null>(null);
-    const [algorithmLoading, setAlgorithmLoading] = useState(false);
-    const [pendingFormData, setPendingFormData] = useState<any>(null);
 
     const {
         currentStep,
@@ -56,7 +48,9 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
         schematicPreference,
         batteryPreference,
         travelBehavior,
-        reset
+
+        reset,
+        roofAreas // Added missing destructuring
     } = useWizardStore();
 
     // Reset Store if requested (only once per session)
@@ -78,7 +72,7 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
     const stepIndex = stepParam ? parseInt(stepParam) : 1;
 
     // Validation: Step must be a number between 1 and 10 (now 10 steps total)
-    if (isNaN(stepIndex) || stepIndex < 1 || stepIndex > 9) {
+    if (isNaN(stepIndex) || stepIndex < 1 || stepIndex > 10) {
         redirect("/wizard/1");
     }
     // Sync URL with store on mount/change
@@ -98,7 +92,8 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
         { id: 6, label: "Autarkie" },
         { id: 7, label: "Solar" },
         { id: 8, label: "Kabel" },
-        { id: 9, label: "Budget" }
+        { id: 9, label: "Budget" },
+        { id: 10, label: "Empfehlung" }
     ];
 
     const completedSteps = steps.filter(s => s.id < stepIndex).map(s => s.id);
@@ -113,11 +108,15 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
         let nextStep = stepIndex + 1;
 
         // Skip Step 7 (Solar) if not selected
-        if (nextStep === 7 && !energySources.includes('solar')) {
-            nextStep = 8;
+        // Re-checking this logic to ensure we don't accidentally skip multiple steps or land on wrong one
+        // If we are at Step 6 and click Next:
+        if (stepIndex === 6) {
+            if (!energySources.includes('solar')) {
+                nextStep = 8; // Skip Solar
+            }
         }
 
-        if (nextStep <= 9) {
+        if (nextStep <= 10) {
             router.push(`/wizard/${nextStep}`);
         }
     };
@@ -126,12 +125,11 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
         if (isSubmitting) return;
 
         setIsSubmitting(true);
-        setAlgorithmLoading(true);
-        setAlgorithmError(null);
-        setAlgorithmResult(null);
+        // We do NOT run the algorithm test modal anymore for the final step, because Step 10 IS the visual recommendation.
+        // We now proceed directly to save.
 
         try {
-            // Collect all form data
+            // Collect all form data (including new overrides)
             const formData = {
                 vehicleType,
                 vehicleVoltage,
@@ -154,47 +152,24 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
                 alternatorSize: 'unknown',
                 simultaneousLoad: 'moderate',
                 batterySpaceSize: 'medium',
-                roofAreas: solarDimensions ? [{ id: 'main', name: 'Hauptfläche', length: solarDimensions.length, width: solarDimensions.width }] : [],
+                roofAreas: (roofAreas && roofAreas.length > 0) ? roofAreas : (solarDimensions ? [{ id: 'main', name: 'Hauptfläche', length: solarDimensions.length, width: solarDimensions.width }] : []),
+
+                // NEW: Custom Overrides
+                customBatteryCapacity: useWizardStore.getState().customBatteryCapacity,
+                customSolarPower: useWizardStore.getState().customSolarPower,
+                customBoosterCurrent: useWizardStore.getState().customBoosterCurrent,
+                customSolarControllerCurrent: useWizardStore.getState().customSolarControllerCurrent,
             };
 
-            // Store form data for later submission
-            setPendingFormData(formData);
 
-            // Test algorithm first
-            const result = await testAlgorithmCalculations(formData);
 
-            if (result.success && result.data) {
-                setAlgorithmResult(result.data);
-                setShowAlgorithmModal(true);
-            } else {
-                setAlgorithmError(result.error || "Unbekannter Fehler");
-                setShowAlgorithmModal(true);
-            }
-        } catch (error) {
-            console.error("Error calculating:", error);
-            setAlgorithmError(error instanceof Error ? error.message : String(error));
-            setShowAlgorithmModal(true);
-        } finally {
-            setAlgorithmLoading(false);
-            setIsSubmitting(false);
-        }
-    };
-
-    // Handle continuing to actual submission after viewing algorithm results
-    const handleContinueToSubmit = async () => {
-        if (!pendingFormData) return;
-
-        setShowAlgorithmModal(false);
-        setIsSubmitting(true);
-
-        try {
             // POST to API
             const response = await fetch("/api/results", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ formData: pendingFormData }),
+                body: JSON.stringify({ formData }),
             });
 
             if (!response.ok) {
@@ -208,10 +183,11 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
             router.push(`/result/${result.id}`);
         } catch (error) {
             console.error("Error submitting wizard:", error);
+            // TODO: Show error toast
+            setIsSubmitting(false);
             if (error instanceof Error) {
                 alert(`Fehler: ${error.message}\n\nBitte überprüfe deine Eingaben.`);
             }
-            setIsSubmitting(false);
         }
     };
 
@@ -228,7 +204,7 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
         }
     };
 
-    const isLastStep = stepIndex === 9;
+    const isLastStep = stepIndex === 10;
 
     return (
         <div className="container max-w-2xl mx-auto py-8 space-y-8 min-h-screen flex flex-col">
@@ -249,6 +225,7 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
                 {stepIndex === 7 && <Step6Solar />}
                 {stepIndex === 8 && <Step7Cabling />}
                 {stepIndex === 9 && <Step8Comfort />}
+                {stepIndex === 10 && <Step10Recommendation />}
             </div>
 
             {/* Footer Navigation */}
@@ -282,16 +259,6 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
                     </Button>
                 </div>
             </div>
-
-            {/* Algorithm Test Modal */}
-            <AlgorithmResultModal
-                open={showAlgorithmModal}
-                onClose={() => setShowAlgorithmModal(false)}
-                onContinue={handleContinueToSubmit}
-                data={algorithmResult}
-                isLoading={algorithmLoading}
-                error={algorithmError}
-            />
         </div>
     );
 }

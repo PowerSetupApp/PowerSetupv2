@@ -166,6 +166,17 @@ export interface WizardState {
     setAlternatorSize: (size: AlternatorSize) => void;
     setBatterySpaceSize: (size: BatterySpaceSize) => void;
 
+    // Custom Overrides (Step 10)
+    customBatteryCapacity: number | null;
+    customSolarPower: number | null;
+    customBoosterCurrent: number | null;
+    customSolarControllerCurrent: number | null;
+
+    setCustomBatteryCapacity: (capacity: number | null) => void;
+    setCustomSolarPower: (power: number | null) => void;
+    setCustomBoosterCurrent: (current: number | null) => void;
+    setCustomSolarControllerCurrent: (current: number | null) => void;
+
     // Navigation Helper
     currentStep: number;
     setStep: (step: number) => void;
@@ -227,6 +238,12 @@ export const useWizardStore = create<WizardState>()(
             alternatorSize: 'unknown',
             batterySpaceSize: 'medium',
 
+            // Custom Overrides Defaults
+            customBatteryCapacity: null,
+            customSolarPower: null,
+            customBoosterCurrent: null,
+            customSolarControllerCurrent: null,
+
             currentStep: 1,
 
             // Actions
@@ -268,6 +285,10 @@ export const useWizardStore = create<WizardState>()(
                 simultaneousLoad: 'moderate',
                 alternatorSize: 'unknown',
                 batterySpaceSize: 'medium',
+                customBatteryCapacity: null,
+                customSolarPower: null,
+                customBoosterCurrent: null,
+                customSolarControllerCurrent: null,
                 currentStep: 1,
             }),
 
@@ -354,6 +375,11 @@ export const useWizardStore = create<WizardState>()(
             setSimultaneousLoad: (load) => set({ simultaneousLoad: load }),
             setAlternatorSize: (size) => set({ alternatorSize: size }),
             setBatterySpaceSize: (size) => set({ batterySpaceSize: size }),
+
+            setCustomBatteryCapacity: (capacity) => set({ customBatteryCapacity: capacity }),
+            setCustomSolarPower: (power) => set({ customSolarPower: power }),
+            setCustomBoosterCurrent: (current) => set({ customBoosterCurrent: current }),
+            setCustomSolarControllerCurrent: (current) => set({ customSolarControllerCurrent: current }),
 
             setTravelBehavior: (behavior) => set((state) => ({
                 travelBehavior: { ...state.travelBehavior, ...behavior }

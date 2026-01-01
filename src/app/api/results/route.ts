@@ -33,7 +33,39 @@ export async function POST(request: NextRequest) {
         try {
             const wizardInput = parseResult.data as unknown as WizardInput;
             calculations = await calculateSystemRequirements(wizardInput);
-            console.log("Calculated requirements:", JSON.stringify(calculations, null, 2));
+
+            // APPLY OVERRIDES if present in formData
+            // note: formData is 'any' basically after parseResult.data, but let's be safe.
+            const data = parseResult.data as any;
+
+            if (calculations) {
+                if (data.customBatteryCapacity) {
+                    console.log(`Overriding Battery Capacity: ${calculations.battery.recommendedCapacityAh} -> ${data.customBatteryCapacity}`);
+                    calculations.battery.recommendedCapacityAh = data.customBatteryCapacity;
+                }
+
+                if (data.customSolarPower && calculations.solarModules) {
+                    console.log(`Overriding Solar Power: ${calculations.solarModules.totalAvailableWp} -> ${data.customSolarPower}`);
+                    calculations.solarModules.totalAvailableWp = data.customSolarPower;
+                    // Also update requiredWp ? No, required is what is needed, available is what we select against.
+                    // But wait, if user overrides, they are saying "I want X Wp", so effectively this becomes the target for product search.
+                    // Implementation plan said: "calculations.solarModules.requiredWp"
+                    // But `totalAvailableWp` is usually what matches the selected bags + roof. 
+                    // Let's decide: The user input is "Desired Power". So we should probably set 'totalAvailableWp' to match that, implies we look for that amount.
+                }
+
+                if (data.customBoosterCurrent && calculations.booster) {
+                    console.log(`Overriding Booster Current: ${calculations.booster.currentA} -> ${data.customBoosterCurrent}`);
+                    calculations.booster.currentA = data.customBoosterCurrent;
+                }
+
+                if (data.customSolarControllerCurrent && calculations.solarController) {
+                    console.log(`Overriding Controller Current: ${calculations.solarController.recommendedCurrentA} -> ${data.customSolarControllerCurrent}`);
+                    calculations.solarController.recommendedCurrentA = data.customSolarControllerCurrent;
+                }
+            }
+
+            console.log("Calculated requirements (with overrides):", JSON.stringify(calculations, null, 2));
         } catch (calcError) {
             console.error("Requirements calculation failed:", calcError);
             // Continue without calculations - AI will fall back to its own logic

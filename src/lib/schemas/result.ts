@@ -159,6 +159,12 @@ export const FormDataSchema = z.object({
         winterLocation: 'varies',
         standingDuration: 'medium',
     }),
+
+    // Step 10: Custom Overrides (Technical Recommendation Step)
+    customBatteryCapacity: z.number().nullable().optional(),
+    customSolarPower: z.number().nullable().optional(),
+    customBoosterCurrent: z.number().nullable().optional(),
+    customSolarControllerCurrent: z.number().nullable().optional(),
 });
 
 // Request Schemas
