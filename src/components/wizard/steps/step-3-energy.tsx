@@ -1,15 +1,31 @@
 "use client";
 
 import * as React from "react";
-import { useWizardStore, type EnergySource, type AlternatorSize } from "@/lib/store/wizard-store";
+import { useWizardStore, type EnergySource, type AlternatorSize, type ShoreChargingSpeed } from "@/lib/store/wizard-store";
 import { IconButton, type IconButtonOption } from "@/components/ui/icon-button";
 import { CardSelection } from "@/components/ui/card-selection";
 import { useTranslations } from "next-intl";
-import { Zap, Battery, Gauge, HelpCircle } from "lucide-react";
+import { Zap, Battery, Gauge, HelpCircle, Clock, Timer, Bolt } from "lucide-react";
+
+import { getAlgorithmSettings, type AlgorithmSettingsData } from "@/app/actions/algorithm-settings";
 
 export function Step3Energy() {
-    const { energySources, setEnergySources, alternatorSize, setAlternatorSize } = useWizardStore();
+    const {
+        energySources,
+        setEnergySources,
+        alternatorSize,
+        setAlternatorSize,
+        shoreChargingSpeed,
+        setShoreChargingSpeed
+    } = useWizardStore();
     const t = useTranslations("Wizard.Step3");
+
+    // State for dynamic settings
+    const [settings, setSettings] = React.useState<AlgorithmSettingsData | null>(null);
+
+    React.useEffect(() => {
+        getAlgorithmSettings().then(setSettings);
+    }, []);
 
     const ENERGY_OPTIONS: IconButtonOption<EnergySource>[] = [
         { value: "solar", label: t("options.solar"), icon: "☀️", sublabel: t("options.solar_sub") },
@@ -24,7 +40,34 @@ export function Step3Energy() {
         { value: "unknown", title: t("alternator_options.unknown"), icon: <HelpCircle className="h-5 w-5" /> },
     ];
 
+    // Default values if settings not loaded yet
+    const slowHours = settings?.chargerTimeHoursSlow ?? 8.0;
+    const normalHours = settings?.chargerTimeHoursNormal ?? 5.0;
+    const fastHours = settings?.chargerTimeHoursFast ?? 3.0;
+
+    const SHORE_CHARGING_OPTIONS = [
+        {
+            value: "slow",
+            title: t("shore_charging_options.slow"),
+            description: t("shore_charging_options.slow_desc", { hours: slowHours }),
+            icon: <Clock className="h-5 w-5" />
+        },
+        {
+            value: "normal",
+            title: t("shore_charging_options.normal"),
+            description: t("shore_charging_options.normal_desc", { hours: normalHours }),
+            icon: <Timer className="h-5 w-5" />
+        },
+        {
+            value: "fast",
+            title: t("shore_charging_options.fast"),
+            description: t("shore_charging_options.fast_desc", { hours: fastHours }),
+            icon: <Bolt className="h-5 w-5" />
+        },
+    ];
+
     const showAlternatorQuestion = energySources.includes("alternator");
+    const showShoreChargingQuestion = energySources.includes("shore_power");
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -46,10 +89,6 @@ export function Step3Energy() {
                 className="grid-cols-2 sm:grid-cols-3"
             />
 
-            <div className="bg-yellow-50/50 dark:bg-yellow-950/20 p-4 rounded-lg text-sm text-yellow-700 dark:text-yellow-300 border border-yellow-100 dark:border-yellow-900/50 text-center">
-                <p dangerouslySetInnerHTML={{ __html: t.raw("hint") }} />
-            </div>
-
             {/* Conditional: Alternator Size Question */}
             {showAlternatorQuestion && (
                 <div className="space-y-4 pt-6 border-t border-border/50 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -63,6 +102,23 @@ export function Step3Energy() {
                         value={alternatorSize}
                         onChange={(val) => setAlternatorSize(val as AlternatorSize)}
                         columns={2}
+                    />
+                </div>
+            )}
+
+            {/* Conditional: Shore Power Charging Speed Question */}
+            {showShoreChargingQuestion && (
+                <div className="space-y-4 pt-6 border-t border-border/50 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div className="text-center space-y-1">
+                        <h3 className="text-lg font-semibold">{t("shore_charging_title")}</h3>
+                        <p className="text-sm text-muted-foreground">{t("shore_charging_hint")}</p>
+                    </div>
+
+                    <CardSelection
+                        options={SHORE_CHARGING_OPTIONS}
+                        value={shoreChargingSpeed}
+                        onChange={(val) => setShoreChargingSpeed(val as ShoreChargingSpeed)}
+                        columns={3}
                     />
                 </div>
             )}

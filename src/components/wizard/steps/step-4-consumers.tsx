@@ -115,11 +115,21 @@ export function Step4Consumers() {
         const fetchData = async () => {
             try {
                 const res = await fetch("/api/wizard/consumers");
-                if (!res.ok) throw new Error("Failed to fetch consumers");
+                if (!res.ok) {
+                    let errorMsg = "Failed to fetch consumers";
+                    try {
+                        const errData = await res.json();
+                        if (errData.error) errorMsg = errData.error;
+                    } catch (e) {
+                        errorMsg = res.statusText;
+                    }
+                    throw new Error(errorMsg);
+                }
                 const data: ApiConsumerCategory[] = await res.json();
                 setCategories(data);
 
                 // Sync: Ensure local store matches backend definitions (removes orphans, updates names)
+                // ... rest of logic
                 if (Array.isArray(data)) {
                     const allDevices = data.flatMap(c => c.devices.map(d => ({
                         id: d.id,
@@ -130,8 +140,8 @@ export function Step4Consumers() {
 
                 if (data.length > 0) setActiveSection(data[0].slug);
             } catch (err) {
-                console.error(err);
-                setError("Fehler beim Laden der Verbraucher.");
+                console.error("Fetch error:", err);
+                setError(err instanceof Error ? err.message : "Fehler beim Laden der Verbraucher.");
             } finally {
                 setIsLoading(false);
             }

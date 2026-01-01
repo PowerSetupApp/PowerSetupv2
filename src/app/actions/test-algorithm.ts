@@ -50,6 +50,7 @@ export async function testAlgorithmCalculations(
                 custom: {},
             },
             comfortLevel: formData.comfortLevel || 'standard',
+            shoreChargingSpeed: formData.shoreChargingSpeed || 'normal',
         };
 
         // Calculate requirements

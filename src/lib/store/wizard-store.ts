@@ -14,6 +14,7 @@ export type BatteryType = 'agm' | 'lifepo4' | 'gel' | 'any';
 // Additional Questions for AI Accuracy
 export type SimultaneousLoad = 'low' | 'moderate' | 'high';
 export type AlternatorSize = 'standard' | 'enhanced' | 'euro6d_smart' | 'unknown';
+export type ShoreChargingSpeed = 'slow' | 'normal' | 'fast';
 export type BatterySpaceSize = 'compact' | 'medium' | 'spacious';
 
 // Travel Behavior Types
@@ -131,6 +132,7 @@ export interface WizardState {
     simultaneousLoad: SimultaneousLoad;
     alternatorSize: AlternatorSize;
     batterySpaceSize: BatterySpaceSize;
+    shoreChargingSpeed: ShoreChargingSpeed;
 
     // Actions
     setTravelBehavior: (behavior: Partial<TravelBehavior>) => void;
@@ -167,6 +169,7 @@ export interface WizardState {
     setSimultaneousLoad: (load: SimultaneousLoad) => void;
     setAlternatorSize: (size: AlternatorSize) => void;
     setBatterySpaceSize: (size: BatterySpaceSize) => void;
+    setShoreChargingSpeed: (speed: ShoreChargingSpeed) => void;
 
     // Custom Overrides (Step 10)
     customBatteryCapacity: number | null;
@@ -241,6 +244,7 @@ export const useWizardStore = create<WizardState>()(
             simultaneousLoad: 'moderate',
             alternatorSize: 'unknown',
             batterySpaceSize: 'medium',
+            shoreChargingSpeed: 'normal',
 
             // Custom Overrides Defaults
             customBatteryCapacity: null,
@@ -290,6 +294,7 @@ export const useWizardStore = create<WizardState>()(
                 simultaneousLoad: 'moderate',
                 alternatorSize: 'unknown',
                 batterySpaceSize: 'medium',
+                shoreChargingSpeed: 'normal',
                 customBatteryCapacity: null,
                 customSolarPower: null,
                 customBoosterCurrent: null,
@@ -380,6 +385,7 @@ export const useWizardStore = create<WizardState>()(
             setSimultaneousLoad: (load) => set({ simultaneousLoad: load }),
             setAlternatorSize: (size) => set({ alternatorSize: size }),
             setBatterySpaceSize: (size) => set({ batterySpaceSize: size }),
+            setShoreChargingSpeed: (speed) => set({ shoreChargingSpeed: speed }),
 
             setCustomBatteryCapacity: (capacity) => set({ customBatteryCapacity: capacity }),
             setCustomSolarPower: (power) => set({ customSolarPower: power }),

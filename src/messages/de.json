@@ -49,7 +49,6 @@
                 "generator": "Generator",
                 "generator_sub": "Benzin/Diesel Generator"
             },
-            "hint": "Eine <strong>Bordbatterie</strong> ist für fast alle Camper-Ausbauten essenziell.",
             "alternator_title": "Welche Lichtmaschine hat dein Fahrzeug?",
             "alternator_hint": "Bestimmt die maximale Ladeleistung des Ladeboosters.",
             "alternator_options": {
@@ -57,6 +56,16 @@
                 "enhanced": "Verstärkt (~150-180A)",
                 "euro6d_smart": "Euro 6d / Smart Generator",
                 "unknown": "Unbekannt"
+            },
+            "shore_charging_title": "Wie schnell soll die Batterie am Landstrom laden?",
+            "shore_charging_hint": "Schnellere Ladung = größeres Ladegerät = höhere Kosten.",
+            "shore_charging_options": {
+                "slow": "Langsam",
+                "slow_desc": "Ca. {hours}h (schont die Batterie)",
+                "normal": "Normal",
+                "normal_desc": "Ca. {hours}h (Empfohlen)",
+                "fast": "Schnell",
+                "fast_desc": "Ca. {hours}h (größeres Ladegerät)"
             }
         },
         "Step4": {

@@ -258,7 +258,7 @@ export default function NewProductPage() {
                     const slug = selectedCategory?.slug || "";
 
                     const showPowerW = slug.startsWith("wechselrichter");
-                    const showBattery = slug.startsWith("batterie");
+                    const showBattery = slug.startsWith("batterie") && !slug.includes("ladegeraet") && !slug.includes("charger");
                     const showVoltage = showBattery || showPowerW;
                     const showCurrentA = slug.includes("laderegler") || slug.includes("ladebooster") || slug.includes("ladegeraet") || slug.includes("charger") || slug.includes("booster");
                     const showCable = slug.startsWith("kabel") || slug.includes("cable");

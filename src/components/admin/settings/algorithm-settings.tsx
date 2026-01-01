@@ -125,12 +125,22 @@ const SETTINGS_GROUPS: SettingsGroup[] = [
         ]
     },
     {
+        title: "Landstrom-Ladezeit",
+        description: "Ziel-Ladezeit für 0-100% je nach Nutzer-Präferenz",
+        tooltip: "Bestimmt, wie das Ladegerät dimensioniert wird: Batteriekapazität / Zielzeit = Ladestrom. Ein schnelleres Laden erfordert ein stärkeres Ladegerät.",
+        fields: [
+            { key: "chargerTimeHoursSlow", label: "Langsam", type: "float", suffix: "h" },
+            { key: "chargerTimeHoursNormal", label: "Normal", type: "float", suffix: "h" },
+            { key: "chargerTimeHoursFast", label: "Schnell", type: "float", suffix: "h" },
+        ]
+    },
+    {
         title: "Komponentenklassen",
         description: "Verfügbare Größen (kommasepariert)",
         fields: [
             { key: "inverterClasses", label: "Wechselrichter (W)", type: "string" },
-            { key: "chargerClasses", label: "Ladegeräte (A)", type: "string" },
-            { key: "solarControllerClasses", label: "Solar-Regler (A)", type: "string" },
+            { key: "chargerClasses", label: "Batterieladegeräte (A)", type: "string" },
+            { key: "solarControllerClasses", label: "Solar-Laderegler (A)", type: "string" },
             { key: "cableSizes", label: "Kabelquerschnitte (mm²)", type: "string" },
         ]
     },
@@ -393,6 +403,11 @@ function SettingsSummary({ settings, onHighlightClick }: { settings: AlgorithmSe
                     <p>
                         "Der Ladebooster wird basierend auf der Lichtmaschine gewählt: Bei einer Standard-LiMa empfehlen wir <H k="alternatorStandard">{settings.alternatorStandard}A</H>, bei verstärkten Modellen bis zu <H k="alternatorEnhanced">{settings.alternatorEnhanced}A</H>.
                         Ein Wechselrichter wird dimensioniert nach der Summe aller 230V-Geräte multipliziert mit dem Faktor <H k="simultaneousModerate">{settings.simultaneousModerate}</H> (bei moderater Nutzung), aber mindestens so stark wie das größte Einzelgerät."
+                    </p>
+                    <p className="mt-2">
+                        "Für das Landstrom-Ladegerät: Bei der Einstellung 'Langsam' planen wir <H k="chargerTimeHoursSlow">{settings.chargerTimeHoursSlow}h</H> Ladezeit,
+                        bei 'Normal' <H k="chargerTimeHoursNormal">{settings.chargerTimeHoursNormal}h</H> und bei 'Schnell' nur <H k="chargerTimeHoursFast">{settings.chargerTimeHoursFast}h</H>.
+                        Die Formel: Batteriekapazität ÷ Zielzeit = benötigter Ladestrom."
                     </p>
                 </div>
 

@@ -71,6 +71,7 @@ export interface WizardInput {
     solarBags: SolarBag[];
     cableLengths: CableLengths;
     comfortLevel: 'budget' | 'standard' | 'premium';
+    shoreChargingSpeed: 'slow' | 'normal' | 'fast';
 }
 
 // ==========================================
@@ -177,7 +178,7 @@ export interface SystemRequirements {
 // ==========================================
 
 const FALLBACK_CABLE_SIZES = [6, 10, 16, 25, 35, 50, 70, 95, 120, 150, 185, 240];
-const FALLBACK_INVERTER_CLASSES = [500, 800, 1000, 1500, 2000, 2500, 3000, 5000];
+const FALLBACK_INVERTER_CLASSES = [500, 800, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 5000];
 const FALLBACK_CHARGER_CLASSES = [10, 20, 30, 50, 60];
 const FALLBACK_SOLAR_CONTROLLER_CLASSES = [10, 20, 30, 40, 50, 60, 80, 100];
 
@@ -192,6 +193,13 @@ function parseClasses(str: string): number[] {
 function roundToClass(value: number, classes: number[], fallback: number[]): number {
     const list = classes.length > 0 ? classes : fallback;
     return list.find(c => c >= value) || list[list.length - 1];
+}
+
+function roundDownToClass(value: number, classes: number[], fallback: number[]): number {
+    const list = classes.length > 0 ? classes : fallback;
+    // Find the largest class that is <= value
+    const validClasses = list.filter(c => c <= value);
+    return validClasses.length > 0 ? validClasses[validClasses.length - 1] : list[0];
 }
 
 // ==========================================
@@ -271,12 +279,16 @@ function calculateBattery(
             ? settings.wpPerM2Rigid
             : settings.wpPerM2Flexible;
 
-        const roofWp = input.roofAreas.reduce((sum, area) => {
-            const m2 = (area.length * area.width) / 10000;
-            return sum + (m2 * wpPerM2);
-        }, 0);
+        const roofWp = input.solarSetupType !== 'portable'
+            ? input.roofAreas.reduce((sum, area) => {
+                const m2 = (area.length * area.width) / 10000;
+                return sum + (m2 * wpPerM2);
+            }, 0)
+            : 0;
 
-        const portableWp = input.solarBags.reduce((sum, bag) => sum + bag.power, 0);
+        const portableWp = input.solarSetupType !== 'roof'
+            ? input.solarBags.reduce((sum, bag) => sum + bag.power, 0)
+            : 0;
         const totalWp = roofWp + portableWp;
 
         // Solar efficiency factor (MPPT ~85%, system losses)
@@ -384,7 +396,9 @@ function calculateInverter(
     const remainingLoadW = Math.max(0, total230VLoadW - maxSingleLoadW);
     const requiredW = maxSingleLoadW + (remainingLoadW * simFactor);
 
-    const recommendedW = roundToClass(requiredW, inverterClasses, FALLBACK_INVERTER_CLASSES);
+    // Use exact calculated requirement, rounded to nearest 10W for cleaner display
+    // User requested "actual need" without fixed classes
+    const recommendedW = Math.ceil(requiredW / 10) * 10;
 
     return {
         needed: true,
@@ -429,22 +443,33 @@ function calculateBooster(
 function calculateCharger(
     input: WizardInput,
     battery: BatteryRequirement,
-    chargerClasses: number[]
+    chargerClasses: number[],
+    settings: AlgorithmSettingsData
 ): ChargerRequirement | null {
     if (!input.energySources.includes('shore_power')) {
         return null;
     }
 
-    // Target: charge battery in ~5 hours
-    const chargingTimeHours = 5;
-    const targetCurrentA = battery.minCapacityAh / chargingTimeHours;
-    const recommendedCurrentA = roundToClass(targetCurrentA, chargerClasses, FALLBACK_CHARGER_CLASSES);
+    // Target time based on user preference
+    let targetTimeHours: number;
+    switch (input.shoreChargingSpeed) {
+        case 'slow': targetTimeHours = settings.chargerTimeHoursSlow; break;
+        case 'fast': targetTimeHours = settings.chargerTimeHoursFast; break;
+        default: targetTimeHours = settings.chargerTimeHoursNormal;
+    }
+
+    const targetCurrentA = battery.recommendedCapacityAh / targetTimeHours;
+    // Round DOWN to get a smaller charger = longer charging time (closer to user's preference)
+    const recommendedCurrentA = roundDownToClass(targetCurrentA, chargerClasses, FALLBACK_CHARGER_CLASSES);
+
+    // Recalculate actual charging time with selected charger
+    const actualChargingTime = Math.ceil((battery.recommendedCapacityAh / recommendedCurrentA) * 10) / 10;
 
     return {
         needed: true,
         targetCurrentA: Math.ceil(targetCurrentA),
         recommendedCurrentA,
-        chargingTimeHours,
+        chargingTimeHours: actualChargingTime,
     };
 }
 
@@ -547,12 +572,16 @@ function calculateSolarModules(
         ? settings.wpPerM2Rigid
         : settings.wpPerM2Flexible;
 
-    const maxRoofWp = input.roofAreas.reduce((sum, area) => {
-        const m2 = (area.length * area.width) / 10000;
-        return sum + (m2 * wpPerM2);
-    }, 0);
+    const maxRoofWp = input.solarSetupType !== 'portable'
+        ? input.roofAreas.reduce((sum, area) => {
+            const m2 = (area.length * area.width) / 10000;
+            return sum + (m2 * wpPerM2);
+        }, 0)
+        : 0;
 
-    const portableWp = input.solarBags.reduce((sum, bag) => sum + bag.power, 0);
+    const portableWp = input.solarSetupType !== 'roof'
+        ? input.solarBags.reduce((sum, bag) => sum + bag.power, 0)
+        : 0;
     const totalAvailableWp = maxRoofWp + portableWp;
 
     // Generate recommendation
@@ -773,7 +802,7 @@ export async function calculateSystemRequirements(input: WizardInput): Promise<S
     const booster = calculateBooster(input, settings);
 
     // 5. Calculate charger (if shore power)
-    const charger = calculateCharger(input, battery, chargerClasses);
+    const charger = calculateCharger(input, battery, chargerClasses, settings);
 
     // 6. Calculate solar modules (if solar) - MOVED UP BEFORE CONTROLLER
     const solarModules = calculateSolarModules(input, dailyWh, settings);

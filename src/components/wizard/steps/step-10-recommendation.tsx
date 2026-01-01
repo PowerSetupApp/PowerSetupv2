@@ -10,12 +10,19 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { AlertTriangle, Battery, Calculator, Check, Info, RotateCcw, Settings2, Sun, Zap } from "lucide-react";
+import { AlertTriangle, Battery, Calculator, Check, Info, RotateCcw, Settings2, Sun, Zap, Bug } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Slider } from "@/components/ui/slider";
 import { InfoModal } from "@/components/ui/info-modal";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 
 export function Step10Recommendation() {
     const t = useTranslations("Wizard.Step10"); // We'll need to add translations or just hardcode German for now as per user request
@@ -41,6 +48,7 @@ export function Step10Recommendation() {
         alternatorSize,
         batterySpaceSize,
         roofAreas,
+        shoreChargingSpeed,
 
         // Custom setters
         setCustomBatteryCapacity,
@@ -61,6 +69,39 @@ export function Step10Recommendation() {
     const [isLoading, setIsLoading] = useState(true);
     const [calculations, setCalculations] = useState<SystemRequirements | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [isDebugOpen, setIsDebugOpen] = useState(false);
+
+    // Filter out functions and only keep data for debug view
+    const debugData = {
+        vehicleType,
+        vehicleVoltage,
+        systemVoltage,
+        energySources,
+        consumers: consumers.length, // Just count to avoid huge dump
+        autarchyGoal,
+        autarchyDays,
+        solarSetupType,
+        solarDimensions,
+        roofModuleType,
+        solarModulePreference,
+        solarBags,
+        cableLengths,
+        comfortLevel,
+        schematicPreference,
+        batteryPreference,
+        travelBehavior,
+        simultaneousLoad,
+        alternatorSize,
+        batterySpaceSize,
+        roofAreas,
+        customOverrides: {
+            battery: customBatteryCapacity,
+            solar: customSolarPower,
+            booster: customBoosterCurrent,
+            controller: customSolarControllerCurrent,
+            inverter: customInverterPower
+        }
+    };
 
     // Initial Calculation
     const calculate = useMemo(() => async () => {
@@ -89,6 +130,7 @@ export function Step10Recommendation() {
                 alternatorSize,
                 batterySpaceSize,
                 roofAreas: roofAreas && roofAreas.length > 0 ? roofAreas : (solarDimensions ? [{ id: 'main', name: 'Hauptfläche', length: solarDimensions.length, width: solarDimensions.width }] : []),
+                shoreChargingSpeed,
                 _timestamp: Date.now(), // Force fresh request
             };
 
@@ -109,7 +151,7 @@ export function Step10Recommendation() {
         autarchyGoal, autarchyDays, solarSetupType, solarDimensions,
         roofModuleType, solarModulePreference, solarBags, cableLengths,
         comfortLevel, schematicPreference, batteryPreference, travelBehavior,
-        simultaneousLoad, alternatorSize, batterySpaceSize, roofAreas
+        simultaneousLoad, alternatorSize, batterySpaceSize, roofAreas, shoreChargingSpeed
     ]);
 
     useEffect(() => {
@@ -189,6 +231,14 @@ export function Step10Recommendation() {
                         title="Neu berechnen"
                     >
                         <RotateCcw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setIsDebugOpen(true)}
+                        title="Debug"
+                    >
+                        <Bug className="h-4 w-4 text-muted-foreground" />
                     </Button>
                 </div>
                 <p className="text-muted-foreground">
@@ -308,7 +358,11 @@ export function Step10Recommendation() {
 
                             <div className="flex items-center justify-between">
                                 <div className="text-muted-foreground text-sm flex items-center gap-1.5 min-w-0">
-                                    <span className="truncate">Verfügbar (Dach+Tasche):</span>
+                                    <span className="truncate">
+                                        {solarSetupType === 'roof' ? 'Verfügbar (Dach):' :
+                                            solarSetupType === 'portable' ? 'Verfügbar (Tasche):' :
+                                                'Verfügbar (Dach+Tasche):'}
+                                    </span>
                                     <InfoModal title="Verfügbare Leistung" description="Die maximal mögliche Solarleistung basierend auf deiner verfügbaren Dachfläche und gewählten Solartaschen." />
                                 </div>
                                 <div className="font-medium text-primary">{Math.ceil(calculations.solarModules.totalAvailableWp)} Wp</div>
@@ -398,6 +452,38 @@ export function Step10Recommendation() {
                                             Manuell
                                         </div>
                                     )}
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+                )}
+
+                {/* Charger Section */}
+                {calculations.charger && (
+                    <Card className="p-6 space-y-4 border-2 border-transparent focus-within:border-primary/20 transition-all">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 font-semibold">
+                                <Zap className="h-5 w-5 text-primary" />
+                                Batterieladegerät (Landstrom)
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="text-muted-foreground text-sm flex items-center gap-1.5 min-w-0">
+                                        <span className="truncate">Ladezeit (0-100%):</span>
+                                        <InfoModal title="Ladezeit" description="Die ungefähre Dauer, um die Batterie bei vollständiger Entladung wieder komplett aufzuladen." />
+                                    </div>
+                                    <div className="font-medium text-muted-foreground">ca. {calculations.charger.chargingTimeHours} Std.</div>
+                                </div>
+
+                                <div className="flex items-center justify-between">
+                                    <div className="text-muted-foreground text-sm flex items-center gap-1.5 min-w-0">
+                                        <span className="truncate">Empfohlener Strom:</span>
+                                        <InfoModal title="Ladestrom" description="Der empfohlene Ladestrom für das 230V Ladegerät, um die Batterie schonend und effektiv zu laden." />
+                                    </div>
+                                    <div className="font-bold text-primary">{calculations.charger.recommendedCurrentA} A</div>
                                 </div>
                             </div>
                         </div>
@@ -529,6 +615,20 @@ export function Step10Recommendation() {
                     </Card>
                 )}
             </div>
+
+            <Dialog open={isDebugOpen} onOpenChange={setIsDebugOpen}>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>Debug: Wizard State</DialogTitle>
+                        <DialogDescription>
+                            Aktuelle Eingabewerte, die für die Berechnung verwendet werden.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="bg-muted p-4 rounded-lg font-mono text-xs overflow-x-auto whitespace-pre-wrap">
+                        {JSON.stringify(debugData, null, 2)}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div >
     );
 }

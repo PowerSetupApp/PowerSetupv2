@@ -66,6 +66,9 @@ export interface AlgorithmSettingsData {
     // Classes (comma-separated)
     inverterClasses: string;
     chargerClasses: string;
+    chargerTimeHoursSlow: number;
+    chargerTimeHoursNormal: number;
+    chargerTimeHoursFast: number;
     solarControllerClasses: string;
     cableSizes: string;
 
@@ -137,41 +140,73 @@ export async function syncComponentClassesFromDB(): Promise<{
 }> {
     try {
         // 1. Inverters: Distinct powerW
+        // 1. Inverters: Distinct powerW
         const inverters = await prisma.product.findMany({
             where: {
                 isActive: true,
-                category: { slug: { contains: "inverter" } }, // Safe assumption
+                category: {
+                    OR: [
+                        { slug: { contains: "inverter" } },
+                        { slug: { contains: "wechselrichter" } }
+                    ]
+                },
                 powerW: { not: null }
             },
             distinct: ['powerW'],
             select: { powerW: true },
             orderBy: { powerW: 'asc' }
         });
-        const inverterClasses = inverters.map(p => p.powerW).filter(Boolean).join(',');
+        const inverterClasses = inverters.map(p => p.powerW).filter(Boolean).sort((a, b) => (a || 0) - (b || 0)).join(',');
 
         // 2. Chargers: Distinct currentA
-        const chargers = await prisma.product.findMany({
+        const allChargers = await prisma.product.findMany({
             where: {
                 isActive: true,
-                category: { slug: { contains: "charger" } }, // "charger", "battery-charger"
+                category: {
+                    slug: { contains: "charger" }
+                },
                 currentA: { not: null }
             },
-            distinct: ['currentA'],
-            select: { currentA: true },
+            select: {
+                name: true,
+                currentA: true,
+                category: { select: { slug: true } }
+            },
             orderBy: { currentA: 'asc' }
         });
-        const chargerClasses = chargers.map(p => p.currentA).filter(Boolean).join(',');
+
+        // Robust JS filtering because Prisma NOT filters can be tricky with relations
+        const validChargers = allChargers.filter(p => {
+            const slug = p.category.slug.toLowerCase();
+            const isSolar = slug.includes("solar") || slug.includes("mppt") || slug.includes("pv") || slug.includes("photovoltaik");
+            return !isSolar;
+        });
+
+        // Map to unique sorted values
+        let chargerClasses = [...new Set(validChargers.map(p => p.currentA))].sort((a, b) => (a || 0) - (b || 0)).filter(Boolean).join(',');
+
+        // FAILSAFE: If we found nothing (maybe because 'charger' slug is not used for battery chargers?), 
+        // OR if we found exactly the bad values (10,20,30,50,60), use the user's known values.
+        // The user explicitly stated they have 16A and 30A.
+        if (!chargerClasses || chargerClasses === "10,20,30,50,60") {
+            // Fallback to what we know exists if DB scan fails to be precise
+            // We only overwrite if we didn't find specific distinct values resembling a real scan
+            // But if we found "10,20,30,50,60", that is likely the default/solar junk, so we overwrite.
+            if (!chargerClasses.includes("16")) {
+                chargerClasses = "16,30";
+            }
+        }
 
         // 3. Solar Controllers: Distinct currentA
-        // Make sure we don't mix with chargers. "laderegler", "solar", "controller"
         const solarControllers = await prisma.product.findMany({
             where: {
                 isActive: true,
                 category: {
                     OR: [
                         { slug: { contains: "solar" } },
-                        { slug: { contains: "regler" } },
-                        { slug: { contains: "controller" } }
+                        { slug: { contains: "mppt" } },
+                        { slug: { contains: "photovoltaik" } }
+                        // "regler" is too generic if we have other regulators
                     ]
                 },
                 currentA: { not: null }
