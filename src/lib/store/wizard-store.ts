@@ -40,6 +40,8 @@ export interface Consumer {
     usage: 'low' | 'medium' | 'high' | 'constant'; // Preset for predefined devices
     isFixed?: boolean; // If true, requires cable planning in Step 7
     coolingMethod?: 'compressor' | 'absorber'; // Only for cooling devices
+    usesGas?: boolean; // Only for absorber cooling: runs partially on gas
+    electricPercentage?: number; // Only for absorber with gas: percentage of time on electric (0-100)
 }
 
 export interface SolarDimensions {
@@ -171,11 +173,13 @@ export interface WizardState {
     customSolarPower: number | null;
     customBoosterCurrent: number | null;
     customSolarControllerCurrent: number | null;
+    customInverterPower: number | null; // NEW
 
     setCustomBatteryCapacity: (capacity: number | null) => void;
     setCustomSolarPower: (power: number | null) => void;
     setCustomBoosterCurrent: (current: number | null) => void;
     setCustomSolarControllerCurrent: (current: number | null) => void;
+    setCustomInverterPower: (power: number | null) => void; // NEW
 
     // Navigation Helper
     currentStep: number;
@@ -243,6 +247,7 @@ export const useWizardStore = create<WizardState>()(
             customSolarPower: null,
             customBoosterCurrent: null,
             customSolarControllerCurrent: null,
+            customInverterPower: null, // NEW
 
             currentStep: 1,
 
@@ -380,6 +385,7 @@ export const useWizardStore = create<WizardState>()(
             setCustomSolarPower: (power) => set({ customSolarPower: power }),
             setCustomBoosterCurrent: (current) => set({ customBoosterCurrent: current }),
             setCustomSolarControllerCurrent: (current) => set({ customSolarControllerCurrent: current }),
+            setCustomInverterPower: (power) => set({ customInverterPower: power }), // NEW
 
             setTravelBehavior: (behavior) => set((state) => ({
                 travelBehavior: { ...state.travelBehavior, ...behavior }

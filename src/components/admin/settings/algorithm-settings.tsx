@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Loader2, Save, RotateCcw, Info } from "lucide-react";
-import { getAlgorithmSettings, updateAlgorithmSettings, type AlgorithmSettingsData } from "@/app/actions/algorithm-settings";
+import { Loader2, Save, RotateCcw, Info, Settings2, Sun, Battery, Zap, Check, RefreshCw } from "lucide-react";
+import { getAlgorithmSettings, updateAlgorithmSettings, syncComponentClassesFromDB, type AlgorithmSettingsData } from "@/app/actions/algorithm-settings";
 
 interface SettingsGroup {
     title: string;
@@ -62,6 +62,14 @@ const SETTINGS_GROUPS: SettingsGroup[] = [
         ]
     },
     {
+        title: "Batterie-Sicherheitspuffer",
+        description: "Multiplikator auf die berechnete Kapazität",
+        tooltip: "Erhöht die Batterieempfehlung um diesen Faktor. Beispiel: Bei 1.5 wird eine berechnete 100Ah Batterie auf 150Ah aufgerundet. Nützlich bei vielen 230V Verbrauchern, um genug Strom für den Wechselrichter zu gewährleisten.",
+        fields: [
+            { key: "batterySafetyFactor", label: "Sicherheitsfaktor", type: "float", suffix: "x" },
+        ]
+    },
+    {
         title: "Standzeit-Definitionen",
         description: "Definiert, wie viele Tage 'Kurz', 'Mittel' und 'Lang' bedeuten",
         fields: [
@@ -84,6 +92,7 @@ const SETTINGS_GROUPS: SettingsGroup[] = [
             { key: "wpPerM2Rigid", label: "Starr (Glas)", type: "int", suffix: "Wp" },
             { key: "wpPerM2Flexible", label: "Flexibel", type: "int", suffix: "Wp" },
             { key: "cloudyYieldFactor", label: "Bewölkt-Faktor", type: "float", suffix: "x" },
+            { key: "recommendedSolarYieldFactor", label: "Solar-Puffer (Empfehlung)", type: "float", suffix: "x" },
         ]
     },
     {
@@ -147,6 +156,7 @@ export function AlgorithmSettings() {
     const [settings, setSettings] = useState<AlgorithmSettingsData | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [syncing, setSyncing] = useState(false);
     const [hasChanges, setHasChanges] = useState(false);
 
     useEffect(() => {
@@ -190,6 +200,25 @@ export function AlgorithmSettings() {
         }
     };
 
+    const handleSyncClasses = async () => {
+        if (!settings) return;
+        setSyncing(true);
+        try {
+            const result = await syncComponentClassesFromDB();
+            if (result.success && result.data) {
+                setSettings({ ...settings, ...result.data });
+                setHasChanges(true);
+            } else {
+                alert("Fehler beim Synchronisieren: " + result.error);
+            }
+        } catch (error) {
+            console.error("Failed to sync:", error);
+            alert("Fehler beim Synchronisieren");
+        } finally {
+            setSyncing(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center py-12">
@@ -229,21 +258,35 @@ export function AlgorithmSettings() {
                 {SETTINGS_GROUPS.map((group) => (
                     <Card key={group.title}>
                         <CardHeader className="pb-3">
-                            <div className="flex items-center gap-2">
-                                <CardTitle className="text-lg">{group.title}</CardTitle>
-                                {group.tooltip && (
-                                    <TooltipProvider delayDuration={0}>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <div className="cursor-help p-1 hover:bg-muted rounded-full transition-colors">
-                                                    <Info className="h-4 w-4 text-muted-foreground" />
-                                                </div>
-                                            </TooltipTrigger>
-                                            <TooltipContent className="max-w-[400px] bg-foreground text-background" side="top">
-                                                <p>{group.tooltip}</p>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <CardTitle className="text-lg">{group.title}</CardTitle>
+                                    {group.tooltip && (
+                                        <TooltipProvider delayDuration={0}>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <div className="cursor-help p-1 hover:bg-muted rounded-full transition-colors">
+                                                        <Info className="h-4 w-4 text-muted-foreground" />
+                                                    </div>
+                                                </TooltipTrigger>
+                                                <TooltipContent className="max-w-[400px] bg-foreground text-background" side="top">
+                                                    <p>{group.tooltip}</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    )}
+                                </div>
+                                {group.title === "Komponentenklassen" && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleSyncClasses}
+                                        disabled={syncing || saving}
+                                        className="h-8"
+                                    >
+                                        <RefreshCw className={`h-3 w-3 mr-2 ${syncing ? "animate-spin" : ""}`} />
+                                        DB-Sync
+                                    </Button>
                                 )}
                             </div>
                             <CardDescription>{group.description}</CardDescription>
@@ -254,6 +297,7 @@ export function AlgorithmSettings() {
                                     <Label className="w-1/2 text-sm">{field.label}</Label>
                                     <div className="flex-1 flex items-center gap-2">
                                         <Input
+                                            id={`setting-${field.key}`}
                                             type={field.type === "string" ? "text" : "number"}
                                             step={field.type === "float" ? "0.01" : "1"}
                                             value={settings[field.key] ?? ""}
@@ -265,7 +309,7 @@ export function AlgorithmSettings() {
                                                         : parseFloat(e.target.value) || 0;
                                                 handleChange(field.key, val);
                                             }}
-                                            className="h-9"
+                                            className="h-9 transition-all duration-500"
                                         />
                                         {field.suffix && (
                                             <span className="text-sm text-muted-foreground w-12">{field.suffix}</span>
@@ -279,52 +323,98 @@ export function AlgorithmSettings() {
             </div>
 
             {/* Explanatory Summary */}
-            <SettingsSummary settings={settings} />
+            <SettingsSummary settings={settings} onHighlightClick={scrollToField} />
         </div>
     );
+
+    function scrollToField(key: string) {
+        const element = document.getElementById(`setting-${key}`);
+        if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "center" });
+            element.classList.add("ring-2", "ring-primary", "ring-offset-2");
+            setTimeout(() => {
+                element.classList.remove("ring-2", "ring-primary", "ring-offset-2");
+            }, 2000);
+        }
+    }
 }
 
-function SettingsSummary({ settings }: { settings: AlgorithmSettingsData }) {
+function SettingsSummary({ settings, onHighlightClick }: { settings: AlgorithmSettingsData, onHighlightClick: (key: string) => void }) {
+    const H = ({ k, children }: { k: keyof AlgorithmSettingsData, children: React.ReactNode }) => (
+        <Highlight targetKey={k} onClick={onHighlightClick}>{children}</Highlight>
+    );
+
     return (
-        <Card className="bg-muted/50 border-blue-200 dark:border-blue-900">
+        <Card className="bg-muted/50 border-blue-200 dark:border-blue-900 mb-20">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <span>🤖</span>
                     <span>Algorithm-Check</span>
                 </CardTitle>
                 <CardDescription>
-                    So würde der Algorithmus aktuell mit diesen Werten rechnen:
+                    So würde der Algorithmus aktuell mit diesen Werten rechnen (Klicke auf Werte zum Bearbeiten):
                 </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 text-base leading-relaxed">
-                <p>
-                    "Wenn wir einen Stromverbraucher berechnen, gehen wir davon aus, dass im Sommer <Highlight>{settings.sunHoursSummer}h</Highlight> und im Winter <Highlight>{settings.sunHoursWinter}h</Highlight> lang effektive Sonne scheint.
-                    Dabei multiplizieren wir diese Basiswerte mit dem Winter-Standort-Faktor (z.B. Skandinavien = <Highlight>{settings.locationScandinavia}x</Highlight>, Südeuropa = <Highlight>{settings.locationSouthernEurope}x</Highlight>), falls relevant."
-                </p>
+            <CardContent className="space-y-6 text-base leading-relaxed">
+                <div>
+                    <h4 className="font-semibold mb-2 flex items-center gap-2"><Settings2 className="h-4 w-4" /> Dimensionierung & Puffer</h4>
+                    <p>
+                        "Bei der Batterieberechnung unterscheiden wir zwischen Typen: Aus einer LiFePO4-Batterie entnehmen wir bis zu <H k="dodLifepo4">{settings.dodLifepo4 * 100}%</H>, während wir bei AGM nur <H k="dodAgm">{settings.dodAgm * 100}%</H> und bei Gel <H k="dodGel">{settings.dodGel * 100}%</H> der Nennkapazität einplanen, um die Lebensdauer zu schützen."
+                    </p>
+                </div>
 
-                <p>
-                    "Falls es mal komplett bewölkt ist, rechnen wir nicht mit 0 Ertrag, sondern immer noch mit <Highlight>{(settings.cloudyYieldFactor * 100).toFixed(0)}%</Highlight> der normalen saisonalen Leistung. Das verhindert, dass die Batterie übertrieben riesig dimensioniert wird."
-                </p>
+                <div>
+                    <h4 className="font-semibold mb-2 flex items-center gap-2"><Sun className="h-4 w-4" /> Solar-Ertrag</h4>
+                    <p>
+                        "Für die Solarberechnung nehmen wir an, dass ein Panel im Sommer durchschnittlich <H k="sunHoursSummer">{settings.sunHoursSummer}h</H> volle Leistung bringt.
+                        Im Winter sind es nur <H k="sunHoursWinter">{settings.sunHoursWinter}h</H>.
+                        Diese Werte werden je nach Reiseziel angepasst: In Skandinavien rechnen wir im Winter z.B. nur mit dem <H k="locationScandinavia">{settings.locationScandinavia}x</H>-fachen dieser Stunden."
+                    </p>
+                    <p className="mt-2">
+                        "Die Modulleistung selbst kalkulieren wir mit <H k="wpPerM2Rigid">{settings.wpPerM2Rigid} Wp/m²</H> für starre und <H k="wpPerM2Flexible">{settings.wpPerM2Flexible} Wp/m²</H> für flexible Module.
+                        An bewölkten Tagen rechnen wir pauschal mit <H k="cloudyYieldFactor">{(settings.cloudyYieldFactor * 100).toFixed(0)}%</H> des normalen Ertrags (Worst-Case).
+                        Für die <strong>Empfehlung</strong> sind wir etwas optimistischer, trauen dem Solarertrag aber auch nur zu <H k="recommendedSolarYieldFactor">{settings.recommendedSolarYieldFactor * 100}%</H> (Sicherheitspuffer)."
+                    </p>
+                </div>
 
-                <p>
-                    "Wenn jemand sagt, er möchte <Highlight>20 Tage</Highlight> autark stehen, aber gleichzeitig angibt, dass er seine Location alle <Highlight>{settings.standingDaysShort} Tage</Highlight> (Kurz) wechselt, dann berechnen wir die Batterie auch nur für diese <Highlight>{settings.standingDaysShort} Tage</Highlight>, da er dann ja eh fährt und nachlädt."
-                </p>
+                <div>
+                    <h4 className="font-semibold mb-2 flex items-center gap-2"><Battery className="h-4 w-4" /> Autarkie & Standzeit</h4>
+                    <p>
+                        "Wenn ein Nutzer 'Kurz' steht, rechnen wir mit <H k="standingDaysShort">{settings.standingDaysShort} Tagen</H> ohne Fahren.
+                        Auch wenn jemand 4 Wochen autark sein will, deckeln wir die reine Batterie-Reserve (ohne Solar/LiMa) auf maximal <H k="maxBackupDays">{settings.maxBackupDays} Tage</H>, um unrealistisch große Batterien zu vermeiden. Der Rest muss über Solar/Ladebooster kommen."
+                    </p>
+                    <p className="mt-2">
+                        "Außerdem multiplizieren wir die berechnete Kapazität mit dem <H k="batterySafetyFactor">{settings.batterySafetyFactor}x</H> Sicherheitsfaktor, um genug Reserve für hohe Spitzenlasten (z.B. Wechselrichter) sicherzustellen."
+                    </p>
+                </div>
 
-                <p>
-                    "Für den absoluten Worst-Case (Winter, dunkel, Motor kaputt) dimensionieren wir die Minimum-Batterie so, dass sie maximal <Highlight>{settings.maxBackupDays} Tage</Highlight> komplett ohne Nachladung durchhält."
-                </p>
+                <div>
+                    <h4 className="font-semibold mb-2 flex items-center gap-2"><Zap className="h-4 w-4" /> Technik: Booster & Wechselrichter</h4>
+                    <p>
+                        "Der Ladebooster wird basierend auf der Lichtmaschine gewählt: Bei einer Standard-LiMa empfehlen wir <H k="alternatorStandard">{settings.alternatorStandard}A</H>, bei verstärkten Modellen bis zu <H k="alternatorEnhanced">{settings.alternatorEnhanced}A</H>.
+                        Ein Wechselrichter wird dimensioniert nach der Summe aller 230V-Geräte multipliziert mit dem Faktor <H k="simultaneousModerate">{settings.simultaneousModerate}</H> (bei moderater Nutzung), aber mindestens so stark wie das größte Einzelgerät."
+                    </p>
+                </div>
 
-                <p>
-                    "Bei der <strong>Wechselrichter-Leistung</strong> prüfen wir beides: Summe aller Geräte mal <Highlight>{settings.simultaneousModerate} (Faktor)</Highlight> UND den stärksten Einzelverbraucher. Das Maximum gewinnt, plus <Highlight>10%</Highlight> Sicherheitspuffer. So knallt die Sicherung auch beim Föhnen (2000W) nicht durch!"
-                </p>
+                <div>
+                    <h4 className="font-semibold mb-2 flex items-center gap-2"><Check className="h-4 w-4" /> Kabel & Sicherheiten</h4>
+                    <p>
+                        "Kabel berechnen wir so, dass an kritischen Stellen (Inverter) maximal <H k="voltageDropCritical">{settings.voltageDropCritical}%</H> Spannung verloren geht.
+                        Als spezifischen Widerstand für Kupfer nutzen wir <H k="copperResistivity">{settings.copperResistivity}</H>."
+                    </p>
+                </div>
             </CardContent>
         </Card>
     );
 }
 
-function Highlight({ children }: { children: React.ReactNode }) {
+function Highlight({ children, targetKey, onClick }: { children: React.ReactNode, targetKey: string, onClick: (key: string) => void }) {
     return (
-        <span className="px-1.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-semibold border border-blue-200 dark:border-blue-800">
+        <span
+            onClick={() => onClick(targetKey)}
+            className="cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors px-1.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-semibold border border-blue-200 dark:border-blue-800"
+            title="Klicken zum Bearbeiten"
+        >
             {children}
         </span>
     );

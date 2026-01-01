@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { AlertTriangle, Battery, Calculator, Check, Info, Settings2, Sun, Zap } from "lucide-react";
+import { AlertTriangle, Battery, Calculator, Check, Info, RotateCcw, Settings2, Sun, Zap } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Slider } from "@/components/ui/slider";
@@ -51,7 +52,10 @@ export function Step10Recommendation() {
         customBatteryCapacity,
         customSolarPower,
         customBoosterCurrent,
-        customSolarControllerCurrent
+        customSolarControllerCurrent,
+
+        customInverterPower,
+        setCustomInverterPower
     } = useWizardStore();
 
     const [isLoading, setIsLoading] = useState(true);
@@ -59,59 +63,65 @@ export function Step10Recommendation() {
     const [error, setError] = useState<string | null>(null);
 
     // Initial Calculation
-    useEffect(() => {
-        const calculate = async () => {
-            setIsLoading(true);
-            try {
-                // Construct formData from store (similar to page.tsx)
-                const formData = {
-                    vehicleType,
-                    vehicleVoltage,
-                    systemVoltage,
-                    energySources,
-                    consumers,
-                    autarchyGoal,
-                    autarchyDays,
-                    solarSetupType,
-                    solarDimensions,
-                    roofModuleType,
-                    solarModulePreference,
-                    solarBags,
-                    cableLengths,
-                    comfortLevel,
-                    schematicPreference,
-                    batteryPreference,
-                    travelBehavior,
-                    simultaneousLoad,
-                    alternatorSize,
-                    batterySpaceSize,
-                    roofAreas: roofAreas && roofAreas.length > 0 ? roofAreas : (solarDimensions ? [{ id: 'main', name: 'Hauptfläche', length: solarDimensions.length, width: solarDimensions.width }] : []),
-                };
+    const calculate = useMemo(() => async () => {
+        setIsLoading(true);
+        try {
+            // Construct formData from store (similar to page.tsx)
+            const formData = {
+                vehicleType,
+                vehicleVoltage,
+                systemVoltage,
+                energySources,
+                consumers,
+                autarchyGoal,
+                autarchyDays,
+                solarSetupType,
+                solarDimensions,
+                roofModuleType,
+                solarModulePreference,
+                solarBags,
+                cableLengths,
+                comfortLevel,
+                schematicPreference,
+                batteryPreference,
+                travelBehavior,
+                simultaneousLoad,
+                alternatorSize,
+                batterySpaceSize,
+                roofAreas: roofAreas && roofAreas.length > 0 ? roofAreas : (solarDimensions ? [{ id: 'main', name: 'Hauptfläche', length: solarDimensions.length, width: solarDimensions.width }] : []),
+                _timestamp: Date.now(), // Force fresh request
+            };
 
-                const result = await testAlgorithmCalculations(formData);
-                if (result.success && result.data) {
-                    setCalculations(result.data);
-
-                    // Initialize custom values if not already set (or reset if drastically different? No, keep user edits)
-                    // Actually, we probably only want to set them if they are null, to basically "seed" them with recommended values?
-                    // No, users requested "adjust if needed". So inputs should show calculated value as placeholder or default, 
-                    // and store override if user types.
-                    // A better UX: Input defaults to calculated value.
-                } else {
-                    setError(result.error || "Fehler bei der Berechnung");
-                }
-            } catch (err) {
-                console.error(err);
-                setError("Berechnungsfehler");
-            } finally {
-                setIsLoading(false);
+            const result = await testAlgorithmCalculations(formData);
+            if (result.success && result.data) {
+                setCalculations(result.data);
+            } else {
+                setError(result.error || "Fehler bei der Berechnung");
             }
-        };
-
-        if (!calculations) {
-            calculate();
+        } catch (err) {
+            console.error(err);
+            setError("Berechnungsfehler");
+        } finally {
+            setIsLoading(false);
         }
-    }, [calculations, vehicleType, systemVoltage, energySources, consumers]); // Dependencies to re-trigger? Maybe just once on mount.
+    }, [
+        vehicleType, vehicleVoltage, systemVoltage, energySources, consumers,
+        autarchyGoal, autarchyDays, solarSetupType, solarDimensions,
+        roofModuleType, solarModulePreference, solarBags, cableLengths,
+        comfortLevel, schematicPreference, batteryPreference, travelBehavior,
+        simultaneousLoad, alternatorSize, batterySpaceSize, roofAreas
+    ]);
+
+    useEffect(() => {
+        calculate();
+
+        // Re-calculate when window regains focus (e.g. user changed settings in other tab)
+        const handleFocus = () => {
+            calculate();
+        };
+        window.addEventListener("focus", handleFocus);
+        return () => window.removeEventListener("focus", handleFocus);
+    }, [calculate]);
 
     // Update store when inputs change
     const handleBatteryChange = (val: string) => {
@@ -138,7 +148,10 @@ export function Step10Recommendation() {
         return (
             <div className="space-y-6">
                 <div className="space-y-2">
-                    <Skeleton className="h-8 w-1/3" />
+                    <div className="flex items-center justify-between">
+                        <Skeleton className="h-8 w-1/3" />
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                    </div>
                     <Skeleton className="h-4 w-2/3" />
                 </div>
                 <div className="grid gap-6 md:grid-cols-2">
@@ -165,16 +178,20 @@ export function Step10Recommendation() {
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-2xl font-bold tracking-tight">Technische Empfehlung</h2>
-                    <Badge variant="outline" className="gap-1">
-                        <Calculator className="h-3 w-3" />
-                        KI-Berechnet
-                    </Badge>
+                    <h2 className="text-2xl font-bold tracking-tight">Deine Empfehlung</h2>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => calculate()}
+                        disabled={isLoading}
+                        title="Neu berechnen"
+                    >
+                        <RotateCcw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                    </Button>
                 </div>
                 <p className="text-muted-foreground">
-                    Basierend auf deinen Angaben haben wir folgende Systemwerte berechnet.
                     Erfahrene Nutzer können diese Werte hier manuell anpassen.
                 </p>
             </div>
@@ -237,6 +254,7 @@ export function Step10Recommendation() {
                                 </div>
                                 <div className="font-bold text-primary">{calculations.battery.recommendedCapacityAh} Ah</div>
                             </div>
+
                         </div>
 
                         <Separator />
@@ -386,6 +404,65 @@ export function Step10Recommendation() {
                     </Card>
                 )}
 
+                {/* Inverter Section */}
+                {calculations.inverter && (
+                    <Card className="p-6 space-y-4 border-2 border-transparent focus-within:border-primary/20 transition-all">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 font-semibold">
+                                <Zap className="h-5 w-5 text-primary" />
+                                Wechselrichter
+                            </div>
+                            {/* Type is not in requirement interface, assuming consistent quality */}
+                            <Badge variant="outline">Reiner Sinus</Badge>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="text-muted-foreground text-sm flex items-center gap-1.5 min-w-0">
+                                        <span className="truncate">Max. Last (230V):</span>
+                                        <InfoModal title="Maximale Last" description="Die summierte Leistung aller 230V-Geräte, die du gleichzeitig betreiben möchtest." />
+                                    </div>
+                                    <div className="font-medium">{calculations.inverter.total230VLoadW} W</div>
+                                </div>
+
+                                <div className="flex items-center justify-between">
+                                    <div className="text-muted-foreground text-sm flex items-center gap-1.5 min-w-0">
+                                        <span className="truncate">Empfohlene Dauerleistung:</span>
+                                        <InfoModal title="Empfohlene Dauerleistung" description="Die empfohlene Größe des Wechselrichters Inklusive Sicherheitsreserven für Anlaufströme." />
+                                    </div>
+                                    <div className="font-bold text-primary">{calculations.inverter.recommendedW} W</div>
+                                </div>
+                            </div>
+
+                            <Separator />
+
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <Label htmlFor="inverter-override">Manuelle Leistung (W)</Label>
+                                    <InfoModal title="Manuelle Anpassung" description="Wähle eine andere Wechselrichter-Größe, falls du z.B. Reserven für künftige Geräte einplanen möchtest." />
+                                </div>
+                                <div className="relative">
+                                    <Input
+                                        id="inverter-override"
+                                        type="number"
+                                        placeholder={calculations.inverter.recommendedW.toString()}
+                                        value={customInverterPower ?? ""}
+                                        onChange={(e) => setCustomInverterPower(e.target.value ? parseInt(e.target.value) : null)}
+                                        className={customInverterPower ? "border-amber-500 ring-amber-500/20" : ""}
+                                    />
+                                    {customInverterPower && (
+                                        <div className="absolute right-3 top-2.5 text-xs text-amber-500 font-medium flex items-center gap-1">
+                                            <Settings2 className="h-3 w-3" />
+                                            Manuell
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+                )}
+
                 {/* Solar Controller Section */}
                 {calculations.solarController && (
                     <Card className="p-6 space-y-4 border-2 border-transparent focus-within:border-primary/20 transition-all">
@@ -437,7 +514,7 @@ export function Step10Recommendation() {
                                         type="number"
                                         placeholder={calculations.solarController.recommendedCurrentA.toString()}
                                         value={customSolarControllerCurrent ?? ""}
-                                        onChange={(e) => handleControllerChange(e.target.value)}
+                                        onChange={(e) => setCustomSolarControllerCurrent(e.target.value ? parseFloat(e.target.value) : null)}
                                         className={customSolarControllerCurrent ? "border-amber-500 ring-amber-500/20" : ""}
                                     />
                                     {customSolarControllerCurrent && (

@@ -53,6 +53,7 @@ export default function NewProductPage() {
         supportedVoltages: [] as number[],
         maxDischargeA: "",
         waveform: "pure_sine",
+        fuseType: "thermal",
         asin: "",
     });
 
@@ -107,6 +108,7 @@ export default function NewProductPage() {
                     supportedVoltages: formData.supportedVoltages && formData.supportedVoltages.length > 0 ? formData.supportedVoltages : null,
                     maxDischargeA: formData.maxDischargeA ? parseInt(formData.maxDischargeA) : null,
                     waveform: formData.waveform || null,
+                    fuseType: formData.fuseType || null,
                     asin: formData.asin || null,
                 }),
             });
@@ -261,8 +263,9 @@ export default function NewProductPage() {
                     const showCurrentA = slug.includes("laderegler") || slug.includes("ladebooster") || slug.includes("ladegeraet") || slug.includes("charger") || slug.includes("booster");
                     const showCable = slug.startsWith("kabel") || slug.includes("cable");
                     const showSolarWp = (slug.includes("solar") || slug.includes("panel") || slug.includes("modul")) && !slug.includes("regler");
+                    const showFuse = slug.includes("sicherung");
 
-                    if (!showPowerW && !showBattery && !showCurrentA && !showCable && !showSolarWp) return null;
+                    if (!showPowerW && !showBattery && !showCurrentA && !showCable && !showSolarWp && !showFuse) return null;
 
                     return (
                         <div className="bg-card rounded-xl border p-6 space-y-4">
@@ -439,6 +442,36 @@ export default function NewProductPage() {
                                     />
                                     <p className="text-xs text-muted-foreground">Nennleistung des Solarmoduls</p>
                                 </div>
+                            )}
+
+                            {showFuse && (
+                                <>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="currentA">Ampere (A)</Label>
+                                        <Input
+                                            id="currentA"
+                                            type="number"
+                                            min="0"
+                                            value={formData.currentA}
+                                            onChange={(e) => setFormData({ ...formData, currentA: e.target.value })}
+                                            placeholder="z.B. 100"
+                                        />
+                                        <p className="text-xs text-muted-foreground">Nennstrom der Sicherung</p>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="fuseType">Sicherungs-Typ</Label>
+                                        <select
+                                            id="fuseType"
+                                            value={formData.fuseType}
+                                            onChange={(e) => setFormData({ ...formData, fuseType: e.target.value })}
+                                            className="w-full px-3 py-2 border rounded-md bg-background"
+                                        >
+                                            <option value="thermal">Thermisch</option>
+                                            <option value="magnetic">Magnetisch</option>
+                                        </select>
+                                        <p className="text-xs text-muted-foreground">Art der Auslösung</p>
+                                    </div>
+                                </>
                             )}
                         </div>
                     );

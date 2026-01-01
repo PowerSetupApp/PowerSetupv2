@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { NumberStepper } from "@/components/ui/number-stepper";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import { Plus, Trash2, Copy, Search, Sparkles, Loader2, AlertCircle, Lightbulb, Laptop, Zap, Info, ChevronDown, AlertTriangle } from "lucide-react";
 import { DeviceSearchModal } from "../device-search-modal";
@@ -345,6 +346,50 @@ export function Step4Consumers() {
                                 size="sm"
                                 className="w-full"
                             />
+                        </div>
+                    )}
+
+                    {/* Gas Option for Absorber */}
+                    {def?.isCooling && consumer.coolingMethod === 'absorber' && (
+                        <div className="sm:col-span-2 space-y-3">
+                            <div className="flex items-center space-x-2 border p-2 rounded-md bg-muted/20">
+                                <Checkbox
+                                    id={`gas-${consumer.id}`}
+                                    checked={!!consumer.usesGas}
+                                    onCheckedChange={(c) => updateConsumer(consumer.id, {
+                                        usesGas: c as boolean,
+                                        electricPercentage: c ? 50 : 100
+                                    })}
+                                />
+                                <Label
+                                    htmlFor={`gas-${consumer.id}`}
+                                    className="text-sm font-medium leading-none cursor-pointer"
+                                >
+                                    {t("GasOption.label")}
+                                </Label>
+                            </div>
+
+                            {consumer.usesGas && (
+                                <div className="space-y-3 p-3 bg-muted/10 rounded-md border border-dashed">
+                                    <Label className="text-xs text-muted-foreground">
+                                        {t("GasOption.electric_percentage")}
+                                    </Label>
+                                    <Slider
+                                        value={[consumer.electricPercentage ?? 50]}
+                                        onValueChange={([v]) => updateConsumer(consumer.id, { electricPercentage: v })}
+                                        min={0}
+                                        max={100}
+                                        step={5}
+                                    />
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-muted-foreground">Gas</span>
+                                        <span className="font-medium text-primary">
+                                            {consumer.electricPercentage ?? 50}% Strom / {100 - (consumer.electricPercentage ?? 50)}% Gas
+                                        </span>
+                                        <span className="text-muted-foreground">Strom</span>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 

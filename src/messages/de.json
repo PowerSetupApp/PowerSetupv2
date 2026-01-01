@@ -77,6 +77,10 @@
                 "compressor": "Kompressor",
                 "absorber": "Absorber"
             },
+            "GasOption": {
+                "label": "Läuft (teilweise) mit Gas",
+                "electric_percentage": "Anteil Strombetrieb"
+            },
             "custom": {
                 "name_label": "Gerätename",
                 "name_placeholder": "Gerätename eingeben",

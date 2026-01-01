@@ -20,6 +20,8 @@ export interface Consumer {
     usageHoursPerDay: number;
     isFixed?: boolean;
     coolingMethod?: 'compressor' | 'absorber';
+    usesGas?: boolean; // Only for absorber cooling: runs partially on gas
+    electricPercentage?: number; // Only for absorber with gas: percentage of time on electric (0-100)
 }
 
 export interface RoofArea {
@@ -165,31 +167,31 @@ export interface SystemRequirements {
 
     // Metadata
     calculatedAt: string;
+    debug?: {
+        solarFactor: number;
+    };
 }
 
 // ==========================================
 // Helper Functions
 // ==========================================
 
-const STANDARD_CABLE_SIZES = [6, 10, 16, 25, 35, 50, 70, 95, 120, 150, 185, 240];
-const INVERTER_CLASSES = [500, 800, 1000, 1500, 2000, 2500, 3000, 5000];
-const CHARGER_CLASSES = [10, 20, 30, 50, 60];
-const SOLAR_CONTROLLER_CLASSES = [10, 20, 30, 40, 50, 60, 80, 100];
+const FALLBACK_CABLE_SIZES = [6, 10, 16, 25, 35, 50, 70, 95, 120, 150, 185, 240];
+const FALLBACK_INVERTER_CLASSES = [500, 800, 1000, 1500, 2000, 2500, 3000, 5000];
+const FALLBACK_CHARGER_CLASSES = [10, 20, 30, 50, 60];
+const FALLBACK_SOLAR_CONTROLLER_CLASSES = [10, 20, 30, 40, 50, 60, 80, 100];
 
-function roundToStandardCableSize(mm2: number): number {
-    return STANDARD_CABLE_SIZES.find(s => s >= mm2) || STANDARD_CABLE_SIZES[STANDARD_CABLE_SIZES.length - 1];
+function parseClasses(str: string): number[] {
+    if (!str) return [];
+    return str.split(',')
+        .map(s => Number(s.trim()))
+        .filter(n => !isNaN(n))
+        .sort((a, b) => a - b);
 }
 
-function roundToInverterClass(watts: number): number {
-    return INVERTER_CLASSES.find(c => c >= watts * 1.1) || INVERTER_CLASSES[INVERTER_CLASSES.length - 1];
-}
-
-function roundToChargerClass(amps: number): number {
-    return CHARGER_CLASSES.find(c => c >= amps) || CHARGER_CLASSES[CHARGER_CLASSES.length - 1];
-}
-
-function roundToControllerClass(amps: number): number {
-    return SOLAR_CONTROLLER_CLASSES.find(c => c >= amps) || SOLAR_CONTROLLER_CLASSES[SOLAR_CONTROLLER_CLASSES.length - 1];
+function roundToClass(value: number, classes: number[], fallback: number[]): number {
+    const list = classes.length > 0 ? classes : fallback;
+    return list.find(c => c >= value) || list[list.length - 1];
 }
 
 // ==========================================
@@ -203,7 +205,13 @@ function calculateDailyWh(consumers: Consumer[], settings: AlgorithmSettingsData
             const dutyCycle = c.coolingMethod === 'compressor'
                 ? settings.dutyCycleCompressor
                 : settings.dutyCycleAbsorber;
-            return sum + (c.power * 24 * dutyCycle);
+
+            // For absorber with gas: only count the electric portion
+            const electricFactor = (c.coolingMethod === 'absorber' && c.usesGas && c.electricPercentage !== undefined)
+                ? c.electricPercentage / 100
+                : 1.0;
+
+            return sum + (c.power * 24 * dutyCycle * electricFactor);
         }
         return sum + (c.power * c.usageHoursPerDay);
     }, 0);
@@ -304,23 +312,39 @@ function calculateBattery(
     const minCapacityAh = (netDailyDeficitWorstCase * backupDays) / (input.systemVoltage * dod);
 
     // Calculate recommended capacity (with solar offset)
-    // Only need to cover the deficit, not full consumption.
-    // Uses effectiveAutarchyDays (capped by standing duration)
-    let recommendedCapacityAh = hasSolar && netDailyDeficitWh > 0
-        ? (netDailyDeficitWh * effectiveAutarchyDays) / (input.systemVoltage * dod)
-        : minCapacityAh;
+    const effectiveSolarYieldRecommendation = dailySolarYieldWh * settings.recommendedSolarYieldFactor;
+    const netDailyDeficitRecommendation = Math.max(0, dailyWh - effectiveSolarYieldRecommendation);
 
-    // If solar covers all consumption, minimum 1 day reserve
-    if (hasSolar && netDailyDeficitWh === 0) {
-        recommendedCapacityAh = (dailyWh * 1) / (input.systemVoltage * dod); // 1 day reserve
+    // Base calculation from deficit
+    let calculatedRecAh = hasSolar && netDailyDeficitRecommendation > 0
+        ? (netDailyDeficitRecommendation * backupDays) / (input.systemVoltage * dod)
+        : 0;
+
+    // Safety Floor: Even with solar, we want at least 1 day of buffer (or minCapacity if that's smaller)
+    const oneDayBufferAh = (dailyWh * 1) / (input.systemVoltage * dod);
+    let recommendedCapacityAh = Math.max(calculatedRecAh, oneDayBufferAh);
+
+    // Ceiling: Should not exceed Worst Case (minCapacityAh)
+    // Logic: If Worst Case is 200Ah, we shouldn't recommend 300Ah just because of some factor math.
+    // However, ensure the floor doesn't violate the ceiling (if OneDay > WorstCase, take OneDay? No, WorstCase usually includes OneDay logic implied).
+    // Actually, WorstCase is (DeficitWorstCase * BackupDays).
+    // If BackupDays is high, WorstCase is high.
+
+    if (recommendedCapacityAh > minCapacityAh) {
+        recommendedCapacityAh = minCapacityAh;
     }
+
+    // Apply battery safety factor (general buffer for peak loads, inverter, etc.)
+    const safetyFactor = settings.batterySafetyFactor || 1.0;
+    const finalMinCapacityAh = minCapacityAh * safetyFactor;
+    const finalRecommendedCapacityAh = recommendedCapacityAh * safetyFactor;
 
     return {
         dailyWh,
         dailySolarYieldWh: Math.ceil(dailySolarYieldWh),
         netDailyDeficitWh: Math.ceil(netDailyDeficitWh),
-        minCapacityAh: Math.ceil(minCapacityAh),
-        recommendedCapacityAh: Math.ceil(recommendedCapacityAh),
+        minCapacityAh: Math.ceil(finalMinCapacityAh),
+        recommendedCapacityAh: Math.ceil(finalRecommendedCapacityAh),
         maxCapacityAh: maxAh,
         type: input.batteryPreference === 'any' ? 'lifepo4' : input.batteryPreference,
         voltage: input.systemVoltage,
@@ -331,7 +355,8 @@ function calculateBattery(
 
 function calculateInverter(
     input: WizardInput,
-    settings: AlgorithmSettingsData
+    settings: AlgorithmSettingsData,
+    inverterClasses: number[]
 ): InverterRequirement | null {
     const consumers230V = input.consumers.filter(c => c.voltage === 230);
 
@@ -350,11 +375,16 @@ function calculateInverter(
 
     const maxSingleLoadW = Math.max(...consumers230V.map(c => c.power));
     const total230VLoadW = consumers230V.reduce((sum, c) => sum + c.power, 0);
-    const simultaneousPowerW = total230VLoadW * simFactor;
+    // OLD LOGIC: Math.max(maxSingleLoadW, total230VLoadW * simFactor)
+    // PROBLEM: If simFactor is low (e.g. 0.5), result often falls back to maxSingleLoadW, so user sees no change.
+    // NEW LOGIC: Interpolate between MaxSingle (0.0) and Total (1.0).
+    // Formula: MaxSingle + (Total - MaxSingle) * simFactor
 
-    // Required power is the higher of: max single load OR simultaneous power
-    const requiredW = Math.max(maxSingleLoadW, simultaneousPowerW);
-    const recommendedW = roundToInverterClass(requiredW);
+    // Safety check: if total < max (shouldn't happen), stick to max
+    const remainingLoadW = Math.max(0, total230VLoadW - maxSingleLoadW);
+    const requiredW = maxSingleLoadW + (remainingLoadW * simFactor);
+
+    const recommendedW = roundToClass(requiredW, inverterClasses, FALLBACK_INVERTER_CLASSES);
 
     return {
         needed: true,
@@ -398,7 +428,8 @@ function calculateBooster(
 
 function calculateCharger(
     input: WizardInput,
-    battery: BatteryRequirement
+    battery: BatteryRequirement,
+    chargerClasses: number[]
 ): ChargerRequirement | null {
     if (!input.energySources.includes('shore_power')) {
         return null;
@@ -407,7 +438,7 @@ function calculateCharger(
     // Target: charge battery in ~5 hours
     const chargingTimeHours = 5;
     const targetCurrentA = battery.minCapacityAh / chargingTimeHours;
-    const recommendedCurrentA = roundToChargerClass(targetCurrentA);
+    const recommendedCurrentA = roundToClass(targetCurrentA, chargerClasses, FALLBACK_CHARGER_CLASSES);
 
     return {
         needed: true,
@@ -420,7 +451,8 @@ function calculateCharger(
 function calculateSolarController(
     input: WizardInput,
     settings: AlgorithmSettingsData,
-    solarModules: SolarModulesRequirement | null
+    solarModules: SolarModulesRequirement | null,
+    controllerClasses: number[]
 ): SolarControllerRequirement | null {
     if (!input.energySources.includes('solar') || !solarModules) {
         return null;
@@ -458,7 +490,7 @@ function calculateSolarController(
 
     // Current calculation: Wp / Voltage * 1.25 safety factor
     const currentA = (sizingTotalWp / input.systemVoltage) * 1.25;
-    const recommendedCurrentA = roundToControllerClass(currentA);
+    const recommendedCurrentA = roundToClass(currentA, controllerClasses, FALLBACK_SOLAR_CONTROLLER_CLASSES);
 
     // MPPT for larger systems, PWM for smaller
     const type: 'MPPT' | 'PWM' = sizingTotalWp > 200 ? 'MPPT' : 'PWM';
@@ -553,6 +585,7 @@ function calculateCableRequirement(
     voltage: number,
     isCritical: boolean,
     settings: AlgorithmSettingsData,
+    cableSizes: number[],
     isSolar: boolean = false // NEW: Solar cables use panel voltage, not system voltage
 ): CableRequirement {
     // For solar cables, use panel Vmp voltage (~18V) instead of system voltage
@@ -579,7 +612,7 @@ function calculateCableRequirement(
     const safetyFactor = isCritical ? 1.5 : 1.0;
     const adjustedMinCrossSection = minCrossSection * safetyFactor;
 
-    const recommendedCrossSection = roundToStandardCableSize(adjustedMinCrossSection);
+    const recommendedCrossSection = roundToClass(adjustedMinCrossSection, cableSizes, FALLBACK_CABLE_SIZES);
 
     return {
         route,
@@ -600,7 +633,8 @@ function calculateCables(
     booster: BoosterRequirement | null,
     charger: ChargerRequirement | null,
     solarController: SolarControllerRequirement | null,
-    settings: AlgorithmSettingsData
+    settings: AlgorithmSettingsData,
+    cableSizes: number[]
 ): CableRequirement[] {
     const cables: CableRequirement[] = [];
     const voltage = input.systemVoltage;
@@ -614,7 +648,8 @@ function calculateCables(
             booster.currentA,
             input.vehicleVoltage,
             true,
-            settings
+            settings,
+            cableSizes
         ));
     }
 
@@ -627,7 +662,8 @@ function calculateCables(
             booster.currentA,
             voltage,
             true,
-            settings
+            settings,
+            cableSizes
         ));
     }
 
@@ -641,7 +677,8 @@ function calculateCables(
             inverterCurrentA,
             voltage,
             true,
-            settings
+            settings,
+            cableSizes
         ));
     }
 
@@ -654,7 +691,8 @@ function calculateCables(
             charger.recommendedCurrentA,
             voltage,
             true,
-            settings
+            settings,
+            cableSizes
         ));
     }
 
@@ -700,7 +738,8 @@ function calculateCables(
             fuseBoxCurrentA,
             voltage,
             false,
-            settings
+            settings,
+            cableSizes
         ));
     }
 
@@ -715,6 +754,12 @@ export async function calculateSystemRequirements(input: WizardInput): Promise<S
     // Fetch settings from database
     const settings = await getAlgorithmSettings();
 
+    // Parse classes from settings
+    const inverterClasses = parseClasses(settings.inverterClasses);
+    const chargerClasses = parseClasses(settings.chargerClasses);
+    const solarControllerClasses = parseClasses(settings.solarControllerClasses);
+    const cableSizes = parseClasses(settings.cableSizes);
+
     // 1. Calculate daily Wh consumption
     const dailyWh = calculateDailyWh(input.consumers, settings);
 
@@ -722,23 +767,23 @@ export async function calculateSystemRequirements(input: WizardInput): Promise<S
     const battery = calculateBattery(input, dailyWh, settings);
 
     // 3. Calculate inverter (if 230V consumers)
-    const inverter = calculateInverter(input, settings);
+    const inverter = calculateInverter(input, settings, inverterClasses);
 
     // 4. Calculate booster (if alternator)
     const booster = calculateBooster(input, settings);
 
     // 5. Calculate charger (if shore power)
-    const charger = calculateCharger(input, battery);
+    const charger = calculateCharger(input, battery, chargerClasses);
 
     // 6. Calculate solar modules (if solar) - MOVED UP BEFORE CONTROLLER
     const solarModules = calculateSolarModules(input, dailyWh, settings);
 
     // 7. Calculate solar controller (if solar) - NOW DEPENDS ON MODULES
-    const solarController = calculateSolarController(input, settings, solarModules);
+    const solarController = calculateSolarController(input, settings, solarModules, solarControllerClasses);
 
     // 8. Calculate cables
     const cables = calculateCables(
-        input, battery, inverter, booster, charger, solarController, settings
+        input, battery, inverter, booster, charger, solarController, settings, cableSizes
     );
 
     return {
@@ -757,6 +802,9 @@ export async function calculateSystemRequirements(input: WizardInput): Promise<S
         cables,
 
         calculatedAt: new Date().toISOString(),
+        debug: {
+            solarFactor: settings.recommendedSolarYieldFactor
+        }
     };
 }
 

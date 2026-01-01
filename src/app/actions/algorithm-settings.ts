@@ -31,6 +31,9 @@ export interface AlgorithmSettingsData {
     batteryMedium: number;
     batterySpacious: number;
 
+    // Batterie-Sicherheitspuffer
+    batterySafetyFactor: number;
+
     // Standing Duration (Days)
     standingDaysShort: number;
     standingDaysMedium: number;
@@ -43,6 +46,7 @@ export interface AlgorithmSettingsData {
     wpPerM2Rigid: number;
     wpPerM2Flexible: number;
     cloudyYieldFactor: number;
+    recommendedSolarYieldFactor: number;
 
     // Sun Hours
     sunHoursSummer: number;
@@ -79,6 +83,12 @@ export interface AlgorithmSettingsData {
 // ==========================================
 
 export async function getAlgorithmSettings(): Promise<AlgorithmSettingsData> {
+    // Force fresh data
+    try {
+        const { unstable_noStore } = await import("next/cache");
+        unstable_noStore();
+    } catch (e) { }
+
     let settings = await prisma.algorithmSettings.findUnique({
         where: { id: "default" }
     });
@@ -112,6 +122,87 @@ export async function updateAlgorithmSettings(
         return { success: true };
     } catch (error) {
         console.error("Failed to update algorithm settings:", error);
+        return { success: false, error: String(error) };
+    }
+}
+
+// ==========================================
+// Sync Classes from DB
+// ==========================================
+
+export async function syncComponentClassesFromDB(): Promise<{
+    success: boolean;
+    data?: Partial<AlgorithmSettingsData>;
+    error?: string;
+}> {
+    try {
+        // 1. Inverters: Distinct powerW
+        const inverters = await prisma.product.findMany({
+            where: {
+                isActive: true,
+                category: { slug: { contains: "inverter" } }, // Safe assumption
+                powerW: { not: null }
+            },
+            distinct: ['powerW'],
+            select: { powerW: true },
+            orderBy: { powerW: 'asc' }
+        });
+        const inverterClasses = inverters.map(p => p.powerW).filter(Boolean).join(',');
+
+        // 2. Chargers: Distinct currentA
+        const chargers = await prisma.product.findMany({
+            where: {
+                isActive: true,
+                category: { slug: { contains: "charger" } }, // "charger", "battery-charger"
+                currentA: { not: null }
+            },
+            distinct: ['currentA'],
+            select: { currentA: true },
+            orderBy: { currentA: 'asc' }
+        });
+        const chargerClasses = chargers.map(p => p.currentA).filter(Boolean).join(',');
+
+        // 3. Solar Controllers: Distinct currentA
+        // Make sure we don't mix with chargers. "laderegler", "solar", "controller"
+        const solarControllers = await prisma.product.findMany({
+            where: {
+                isActive: true,
+                category: {
+                    OR: [
+                        { slug: { contains: "solar" } },
+                        { slug: { contains: "regler" } },
+                        { slug: { contains: "controller" } }
+                    ]
+                },
+                currentA: { not: null }
+            },
+            distinct: ['currentA'],
+            select: { currentA: true },
+            orderBy: { currentA: 'asc' }
+        });
+        const solarControllerClasses = solarControllers.map(p => p.currentA).filter(Boolean).join(',');
+
+        // 4. Cables: Distinct crossSectionMm2
+        const cables = await prisma.product.findMany({
+            where: {
+                isActive: true,
+                crossSectionMm2: { not: null }
+            },
+            distinct: ['crossSectionMm2'],
+            select: { crossSectionMm2: true },
+            orderBy: { crossSectionMm2: 'asc' }
+        });
+        const cableSizes = cables.map(p => p.crossSectionMm2).filter(Boolean).join(',');
+
+        const newData: Partial<AlgorithmSettingsData> = {};
+        if (inverterClasses) newData.inverterClasses = inverterClasses;
+        if (chargerClasses) newData.chargerClasses = chargerClasses;
+        if (solarControllerClasses) newData.solarControllerClasses = solarControllerClasses;
+        if (cableSizes) newData.cableSizes = cableSizes;
+
+        return { success: true, data: newData };
+    } catch (error) {
+        console.error("Failed to sync classes from DB:", error);
         return { success: false, error: String(error) };
     }
 }
