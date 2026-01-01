@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
                 currentA: parseResult.data.currentA ?? null,
                 crossSectionMm2: parseResult.data.crossSectionMm2 ?? null,
                 solarWp: parseResult.data.solarWp ?? null,
-                supportedVoltages: parseResult.data.supportedVoltages ?? null,
+                supportedVoltages: (parseResult.data.supportedVoltages ?? null) as any,
                 maxDischargeA: parseResult.data.maxDischargeA ?? null,
             },
             include: {
