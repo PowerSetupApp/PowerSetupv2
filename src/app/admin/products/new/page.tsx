@@ -7,6 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Save, Loader2, Image as ImageIcon, Smile, Sparkles } from "lucide-react";
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@/components/ui/accordion";
 import Link from "next/link";
 import { MediaModal } from "@/components/admin/media-modal";
 import { EmojiPickerModal } from "@/components/admin/emoji-picker-modal";
@@ -47,7 +53,20 @@ export default function NewProductPage() {
         supportedVoltages: [] as number[],
         maxDischargeA: "",
         waveform: "pure_sine",
+        asin: "",
     });
+
+    // ASIN extraction helper
+    const extractAsinFromUrl = (url: string): string | null => {
+        const match = url.match(/\/(?:dp|gp\/product|gp\/aw\/d)\/([A-Z0-9]{10})/i);
+        return match ? match[1].toUpperCase() : null;
+    };
+
+    // Handle affiliate URL change with ASIN auto-extraction
+    const handleAffiliateUrlChange = (url: string) => {
+        const asin = extractAsinFromUrl(url);
+        setFormData({ ...formData, affiliateUrl: url, asin: asin || "" });
+    };
 
     useEffect(() => {
         fetch("/api/admin/categories")
@@ -88,6 +107,7 @@ export default function NewProductPage() {
                     supportedVoltages: formData.supportedVoltages && formData.supportedVoltages.length > 0 ? formData.supportedVoltages : null,
                     maxDischargeA: formData.maxDischargeA ? parseInt(formData.maxDischargeA) : null,
                     waveform: formData.waveform || null,
+                    asin: formData.asin || null,
                 }),
             });
 
@@ -463,7 +483,7 @@ export default function NewProductPage() {
                             id="affiliateUrl"
                             type="url"
                             value={formData.affiliateUrl}
-                            onChange={(e) => setFormData({ ...formData, affiliateUrl: e.target.value })}
+                            onChange={(e) => handleAffiliateUrlChange(e.target.value)}
                             placeholder="https://amazon.de/..."
                             required
                             className={fieldErrors.affiliateUrl ? "border-destructive" : ""}
@@ -471,6 +491,30 @@ export default function NewProductPage() {
                         {fieldErrors.affiliateUrl && (
                             <p className="text-sm text-destructive">{fieldErrors.affiliateUrl[0]}</p>
                         )}
+
+                        {/* Amazon Details Accordion */}
+                        <Accordion type="single" collapsible className="mt-3">
+                            <AccordionItem value="amazon-details" className="border rounded-lg px-3">
+                                <AccordionTrigger className="text-sm text-muted-foreground hover:no-underline py-2">
+                                    Amazon Details
+                                </AccordionTrigger>
+                                <AccordionContent className="pb-3">
+                                    <div className="space-y-2">
+                                        <div>
+                                            <span className="text-xs text-muted-foreground">ASIN (Amazon Standard Identification Number):</span>
+                                            <div className="font-mono text-sm bg-muted px-2 py-1 rounded mt-1">
+                                                {formData.asin || <span className="text-muted-foreground italic">Wird aus URL extrahiert</span>}
+                                            </div>
+                                            <p className="text-xs text-muted-foreground mt-1">Wird benötigt für zukünftige Amazon API-Abfragen</p>
+                                        </div>
+                                        <div>
+                                            <span className="text-xs text-muted-foreground">Marketplace:</span>
+                                            <div className="text-sm mt-1">🇩🇪 amazon.de</div>
+                                        </div>
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
+                        </Accordion>
                     </div>
                 </div>
 

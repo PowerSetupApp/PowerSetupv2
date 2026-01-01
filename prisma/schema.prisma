@@ -57,7 +57,8 @@ model Product {
   description     String?
   icon            String?
   imageUrl        String?
-  affiliateUrl    String
+  affiliateUrl    String?
+  asin            String?   // Amazon Standard Identification Number (für API-Abfragen)
   price           Float?
   
   // Kategorie

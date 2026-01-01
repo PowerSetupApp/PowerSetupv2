@@ -24,6 +24,7 @@ const ProductSchema = z.object({
     supportedVoltages: z.array(z.number()).nullable().optional(),
     maxDischargeA: z.number().nullable().optional(),
     waveform: z.string().nullable().optional(),
+    asin: z.string().nullable().optional(),
 });
 
 // GET /api/admin/products - List all products
@@ -102,6 +103,7 @@ export async function POST(request: NextRequest) {
                 supportedVoltages: (parseResult.data.supportedVoltages ?? null) as any,
                 maxDischargeA: parseResult.data.maxDischargeA ?? null,
                 waveform: parseResult.data.waveform ?? null,
+                asin: parseResult.data.asin ?? null,
             },
             include: {
                 category: true,
