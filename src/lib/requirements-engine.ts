@@ -783,6 +783,9 @@ export function preFilterProducts(
             if (product.powerW && product.powerW < requirements.inverter.recommendedW) {
                 return false;
             }
+            if (product.voltageV && product.voltageV !== requirements.systemVoltage) {
+                return false;
+            }
         }
 
         // Batterie: capacityAh >= required, voltageV = system, batteryType matches

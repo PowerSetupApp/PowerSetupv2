@@ -22,6 +22,7 @@ const UpdateProductSchema = z.object({
     solarWp: z.number().nullable().optional(),
     supportedVoltages: z.array(z.number()).nullable().optional(),
     maxDischargeA: z.number().nullable().optional(),
+    waveform: z.string().nullable().optional(),
 });
 
 // GET /api/admin/products/[id] - Get single product

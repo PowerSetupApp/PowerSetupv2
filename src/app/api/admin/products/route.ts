@@ -23,6 +23,7 @@ const ProductSchema = z.object({
     solarWp: z.number().nullable().optional(),
     supportedVoltages: z.array(z.number()).nullable().optional(),
     maxDischargeA: z.number().nullable().optional(),
+    waveform: z.string().nullable().optional(),
 });
 
 // GET /api/admin/products - List all products
@@ -100,6 +101,7 @@ export async function POST(request: NextRequest) {
                 solarWp: parseResult.data.solarWp ?? null,
                 supportedVoltages: (parseResult.data.supportedVoltages ?? null) as any,
                 maxDischargeA: parseResult.data.maxDischargeA ?? null,
+                waveform: parseResult.data.waveform ?? null,
             },
             include: {
                 category: true,

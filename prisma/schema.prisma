@@ -78,6 +78,7 @@ model Product {
   solarWp         Int?      // Solarpanel: Leistung in Wp
   supportedVoltages Json?   // Laderegler/Booster/Charger: Unterstützte Spannungen [12, 24, 48]
   maxDischargeA   Int?      // Batterie: Max. Entladestrom (BMS-Limit)
+  waveform        String?   // Wechselrichter: Sinus-Typ (pure_sine/modified_sine)
   
   // Status
   isActive        Boolean  @default(true)

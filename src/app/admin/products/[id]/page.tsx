@@ -40,6 +40,7 @@ interface Product {
     solarWp: number | null;
     supportedVoltages: number[] | null;
     maxDischargeA: number | null;
+    waveform: string | null;
 }
 
 export default function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
@@ -76,6 +77,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
         solarWp: "",
         supportedVoltages: [] as number[],
         maxDischargeA: "",
+        waveform: "pure_sine",
     });
 
     useEffect(() => {
@@ -106,6 +108,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                     solarWp: product.solarWp?.toString() || "",
                     supportedVoltages: (product.supportedVoltages as number[]) || [],
                     maxDischargeA: product.maxDischargeA?.toString() || "",
+                    waveform: product.waveform || "pure_sine",
                 });
                 setCategories(cats);
                 setPartnerTag(settings.amazonPartnerTag);
@@ -148,6 +151,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                     solarWp: formData.solarWp ? parseInt(formData.solarWp) : null,
                     supportedVoltages: formData.supportedVoltages && formData.supportedVoltages.length > 0 ? formData.supportedVoltages : null,
                     maxDischargeA: formData.maxDischargeA ? parseInt(formData.maxDischargeA) : null,
+                    waveform: formData.waveform || null,
                 }),
             });
 
@@ -357,6 +361,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
 
                     const showPowerW = slug.startsWith("wechselrichter");
                     const showBattery = slug.startsWith("batterie");
+                    const showVoltage = showBattery || showPowerW;
                     const showCurrentA = slug.includes("laderegler") || slug.includes("ladebooster") || slug.includes("ladegeraet") || slug.includes("charger") || slug.includes("booster");
                     const showCable = slug.startsWith("kabel") || slug.includes("cable");
                     const showSolarWp = (slug.includes("solar") || slug.includes("panel") || slug.includes("modul")) && !slug.includes("regler");
@@ -373,18 +378,33 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                             </div>
 
                             {showPowerW && (
-                                <div className="space-y-2">
-                                    <Label htmlFor="powerW">Dauerleistung (W)</Label>
-                                    <Input
-                                        id="powerW"
-                                        type="number"
-                                        min="0"
-                                        value={formData.powerW}
-                                        onChange={(e) => setFormData({ ...formData, powerW: e.target.value })}
-                                        placeholder="z.B. 2000"
-                                    />
-                                    <p className="text-xs text-muted-foreground">Die maximale Dauerleistung des Wechselrichters</p>
-                                </div>
+                                <>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="powerW">Dauerleistung (W)</Label>
+                                        <Input
+                                            id="powerW"
+                                            type="number"
+                                            min="0"
+                                            value={formData.powerW}
+                                            onChange={(e) => setFormData({ ...formData, powerW: e.target.value })}
+                                            placeholder="z.B. 2000"
+                                        />
+                                        <p className="text-xs text-muted-foreground">Die maximale Dauerleistung des Wechselrichters</p>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="waveform">Sinus-Welle</Label>
+                                        <select
+                                            id="waveform"
+                                            value={formData.waveform}
+                                            onChange={(e) => setFormData({ ...formData, waveform: e.target.value })}
+                                            className="w-full px-3 py-2 border rounded-md bg-background"
+                                        >
+                                            <option value="pure_sine">Reiner Sinus</option>
+                                            <option value="modified_sine">Modifizierter Sinus</option>
+                                        </select>
+                                        <p className="text-xs text-muted-foreground">Reiner Sinus ist für empfindliche Geräte (z.B. Kompressor-Kühlschrank) erforderlich</p>
+                                    </div>
+                                </>
                             )}
 
                             {showBattery && (
@@ -400,20 +420,33 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                                             placeholder="z.B. 200"
                                         />
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="voltageV">Spannung (V)</Label>
-                                        <select
-                                            id="voltageV"
-                                            value={formData.voltageV}
-                                            onChange={(e) => setFormData({ ...formData, voltageV: e.target.value })}
-                                            className="w-full px-3 py-2 border rounded-md bg-background"
-                                        >
-                                            <option value="">Bitte wählen...</option>
-                                            <option value="12">12V</option>
-                                            <option value="24">24V</option>
-                                            <option value="48">48V</option>
-                                        </select>
-                                    </div>
+                                </>
+                            )}
+
+                            {showVoltage && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="voltageV">{showPowerW ? "Eingangsspannung (V)" : "Spannung (V)"}</Label>
+                                    <select
+                                        id="voltageV"
+                                        value={formData.voltageV}
+                                        onChange={(e) => setFormData({ ...formData, voltageV: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-md bg-background"
+                                    >
+                                        <option value="">Bitte wählen...</option>
+                                        <option value="12">12V</option>
+                                        <option value="24">24V</option>
+                                        <option value="48">48V</option>
+                                    </select>
+                                    <p className="text-xs text-muted-foreground">
+                                        {showPowerW
+                                            ? "Mit welcher Systemspannung arbeitet dieser Wechselrichter?"
+                                            : "Nennspannung der Batterie"}
+                                    </p>
+                                </div>
+                            )}
+
+                            {showBattery && (
+                                <>
                                     <div className="space-y-2">
                                         <Label htmlFor="batteryType">Batterietyp</Label>
                                         <select
