@@ -79,7 +79,7 @@ export default async function ConsumerDevicesPage() {
                                             <td className="px-6 py-4 text-sm space-y-1">
                                                 <div>⚡ {device.defaultPower} W</div>
                                                 <div>🔌 {['12V', '24V', '48V', 'user'].includes(device.defaultVoltage) ? 'System' : device.defaultVoltage}</div>
-                                                <div>🕒 {device.defaultHoursPerDay} h/Tag</div>
+                                                <div>🕒 {Math.round(device.defaultHoursPerDay * 60)} min/Tag</div>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex flex-wrap gap-1">

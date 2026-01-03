@@ -6,7 +6,7 @@ import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Cable, Zap, Sun, Droplets, Plug2 } from "lucide-react";
 
-export function Step7Cabling() {
+export function Step6Cabling() {
     const t = useTranslations("Wizard.Step8");
     const {
         cableLengths, setCableLengths, setCustomCableLength,

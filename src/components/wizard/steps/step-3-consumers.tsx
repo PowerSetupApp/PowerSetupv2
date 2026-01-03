@@ -81,7 +81,7 @@ function SectionHeader({
 
 import { useRouter } from "next/navigation";
 
-export function Step4Consumers() {
+export function Step3Consumers() {
     const t = useTranslations("Wizard.Step4");
     const router = useRouter();
     const { consumers, toggleConsumer, updateConsumer, addConsumer, removeConsumer, systemVoltage, simultaneousLoad, setSimultaneousLoad, syncConsumers } = useWizardStore();
@@ -403,17 +403,20 @@ export function Step4Consumers() {
                         </div>
                     )}
 
-                    {/* Hours Selection */}
+                    {/* Hours Selection - show as minutes */}
                     {def?.showHoursField !== false && !def?.isCooling && (
                         <div className="space-y-1.5">
-                            <Label className="text-xs text-muted-foreground">{t("custom.hours_label")}</Label>
+                            <div className="flex items-center gap-1 flex-wrap">
+                                <Label className="text-xs text-muted-foreground">{t("custom.hours_label")}</Label>
+                                <span className="text-xs text-muted-foreground whitespace-nowrap">(≈ {safeHours.toLocaleString('de-DE', { maximumFractionDigits: 1 })} Std.)</span>
+                            </div>
                             <NumberStepper
-                                value={safeHours}
-                                onChange={(v) => updateConsumer(consumer.id, { usageHoursPerDay: v })}
+                                value={Math.round(safeHours * 60)}
+                                onChange={(v) => updateConsumer(consumer.id, { usageHoursPerDay: v / 60 })}
                                 min={0}
-                                max={24}
-                                step={stepHours}
-                                suffix="h"
+                                max={1440}
+                                step={Math.round(stepHours * 60)}
+                                suffix="min"
                             />
                         </div>
                     )}
@@ -546,7 +549,7 @@ export function Step4Consumers() {
 
                                                         {/* --- HINT FOR LED - HARDCODED CHECK, COULD BE DYNAMIC LATER --- */}
                                                         {device.i18nKey === 'led' && (
-                                                            <div className="absolute top-8 left-10 sm:left-14 text-xs text-muted-foreground italic w-full">
+                                                            <div className="text-xs text-muted-foreground italic w-full mb-2 sm:mb-0 sm:absolute sm:top-8 sm:left-14">
                                                                 {t("Consumers.led_hint")}
                                                             </div>
                                                         )}
@@ -683,14 +686,17 @@ export function Step4Consumers() {
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label className="text-sm font-medium">{t("custom.hours_label")}</Label>
+                                        <div className="flex items-center gap-1 flex-wrap">
+                                            <Label className="text-sm font-medium">{t("custom.hours_label")}</Label>
+                                            <span className="text-xs text-muted-foreground whitespace-nowrap">(≈ {customHours.toLocaleString('de-DE', { maximumFractionDigits: 1 })} Std.)</span>
+                                        </div>
                                         <NumberStepper
-                                            value={customHours}
-                                            onChange={setCustomHours}
-                                            min={0.5}
-                                            max={24}
-                                            step={0.5}
-                                            suffix="h"
+                                            value={Math.round(customHours * 60)}
+                                            onChange={(v) => setCustomHours(v / 60)}
+                                            min={30}
+                                            max={1440}
+                                            step={30}
+                                            suffix="min"
                                         />
                                     </div>
                                     <div className="flex items-end pb-2">
@@ -769,14 +775,17 @@ export function Step4Consumers() {
                                                     />
                                                 </div>
                                                 <div className="space-y-1.5">
-                                                    <Label className="text-xs text-muted-foreground">{t("custom.hours_label")}</Label>
+                                                    <div className="flex items-center gap-1 flex-wrap">
+                                                        <Label className="text-xs text-muted-foreground">{t("custom.hours_label")}</Label>
+                                                        <span className="text-xs text-muted-foreground whitespace-nowrap">(≈ {c.usageHoursPerDay.toLocaleString('de-DE', { maximumFractionDigits: 1 })} Std.)</span>
+                                                    </div>
                                                     <NumberStepper
-                                                        value={c.usageHoursPerDay}
-                                                        onChange={(v) => updateConsumer(c.id, { usageHoursPerDay: v })}
+                                                        value={Math.round(c.usageHoursPerDay * 60)}
+                                                        onChange={(v) => updateConsumer(c.id, { usageHoursPerDay: v / 60 })}
                                                         min={0}
-                                                        max={24}
-                                                        step={0.5}
-                                                        suffix="h"
+                                                        max={1440}
+                                                        step={30}
+                                                        suffix="min"
                                                     />
                                                 </div>
                                                 <div className="flex items-end pb-1">

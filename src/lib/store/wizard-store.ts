@@ -176,13 +176,24 @@ export interface WizardState {
     customSolarPower: number | null;
     customBoosterCurrent: number | null;
     customSolarControllerCurrent: number | null;
+    customChargerCurrent: number | null; // NEW
     customInverterPower: number | null; // NEW
+
+    // Brand Preferences
+    brandPreferenceCharger: string | null;
+    brandPreferenceBattery: string | null;
+    brandPreferenceSolar: string | null;
 
     setCustomBatteryCapacity: (capacity: number | null) => void;
     setCustomSolarPower: (power: number | null) => void;
     setCustomBoosterCurrent: (current: number | null) => void;
     setCustomSolarControllerCurrent: (current: number | null) => void;
+    setCustomChargerCurrent: (current: number | null) => void; // NEW
     setCustomInverterPower: (power: number | null) => void; // NEW
+
+    setBrandPreferenceCharger: (brand: string | null) => void;
+    setBrandPreferenceBattery: (brand: string | null) => void;
+    setBrandPreferenceSolar: (brand: string | null) => void;
 
     // Navigation Helper
     currentStep: number;
@@ -251,7 +262,13 @@ export const useWizardStore = create<WizardState>()(
             customSolarPower: null,
             customBoosterCurrent: null,
             customSolarControllerCurrent: null,
+            customChargerCurrent: null, // NEW
             customInverterPower: null, // NEW
+
+            // Brand Preference Defaults
+            brandPreferenceCharger: null,
+            brandPreferenceBattery: null,
+            brandPreferenceSolar: null,
 
             currentStep: 1,
 
@@ -299,6 +316,11 @@ export const useWizardStore = create<WizardState>()(
                 customSolarPower: null,
                 customBoosterCurrent: null,
                 customSolarControllerCurrent: null,
+                customChargerCurrent: null, // NEW
+                customInverterPower: null, // NEW
+                brandPreferenceCharger: null,
+                brandPreferenceBattery: null,
+                brandPreferenceSolar: null,
                 currentStep: 1,
             }),
 
@@ -391,7 +413,12 @@ export const useWizardStore = create<WizardState>()(
             setCustomSolarPower: (power) => set({ customSolarPower: power }),
             setCustomBoosterCurrent: (current) => set({ customBoosterCurrent: current }),
             setCustomSolarControllerCurrent: (current) => set({ customSolarControllerCurrent: current }),
+            setCustomChargerCurrent: (current) => set({ customChargerCurrent: current }),
             setCustomInverterPower: (power) => set({ customInverterPower: power }), // NEW
+
+            setBrandPreferenceCharger: (brand) => set({ brandPreferenceCharger: brand }),
+            setBrandPreferenceBattery: (brand) => set({ brandPreferenceBattery: brand }),
+            setBrandPreferenceSolar: (brand) => set({ brandPreferenceSolar: brand }),
 
             setTravelBehavior: (behavior) => set((state) => ({
                 travelBehavior: { ...state.travelBehavior, ...behavior }

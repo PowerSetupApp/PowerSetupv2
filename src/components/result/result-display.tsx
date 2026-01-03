@@ -3,12 +3,15 @@
 import { useMemo, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Copy, Share2, Check, ArrowLeft, Plus, RefreshCw, Loader2, Sparkles } from "lucide-react";
+import { Copy, Share2, Check, ArrowLeft, Plus, RefreshCw, Loader2, Sparkles, Bug } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { ProductCarousel } from "./product-carousel";
 import { CableGrid } from "./cable-grid";
 import { useRouter } from "next/navigation";
+import { SummaryCard } from "./result-summary-card";
+import { SolarBagSuggestion } from "./solar-bag-suggestion";
+import { ResultDebugCalculations } from "./result-debug-calculations";
 
 interface Product {
     id: string;
@@ -46,6 +49,7 @@ export default function ResultDisplay({
     const [isGenerating, setIsGenerating] = useState(false);
     const [creationStep, setCreationStep] = useState(0); // 0: Idle, 1: Analyzing, 2: Selecting, 3: Finalizing
     const [mounted, setMounted] = useState(false);
+    const [isDebugOpen, setIsDebugOpen] = useState(false);
 
     // Prevent hydration mismatch by only rendering dynamic content after mount
     useEffect(() => {
@@ -721,6 +725,33 @@ export default function ResultDisplay({
                     </Link>
                 </Button>
             </div>
+
+            {/* Solar Bag Suggestion - Only show if solar is selected and there's a deficit */}
+            {calculations?.solarModules && userConfig?.energySources?.includes('solar') && (
+                <SolarBagSuggestion
+                    requiredWp={calculations.solarModules.requiredWp || 0}
+                    availableWp={calculations.solarModules.totalAvailableWp || 0}
+                />
+            )}
+
+            {/* Debug Button - Fixed position */}
+            <Button
+                variant="ghost"
+                size="sm"
+                className="fixed bottom-4 left-4 z-50 opacity-50 hover:opacity-100 transition-opacity bg-gray-900/80 text-white hover:bg-gray-900"
+                onClick={() => setIsDebugOpen(true)}
+            >
+                <Bug className="h-4 w-4 mr-2" />
+                Debug
+            </Button>
+
+            {/* Debug Modal */}
+            <ResultDebugCalculations
+                isOpen={isDebugOpen}
+                onOpenChange={setIsDebugOpen}
+                calculations={calculations}
+                userConfig={userConfig}
+            />
         </div>
     );
 }

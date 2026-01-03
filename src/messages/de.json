@@ -20,11 +20,11 @@
             "title": "Welche Systemspannung nutzt du?",
             "subtitle": "12V ist Standard für Camper. 24V wird oft in LKW oder größeren Expeditionsmobilen genutzt.",
             "options": {
-                "12V": "12V System (Standard)",
-                "24V": "24V System",
-                "48V": "48V System (High Power)"
+                "12V": "12V (üblich)",
+                "24V": "24V (sinnvoll)",
+                "48V": "48V (sonderfall)"
             },
-            "hint": "Wenn du unsicher bist: 90% aller Campervans nutzen <strong>12V</strong>. Wähle <strong>24V</strong> oder <strong>48V</strong> nur für spezielle Anforderungen.",
+            "hint": "<strong>12V</strong> ist Standard. <strong>24V</strong> lohnt sich bei hohem Strombedarf. <strong>48V</strong> ist meist unpraktisch, da viel Camping-Zubehör nicht kompatibel ist.",
             "battery_title": "Welchen Batterietyp planst du?",
             "battery_type_label": "Batterie-Technologie",
             "battery_options": {
@@ -97,7 +97,7 @@
                 "power_placeholder": "Leistung (W)",
                 "voltage_label": "Spannung",
                 "quantity_label": "Anzahl",
-                "hours_label": "Std/Tag",
+                "hours_label": "Min/Tag",
                 "add_button": "Hinzufügen",
                 "add_device_button": "Gerät hinzufügen",
                 "add_individual_button": "Individuelles Gerät",

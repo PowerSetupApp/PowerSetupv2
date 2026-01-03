@@ -75,7 +75,7 @@ function getDevicesForCategory(categoryKey: string): any[] {
 
     if (categoryKey === 'basic') {
         devices.push(
-            { name: 'LED Beleuchtung', i18nKey: 'led', defaultPower: 20, icon: '💡', defaultVoltage: '12V', defaultHoursPerDay: 4, stepHours: 0.5, showHoursField: true, showFixedOption: false, sortOrder: 10 },
+            { name: 'LED Beleuchtung', i18nKey: 'led', defaultPower: 20, icon: '💡', defaultVoltage: '12V', defaultHoursPerDay: 4, stepHours: 0.5, showHoursField: true, sortOrder: 10 },
             { name: 'USB Laden', i18nKey: 'usb', defaultPower: 15, icon: '📱', defaultVoltage: '12V', defaultHoursPerDay: 3, stepHours: 0.5, showHoursField: true, sortOrder: 20 },
             { name: '12V Steckdose', i18nKey: 'socket12v', defaultPower: 60, icon: '🔌', defaultVoltage: '12V', defaultHoursPerDay: 2, stepHours: 0.5, showHoursField: true, sortOrder: 30 }
         );

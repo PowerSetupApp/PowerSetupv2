@@ -85,6 +85,11 @@ model Product {
   // Status
   isActive        Boolean  @default(true)
   
+  // Marke & Typ (Filter)
+  brandId         String?
+  brand           Brand?   @relation(fields: [brandId], references: [id])
+
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   
@@ -203,7 +208,7 @@ model ConsumerDevice {
   
   // UI-Optionen
   showHoursField      Boolean   @default(true)
-  showFixedOption     Boolean   @default(true)
+  showFixedOption     Boolean   @default(false)
   isCooling           Boolean   @default(false)
   
   // Suche
@@ -280,6 +285,9 @@ model AlgorithmSettings {
   // Batterie-Sicherheitspuffer (Multiplikator auf berechnete Kapazität)
   batterySafetyFactor   Float    @default(1.3)  // 1.3 = 30% Puffer
   
+  // Solar-Regler Sicherheitspuffer (Multiplikator auf Wp/V)
+  solarSafetyFactor     Float    @default(1.1)  // 1.1 = 10% Puffer (User Request)
+  
   // Standzeit-Definitionen (in Tagen)
   standingDaysShort     Int      @default(3)
   standingDaysMedium    Int      @default(7)
@@ -337,3 +345,40 @@ model AlgorithmSettings {
   updatedAt             DateTime @updatedAt
 }
 
+
+// ==========================================
+// Brand (Marken-Präferenzen)
+// ==========================================
+model Brand {
+  id        String   @id @default(uuid())
+  name      String
+  
+  // New fields
+  showInPreferences Boolean @default(true)
+  types     String[] @default([]) // "CHARGER", "BATTERY", "SOLAR"
+  
+  // Deprecated, use types instead
+  type      String?   // "CHARGER" | "BATTERY" | "SOLAR" | "BOTH"
+  
+  isActive  Boolean  @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products  Product[]
+}
+
+
+// ==========================================
+// BrandFilterCategory (Kategorien-Zuordnung für Wizard)
+// ==========================================
+model BrandFilterCategory {
+  id              String   @id @default(uuid())
+  key             String   @unique  // "CHARGER", "BATTERY", "SOLAR"
+  label           String            // "Ladeelektronik (Ladegeräte, Booster, etc.)"
+  categorySlugs   String[]          // ["wechselrichter", "solar-laderegler", "ladebooster", "batterieladegeraete"]
+  sortOrder       Int      @default(0)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}

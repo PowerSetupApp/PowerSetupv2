@@ -35,8 +35,8 @@ export default function EditConsumerDevicePage() {
 
         defaultPower: "50",
         defaultVoltage: "12V",
-        defaultHoursPerDay: "2",
-        stepHours: "0.5",
+        defaultMinutesPerDay: "120",  // UI shows minutes, backend uses hours
+        stepPercentage: "10",  // UI shows percentage, backend uses hours
 
         showHoursField: true,
         showFixedOption: true,
@@ -69,8 +69,8 @@ export default function EditConsumerDevicePage() {
                     categoryId: deviceData.categoryId,
                     defaultPower: deviceData.defaultPower.toString(),
                     defaultVoltage: ['12V', '24V', '48V'].includes(deviceData.defaultVoltage) ? 'user' : deviceData.defaultVoltage,
-                    defaultHoursPerDay: deviceData.defaultHoursPerDay.toString(),
-                    stepHours: deviceData.stepHours.toString(),
+                    defaultMinutesPerDay: (deviceData.defaultHoursPerDay * 60).toString(),  // Convert hours to minutes
+                    stepPercentage: Math.round((deviceData.stepHours / (deviceData.defaultHoursPerDay || 1)) * 100).toString(), // Calculate percentage
                     showHoursField: deviceData.showHoursField,
                     showFixedOption: deviceData.showFixedOption,
                     isCooling: deviceData.isCooling,
@@ -93,10 +93,21 @@ export default function EditConsumerDevicePage() {
         setIsSubmitting(true);
 
         try {
+            // Calculate step hours from percentage
+            const durationMinutes = parseFloat(formData.defaultMinutesPerDay);
+            const percentage = parseFloat(formData.stepPercentage);
+            const stepMinutes = (durationMinutes * percentage) / 100;
+
+            // Convert minutes to hours for backend
+            const dataToSend = {
+                ...formData,
+                defaultHoursPerDay: (durationMinutes / 60).toString(),
+                stepHours: (stepMinutes / 60).toString(),
+            };
             const res = await fetch(`/api/admin/consumer-devices/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(dataToSend),
             });
 
             if (!res.ok) throw new Error("Fehler beim Speichern");
@@ -244,27 +255,33 @@ export default function EditConsumerDevicePage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label htmlFor="defaultHoursPerDay">Nutzungsdauer (Std/Tag) *</Label>
+                            <Label htmlFor="defaultMinutesPerDay">Nutzungsdauer (Min/Tag) *</Label>
                             <Input
-                                id="defaultHoursPerDay"
+                                id="defaultMinutesPerDay"
                                 type="number"
-                                value={formData.defaultHoursPerDay}
-                                onChange={(e) => setFormData({ ...formData, defaultHoursPerDay: e.target.value })}
+                                value={formData.defaultMinutesPerDay}
+                                onChange={(e) => setFormData({ ...formData, defaultMinutesPerDay: e.target.value })}
                                 required
-                                step="0.1"
+                                step="1"
                                 min="0"
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="stepHours">Schrittweite (Stunden)</Label>
-                            <Input
-                                id="stepHours"
-                                type="number"
-                                value={formData.stepHours}
-                                onChange={(e) => setFormData({ ...formData, stepHours: e.target.value })}
-                                step="0.1"
-                                min="0.1"
-                            />
+                            <Label htmlFor="stepPercentage">Schrittweite (%)</Label>
+                            <div className="relative">
+                                <Input
+                                    id="stepPercentage"
+                                    type="number"
+                                    value={formData.stepPercentage}
+                                    onChange={(e) => setFormData({ ...formData, stepPercentage: e.target.value })}
+                                    step="1"
+                                    min="1"
+                                    max="100"
+                                />
+                                <div className="text-xs text-muted-foreground mt-1">
+                                    ≈ {Math.round((parseFloat(formData.defaultMinutesPerDay || "0") * parseFloat(formData.stepPercentage || "0")) / 100)} Min.
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

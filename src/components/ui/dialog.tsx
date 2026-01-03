@@ -60,7 +60,7 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
         };
     }, [open, onOpenChange]);
 
-    if (!open) return null;
+
 
     return (
         <DialogContext.Provider value={{ open, onOpenChange }}>
@@ -69,8 +69,30 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
     );
 }
 
-export function DialogOverlay({ className }: { className?: string }) {
+export function DialogTrigger({ children, asChild }: { children: React.ReactNode; asChild?: boolean }) {
     const { onOpenChange } = useDialogContext();
+
+    if (asChild && React.isValidElement(children)) {
+        return React.cloneElement(children as React.ReactElement<any>, {
+            onClick: (e: React.MouseEvent) => {
+                const child = children as React.ReactElement<any>;
+                child.props.onClick?.(e);
+                onOpenChange(true);
+            }
+        });
+    }
+
+    return (
+        <button onClick={() => onOpenChange(true)} type="button">
+            {children}
+        </button>
+    );
+}
+
+export function DialogOverlay({ className }: { className?: string }) {
+    const { open, onOpenChange } = useDialogContext();
+
+    if (!open) return null;
 
     return (
         <div
@@ -91,16 +113,24 @@ export function DialogContent({
     title,
     description,
 }: DialogContentProps) {
-    const { onOpenChange } = useDialogContext();
+    const { open, onOpenChange } = useDialogContext();
     const contentRef = React.useRef<HTMLDivElement>(null);
 
     // Focus trap - focus first focusable element
     React.useEffect(() => {
-        const firstFocusable = contentRef.current?.querySelector(
-            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        ) as HTMLElement;
-        firstFocusable?.focus();
-    }, []);
+        if (open) {
+            // Tiny timeout to ensure DOM is ready
+            const timer = setTimeout(() => {
+                const firstFocusable = contentRef.current?.querySelector(
+                    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                ) as HTMLElement;
+                firstFocusable?.focus();
+            }, 10);
+            return () => clearTimeout(timer);
+        }
+    }, [open]);
+
+    if (!open) return null;
 
     return (
         <>

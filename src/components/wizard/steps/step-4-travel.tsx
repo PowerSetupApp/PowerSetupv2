@@ -5,7 +5,7 @@ import { useWizardStore, TravelSeason, TripDuration, WinterLocation, StandingDur
 import { CardSelection } from "@/components/ui/card-selection";
 import { Sun, Snowflake, CalendarRange, Map, Timer, ChevronRight, Thermometer, Mountain, Palmtree, Compass } from "lucide-react";
 
-export function Step5Travel() {
+export function Step4Travel() {
     const t = useTranslations("Wizard.Step5");
     const { travelBehavior, setTravelBehavior } = useWizardStore();
 

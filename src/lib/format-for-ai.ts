@@ -67,6 +67,9 @@ interface FormData {
     simultaneousLoad?: string;
     alternatorSize?: string;
     batterySpaceSize?: string;
+    // Brand Preferences
+    brandPreferenceCharger?: string | null;
+    brandPreferenceBattery?: string | null;
 }
 
 // Translation maps for German text output
@@ -401,6 +404,14 @@ export function formatFormDataForAI(data: FormData): string {
     sections.push('\n## PRÄFERENZEN');
     sections.push(`Komfort-Level: ${COMFORT_LEVELS[data.comfortLevel] || data.comfortLevel}`);
     sections.push(`Schaltplan-Stil: ${SCHEMATIC_TYPES[data.schematicPreference] || data.schematicPreference}`);
+
+    // Brand Preferences (NEW)
+    if (data.brandPreferenceCharger) {
+        sections.push(`Bevorzugte Marke (Ladeelektronik): ${data.brandPreferenceCharger}`);
+    }
+    if (data.brandPreferenceBattery) {
+        sections.push(`Bevorzugte Marke (Batterien): ${data.brandPreferenceBattery}`);
+    }
 
     // --- Section 9: AI Rules & Exclusions (Universal) ---
     // These rules are injected here to ensure they override any weak instructions in the user's prompt template.

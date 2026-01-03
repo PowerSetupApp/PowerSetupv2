@@ -170,17 +170,21 @@ export interface SystemRequirements {
     calculatedAt: string;
     debug?: {
         solarFactor: number;
+        solarSafetyFactor?: number;
     };
+
+    // Classes (from DB settings)
+    solarControllerClasses?: number[];
 }
 
 // ==========================================
 // Helper Functions
 // ==========================================
 
-const FALLBACK_CABLE_SIZES = [6, 10, 16, 25, 35, 50, 70, 95, 120, 150, 185, 240];
-const FALLBACK_INVERTER_CLASSES = [500, 800, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 5000];
-const FALLBACK_CHARGER_CLASSES = [10, 20, 30, 50, 60];
-const FALLBACK_SOLAR_CONTROLLER_CLASSES = [10, 20, 30, 40, 50, 60, 80, 100];
+export const FALLBACK_CABLE_SIZES = [6, 10, 16, 25, 35, 50, 70, 95, 120, 150, 185, 240];
+export const FALLBACK_INVERTER_CLASSES = [500, 800, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 5000];
+export const FALLBACK_CHARGER_CLASSES = [10, 20, 30, 50, 60];
+export const FALLBACK_SOLAR_CONTROLLER_CLASSES = [10, 20, 30, 40, 50, 60, 80, 100];
 
 function parseClasses(str: string): number[] {
     if (!str) return [];
@@ -190,7 +194,7 @@ function parseClasses(str: string): number[] {
         .sort((a, b) => a - b);
 }
 
-function roundToClass(value: number, classes: number[], fallback: number[]): number {
+export function roundToClass(value: number, classes: number[], fallback: number[]): number {
     const list = classes.length > 0 ? classes : fallback;
     return list.find(c => c >= value) || list[list.length - 1];
 }
@@ -328,23 +332,34 @@ function calculateBattery(
     const netDailyDeficitRecommendation = Math.max(0, dailyWh - effectiveSolarYieldRecommendation);
 
     // Base calculation from deficit
-    let calculatedRecAh = hasSolar && netDailyDeficitRecommendation > 0
-        ? (netDailyDeficitRecommendation * backupDays) / (input.systemVoltage * dod)
-        : 0;
+    let calculatedRecAh: number;
 
-    // Safety Floor: Even with solar, we want at least 1 day of buffer (or minCapacity if that's smaller)
+    if (!hasSolar) {
+        // No solar: Calculate based on full daily consumption
+        calculatedRecAh = (dailyWh * backupDays) / (input.systemVoltage * dod);
+    } else if (netDailyDeficitRecommendation > 0) {
+        // Solar present but doesn't cover all consumption
+        calculatedRecAh = (netDailyDeficitRecommendation * backupDays) / (input.systemVoltage * dod);
+    } else {
+        // Solar covers all consumption (e.g., summer_only with high solar yield)
+        // Still need buffer capacity for nights and cloudy periods
+        calculatedRecAh = 0;
+    }
+
+    // Safety Floor: Even with solar, we want at least 1 day of buffer
     const oneDayBufferAh = (dailyWh * 1) / (input.systemVoltage * dod);
     let recommendedCapacityAh = Math.max(calculatedRecAh, oneDayBufferAh);
 
     // Ceiling: Should not exceed Worst Case (minCapacityAh)
+    // BUT: Only apply ceiling if minCapacityAh > 0, otherwise we'd cap to 0 which is wrong
     // Logic: If Worst Case is 200Ah, we shouldn't recommend 300Ah just because of some factor math.
-    // However, ensure the floor doesn't violate the ceiling (if OneDay > WorstCase, take OneDay? No, WorstCase usually includes OneDay logic implied).
-    // Actually, WorstCase is (DeficitWorstCase * BackupDays).
-    // If BackupDays is high, WorstCase is high.
-
-    if (recommendedCapacityAh > minCapacityAh) {
+    // However, if minCapacityAh is very low/0 (solar covers worst case too), use oneDayBufferAh as minimum.
+    if (minCapacityAh > 0 && recommendedCapacityAh > minCapacityAh) {
         recommendedCapacityAh = minCapacityAh;
     }
+
+    // Absolute minimum floor: At least 1 day buffer regardless of other calculations
+    recommendedCapacityAh = Math.max(recommendedCapacityAh, oneDayBufferAh);
 
     // Apply battery safety factor (general buffer for peak loads, inverter, etc.)
     const safetyFactor = settings.batterySafetyFactor || 1.0;
@@ -484,37 +499,29 @@ function calculateSolarController(
     }
 
     // Determine the "Planned" Wp (sizing target)
-    // Instead of maxing out the roof, we target the required amount + buffer
-    const bufferFactor = 1.2; // 20% oversized for good yield
-    const targetWp = solarModules.requiredWp * bufferFactor;
+    // Target is exactly the required Wp, no buffer. Cap by what's available.
+    const targetWp = solarModules.requiredWp;
 
     // Portable is explicit, so we count it fully if present
     const portableWp = solarModules.portableWp;
 
     // Calculate how much roof solar we plan to install
     // We cover the remaining need with roof solar, limited by available roof space
-    // If portable covers everything, we might still want some roof solar? 
-    // For now, let's just ensure we meet the target.
     const remainingNeedWp = Math.max(0, targetWp - portableWp);
 
     // We plan for the lesser of: What we need vs. What fits on the roof
     const plannedRoofWp = Math.min(solarModules.maxRoofWp, remainingNeedWp);
 
-    // However, if the user explicitly defined roof areas, but the calculated need is tiny,
-    // we should probably enforce a sane minimum system size if roof space allows.
-    // E.g. at least 200W if space fits 200W.
-    const saneMinimumRoofWp = Math.min(solarModules.maxRoofWp, 200);
-    const finalPlannedRoofWp = Math.max(plannedRoofWp, saneMinimumRoofWp);
-
-    // Total logic sizing Wp
-    const sizingTotalWp = portableWp + finalPlannedRoofWp;
+    // Total logic sizing Wp (capped at required)
+    const sizingTotalWp = Math.min(portableWp + plannedRoofWp, targetWp);
 
     // --- RE-CALCULATE ACTUAL FITTED VALUES ---
     // The previous logic just summed everything. Now we use the sizingTotalWp for controller sizing.
     // Note: We intentionally DO NOT use totalAvailableWp anymore for the controller current calculation.
 
-    // Current calculation: Wp / Voltage * 1.25 safety factor
-    const currentA = (sizingTotalWp / input.systemVoltage) * 1.25;
+    // Current calculation: Wp / Voltage * solarSafetyFactor (default 1.1)
+    const safetyFactor = settings.solarSafetyFactor || 1.1;
+    const currentA = (sizingTotalWp / input.systemVoltage) * safetyFactor;
     const recommendedCurrentA = roundToClass(currentA, controllerClasses, FALLBACK_SOLAR_CONTROLLER_CLASSES);
 
     // MPPT for larger systems, PWM for smaller
@@ -522,12 +529,12 @@ function calculateSolarController(
 
     // Separate controller for portable if mixed setup
     const needsSeparatePortableController =
-        input.solarSetupType === 'mixed' && portableWp > 0 && finalPlannedRoofWp > 0;
+        input.solarSetupType === 'mixed' && portableWp > 0 && plannedRoofWp > 0;
 
     return {
         needed: true,
         totalWp: Math.ceil(sizingTotalWp),
-        roofWp: Math.ceil(finalPlannedRoofWp), // Update this to reflect planned, not max
+        roofWp: Math.ceil(plannedRoofWp), // Update this to reflect planned, not max
         portableWp: Math.ceil(portableWp),
         currentA: Math.ceil(currentA),
         recommendedCurrentA,
@@ -832,8 +839,12 @@ export async function calculateSystemRequirements(input: WizardInput): Promise<S
 
         calculatedAt: new Date().toISOString(),
         debug: {
-            solarFactor: settings.recommendedSolarYieldFactor
-        }
+            solarFactor: settings.recommendedSolarYieldFactor,
+            solarSafetyFactor: settings.solarSafetyFactor || 1.1
+        },
+
+        // Expose classes for UI
+        solarControllerClasses
     };
 }
 

@@ -26,6 +26,8 @@ const ProductSchema = z.object({
     waveform: z.string().nullable().optional(),
     fuseType: z.string().nullable().optional(),
     asin: z.string().nullable().optional(),
+    // Filter fields
+    brandId: z.string().nullable().optional(),
 });
 
 // GET /api/admin/products - List all products
@@ -44,6 +46,7 @@ export async function GET(request: NextRequest) {
                 where,
                 include: {
                     category: true,
+                    brand: true, // Include Brand
                 },
                 orderBy: { createdAt: "desc" },
                 skip,
@@ -106,6 +109,8 @@ export async function POST(request: NextRequest) {
                 waveform: parseResult.data.waveform ?? null,
                 fuseType: parseResult.data.fuseType ?? null,
                 asin: parseResult.data.asin ?? null,
+                // Brand Logic
+                brandId: parseResult.data.brandId ?? null,
             },
             include: {
                 category: true,

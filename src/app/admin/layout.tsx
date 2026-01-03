@@ -31,6 +31,13 @@ export default function AdminLayout({
                         Produkte
                     </Link>
                     <Link
+                        href="/admin/brands"
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-muted transition-colors"
+                    >
+                        <Tags className="h-5 w-5" />
+                        Marken
+                    </Link>
+                    <Link
                         href="/admin/categories"
                         className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-muted transition-colors"
                     >

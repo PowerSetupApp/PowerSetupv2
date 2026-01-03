@@ -1,17 +1,16 @@
 "use client";
 
 import { redirect } from "next/navigation";
-import { Step1Vehicle } from "@/components/wizard/steps/step-1-vehicle";
-import { Step2Voltage } from "@/components/wizard/steps/step-2-voltage";
-import { Step3Energy } from "@/components/wizard/steps/step-3-energy";
-import { Step4Consumers } from "@/components/wizard/steps/step-4-consumers";
-import { Step5Travel } from "@/components/wizard/steps/step-5-travel";
+// Step 1 removed (Vehicle), Step 6 Solar removed (integrated into Sources)
+import { Step1Voltage } from "@/components/wizard/steps/step-1-voltage";
+import { Step2Energy } from "@/components/wizard/steps/step-2-energy";
+import { Step3Consumers } from "@/components/wizard/steps/step-3-consumers";
+import { Step4Travel } from "@/components/wizard/steps/step-4-travel";
 import { Step5Autarky } from "@/components/wizard/steps/step-5-autarky";
-import { Step6Solar } from "@/components/wizard/steps/step-6-solar";
-import { Step7Cabling } from "@/components/wizard/steps/step-7-cabling";
-import { Step8Comfort } from "@/components/wizard/steps/step-8-comfort";
-import { Step9Schematic } from "@/components/wizard/steps/step-9-schematic";
-import { Step10Recommendation } from "@/components/wizard/steps/step-10-recommendation";
+import { Step6Cabling } from "@/components/wizard/steps/step-6-cabling";
+import { Step7Comfort } from "@/components/wizard/steps/step-7-comfort";
+// Step 9 Schematic was not rendered in previous version either
+import { Step8Recommendation } from "@/components/wizard/steps/step-8-recommendation";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useWizardStore } from "@/lib/store/wizard-store";
@@ -20,7 +19,6 @@ import { ProgressSteps } from "@/components/ui/progress-steps";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
-// import { AlgorithmResultModal } from "@/components/wizard/algorithm-result-modal";
 
 function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
     const t = useTranslations("Wizard");
@@ -50,7 +48,9 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
         travelBehavior,
 
         reset,
-        roofAreas // Added missing destructuring
+        roofAreas,
+        alternatorSize,
+        shoreChargingSpeed
     } = useWizardStore();
 
     // Reset Store if requested (only once per session)
@@ -71,29 +71,28 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
     const stepParam = resolvedParams.step?.[0];
     const stepIndex = stepParam ? parseInt(stepParam) : 1;
 
-    // Validation: Step must be a number between 1 and 10 (now 10 steps total)
-    if (isNaN(stepIndex) || stepIndex < 1 || stepIndex > 10) {
+    // Validation: Step must be a number between 1 and 8 (now 8 steps total - Solar integrated into Sources)
+    if (isNaN(stepIndex) || stepIndex < 1 || stepIndex > 8) {
         redirect("/wizard/1");
     }
     // Sync URL with store on mount/change
     useEffect(() => {
+        // Ensure we update the store with the current step from URL
         if (!isNaN(stepIndex) && stepIndex !== currentStep) {
             setStep(stepIndex);
         }
     }, [stepIndex, setStep, currentStep]);
 
-    // Define Steps (10 total now)
+    // Define Steps (8 total - Solar integrated into Sources step)
     const steps = [
-        { id: 1, label: "Fahrzeug" },
-        { id: 2, label: "Spannung" },
-        { id: 3, label: "Quellen" },
-        { id: 4, label: "Verbraucher" },
-        { id: 5, label: "Reise" },
-        { id: 6, label: "Autarkie" },
-        { id: 7, label: "Solar" },
-        { id: 8, label: "Kabel" },
-        { id: 9, label: "Budget" },
-        { id: 10, label: "Empfehlung" }
+        { id: 1, label: "Spannung" },
+        { id: 2, label: "Quellen" },
+        { id: 3, label: "Verbraucher" },
+        { id: 4, label: "Reise" },
+        { id: 5, label: "Autarkie" },
+        { id: 6, label: "Kabel" },
+        { id: 7, label: "Budget" },
+        { id: 8, label: "Empfehlung" }
     ];
 
     const completedSteps = steps.filter(s => s.id < stepIndex).map(s => s.id);
@@ -105,18 +104,8 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
     };
 
     const handleNext = () => {
-        let nextStep = stepIndex + 1;
-
-        // Skip Step 7 (Solar) if not selected
-        // Re-checking this logic to ensure we don't accidentally skip multiple steps or land on wrong one
-        // If we are at Step 6 and click Next:
-        if (stepIndex === 6) {
-            if (!energySources.includes('solar')) {
-                nextStep = 8; // Skip Solar
-            }
-        }
-
-        if (nextStep <= 10) {
+        const nextStep = stepIndex + 1;
+        if (nextStep <= 8) {
             router.push(`/wizard/${nextStep}`);
         }
     };
@@ -125,11 +114,9 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
         if (isSubmitting) return;
 
         setIsSubmitting(true);
-        // We do NOT run the algorithm test modal anymore for the final step, because Step 10 IS the visual recommendation.
-        // We now proceed directly to save.
 
         try {
-            // Collect all form data (including new overrides)
+            // Collect all form data
             const formData = {
                 vehicleType,
                 vehicleVoltage,
@@ -148,20 +135,23 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
                 schematicPreference,
                 batteryPreference,
                 travelBehavior,
+                alternatorSize,
+                shoreChargingSpeed,
                 // Defaults for fields not yet in wizard store
-                alternatorSize: 'unknown',
                 simultaneousLoad: 'moderate',
                 batterySpaceSize: 'medium',
                 roofAreas: (roofAreas && roofAreas.length > 0) ? roofAreas : (solarDimensions ? [{ id: 'main', name: 'Hauptfläche', length: solarDimensions.length, width: solarDimensions.width }] : []),
 
-                // NEW: Custom Overrides
+                // Custom Overrides
                 customBatteryCapacity: useWizardStore.getState().customBatteryCapacity,
                 customSolarPower: useWizardStore.getState().customSolarPower,
                 customBoosterCurrent: useWizardStore.getState().customBoosterCurrent,
                 customSolarControllerCurrent: useWizardStore.getState().customSolarControllerCurrent,
             };
 
-
+            console.log("Submitting Wizard FormData:", formData);
+            console.log("Alternator Size:", alternatorSize);
+            console.log("Energy Sources:", energySources);
 
             // POST to API
             const response = await fetch("/api/results", {
@@ -183,7 +173,6 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
             router.push(`/result/${result.id}`);
         } catch (error) {
             console.error("Error submitting wizard:", error);
-            // TODO: Show error toast
             setIsSubmitting(false);
             if (error instanceof Error) {
                 alert(`Fehler: ${error.message}\n\nBitte überprüfe deine Eingaben.`);
@@ -192,19 +181,13 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
     };
 
     const handleBack = () => {
-        let prevStep = stepIndex - 1;
-
-        // Skip Step 7 (Solar) going back if not selected
-        if (prevStep === 7 && !energySources.includes('solar')) {
-            prevStep = 6;
-        }
-
+        const prevStep = stepIndex - 1;
         if (prevStep >= 1) {
             router.push(`/wizard/${prevStep}`);
         }
     };
 
-    const isLastStep = stepIndex === 10;
+    const isLastStep = stepIndex === 8;
 
     return (
         <div className="container max-w-2xl mx-auto py-8 space-y-8 min-h-screen flex flex-col">
@@ -216,16 +199,14 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
             />
 
             <div className="bg-card border rounded-xl p-6 shadow-sm min-h-[400px] mb-24">
-                {stepIndex === 1 && <Step1Vehicle />}
-                {stepIndex === 2 && <Step2Voltage />}
-                {stepIndex === 3 && <Step3Energy />}
-                {stepIndex === 4 && <Step4Consumers />}
-                {stepIndex === 5 && <Step5Travel />}
-                {stepIndex === 6 && <Step5Autarky />}
-                {stepIndex === 7 && <Step6Solar />}
-                {stepIndex === 8 && <Step7Cabling />}
-                {stepIndex === 9 && <Step8Comfort />}
-                {stepIndex === 10 && <Step10Recommendation />}
+                {stepIndex === 1 && <Step1Voltage />}
+                {stepIndex === 2 && <Step2Energy />}
+                {stepIndex === 3 && <Step3Consumers />}
+                {stepIndex === 4 && <Step4Travel />}
+                {stepIndex === 5 && <Step5Autarky />}
+                {stepIndex === 6 && <Step6Cabling />}
+                {stepIndex === 7 && <Step7Comfort />}
+                {stepIndex === 8 && <Step8Recommendation />}
             </div>
 
             {/* Footer Navigation */}

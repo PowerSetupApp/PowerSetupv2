@@ -25,6 +25,8 @@ const UpdateProductSchema = z.object({
     waveform: z.string().nullable().optional(),
     fuseType: z.string().nullable().optional(),
     asin: z.string().nullable().optional(),
+    // New Filter Fields
+    brandId: z.string().nullable().optional(),
 });
 
 // GET /api/admin/products/[id] - Get single product
@@ -74,10 +76,20 @@ export async function PATCH(
             );
         }
         // Transform categoryId to Prisma relation syntax
-        const { categoryId, ...restData } = parseResult.data;
+        // Transform relational fields (categoryId, brandId) to Prisma relation syntax
+        const { categoryId, brandId, ...restData } = parseResult.data;
         const updateData: any = { ...restData };
+
         if (categoryId) {
             updateData.category = { connect: { id: categoryId } };
+        }
+
+        if (brandId !== undefined) {
+            if (brandId) {
+                updateData.brand = { connect: { id: brandId } };
+            } else {
+                updateData.brand = { disconnect: true };
+            }
         }
 
         const product = await prisma.product.update({

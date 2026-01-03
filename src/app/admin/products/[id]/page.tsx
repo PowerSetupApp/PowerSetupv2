@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,7 @@ import Link from "next/link";
 import { MediaModal } from "@/components/admin/media-modal";
 import { EmojiPickerModal } from "@/components/admin/emoji-picker-modal";
 import { getGeneralSettings } from "@/app/actions/general-settings";
+import { getBrands, createBrand, Brand } from "@/app/actions/brands"; // Import brands
 import { getAmazonLink } from "@/lib/amazon-link-helper";
 
 interface Category {
@@ -49,21 +50,29 @@ interface Product {
     waveform: string | null;
     fuseType: string | null;
     asin: string | null;
+    // New fields
+    brandId: string | null;
 }
 
 export default function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const suggestedBrandFromUrl = searchParams.get('suggestedBrand');
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [categories, setCategories] = useState<Category[]>([]);
+    const [brands, setBrands] = useState<Brand[]>([]); // Brands state
     const [error, setError] = useState<string | null>(null);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
     const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
     const [isEmojiModalOpen, setIsEmojiModalOpen] = useState(false);
     const [partnerTag, setPartnerTag] = useState<string>("");
     const [isOptimizing, setIsOptimizing] = useState(false);
+    const [isCreatingBrand, setIsCreatingBrand] = useState(false);
+    const [suggestedBrand, setSuggestedBrand] = useState<string | null>(suggestedBrandFromUrl);
 
     const [formData, setFormData] = useState({
         name: "",
@@ -88,16 +97,19 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
         waveform: "pure_sine",
         fuseType: "thermal",
         asin: "",
+        // New fields
+        brandId: "",
     });
 
     useEffect(() => {
-        // Fetch product, categories, and settings
+        // Fetch product, categories, brands, and settings
         Promise.all([
             fetch(`/api/admin/products/${id}`).then((res) => res.json()),
             fetch("/api/admin/categories").then((res) => res.json()),
+            getBrands(), // Fetch brands
             getGeneralSettings()
         ])
-            .then(([product, cats, settings]: [Product, Category[], { amazonPartnerTag: string }]) => {
+            .then(([product, cats, fetchedBrands, settings]: [Product, Category[], Brand[], { amazonPartnerTag: string }]) => {
                 setFormData({
                     name: product.name,
                     description: product.description || "",
@@ -121,8 +133,10 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                     waveform: product.waveform || "pure_sine",
                     fuseType: product.fuseType || "thermal",
                     asin: product.asin || "",
+                    brandId: product.brandId || "",
                 });
                 setCategories(cats);
+                setBrands(fetchedBrands);
                 setPartnerTag(settings.amazonPartnerTag);
                 setIsLoading(false);
             })
@@ -166,6 +180,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                     waveform: formData.waveform || null,
                     fuseType: formData.fuseType || null,
                     asin: formData.asin || null,
+                    brandId: formData.brandId || null,
                 }),
             });
 
@@ -224,6 +239,54 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
             console.error("Optimization failed", err);
         } finally {
             setIsOptimizing(false);
+        }
+    };
+
+    // Handler for creating a new brand from suggestion
+    const handleCreateSuggestedBrand = async () => {
+        if (!suggestedBrand) return;
+
+        setIsCreatingBrand(true);
+        try {
+            // Create brand with default types based on current category
+            const selectedCategory = categories.find(c => c.id === formData.categoryId);
+            const slug = selectedCategory?.slug || "";
+
+            // Determine brand types based on category
+            let types: string[] = ["CHARGER"]; // Default
+            if (slug.includes("batterie")) {
+                types = ["BATTERY"];
+            } else if (slug.includes("solar")) {
+                types = ["SOLAR"];
+            }
+
+            const result = await createBrand(suggestedBrand, types, true);
+
+            if (result.success) {
+                // Reload brands and select the new one
+                const updatedBrands = await getBrands();
+                setBrands(updatedBrands);
+
+                // Find the newly created brand and select it
+                const newBrand = updatedBrands.find(b =>
+                    b.name.toLowerCase() === suggestedBrand.toLowerCase()
+                );
+                if (newBrand) {
+                    setFormData({ ...formData, brandId: newBrand.id });
+                }
+
+                // Clear suggestion
+                setSuggestedBrand(null);
+
+                // Also clean URL param
+                const url = new URL(window.location.href);
+                url.searchParams.delete('suggestedBrand');
+                window.history.replaceState({}, '', url.toString());
+            }
+        } catch (err) {
+            console.error("Failed to create brand:", err);
+        } finally {
+            setIsCreatingBrand(false);
         }
     };
 
@@ -402,6 +465,53 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                                 <p className="text-sm text-muted-foreground">
                                     Diese Werte werden für die Vorfilterung vor der KI-Auswahl verwendet.
                                 </p>
+                            </div>
+
+                            {/* Brand Filter Field */}
+                            <div className="space-y-2 border-b pb-4 mb-4">
+                                <Label htmlFor="brandId">Marke (aus Marken-Verwaltung)</Label>
+                                <select
+                                    id="brandId"
+                                    value={formData.brandId}
+                                    onChange={(e) => setFormData({ ...formData, brandId: e.target.value })}
+                                    className="w-full px-3 py-2 border rounded-md bg-background"
+                                >
+                                    <option value="">Keine Marke</option>
+                                    {brands.map((b) => (
+                                        <option key={b.id} value={b.id}>
+                                            {b.name} ({b.type})
+                                        </option>
+                                    ))}
+                                </select>
+
+                                {/* Brand Suggestion Box - shown when brand was detected but not matched */}
+                                {suggestedBrand && !formData.brandId && (
+                                    <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg">
+                                        <div className="flex items-center gap-2 text-sm text-amber-800 dark:text-amber-200 mb-2">
+                                            <Sparkles className="h-4 w-4" />
+                                            <span className="font-medium">Marke erkannt: "{suggestedBrand}"</span>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Input
+                                                value={suggestedBrand}
+                                                onChange={(e) => setSuggestedBrand(e.target.value)}
+                                                className="flex-1"
+                                            />
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                onClick={handleCreateSuggestedBrand}
+                                                disabled={isCreatingBrand}
+                                            >
+                                                {isCreatingBrand ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                ) : (
+                                                    "Hinzufügen"
+                                                )}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {showPowerW && (

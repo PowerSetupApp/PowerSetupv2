@@ -93,6 +93,7 @@ const SETTINGS_GROUPS: SettingsGroup[] = [
             { key: "wpPerM2Flexible", label: "Flexibel", type: "int", suffix: "Wp" },
             { key: "cloudyYieldFactor", label: "Bewölkt-Faktor", type: "float", suffix: "x" },
             { key: "recommendedSolarYieldFactor", label: "Solar-Puffer (Empfehlung)", type: "float", suffix: "x" },
+            { key: "solarSafetyFactor", label: "Regler-Sicherheitsfaktor", type: "float", suffix: "x" },
         ]
     },
     {
@@ -369,7 +370,7 @@ function SettingsSummary({ settings, onHighlightClick }: { settings: AlgorithmSe
                 <div>
                     <h4 className="font-semibold mb-2 flex items-center gap-2"><Settings2 className="h-4 w-4" /> Dimensionierung & Puffer</h4>
                     <p>
-                        "Bei der Batterieberechnung unterscheiden wir zwischen Typen: Aus einer LiFePO4-Batterie entnehmen wir bis zu <H k="dodLifepo4">{settings.dodLifepo4 * 100}%</H>, während wir bei AGM nur <H k="dodAgm">{settings.dodAgm * 100}%</H> und bei Gel <H k="dodGel">{settings.dodGel * 100}%</H> der Nennkapazität einplanen, um die Lebensdauer zu schützen."
+                        "Bei der <strong>Batterieberechnung</strong> unterscheiden wir zwischen Typen: Aus einer <strong>LiFePO4-Batterie</strong> entnehmen wir bis zu <H k="dodLifepo4">{settings.dodLifepo4 * 100}%</H>, während wir bei <strong>AGM</strong> nur <H k="dodAgm">{settings.dodAgm * 100}%</H> und bei <strong>Gel</strong> <H k="dodGel">{settings.dodGel * 100}%</H> der Nennkapazität einplanen, um die Lebensdauer zu schützen."
                     </p>
                 </div>
 
@@ -383,7 +384,10 @@ function SettingsSummary({ settings, onHighlightClick }: { settings: AlgorithmSe
                     <p className="mt-2">
                         "Die Modulleistung selbst kalkulieren wir mit <H k="wpPerM2Rigid">{settings.wpPerM2Rigid} Wp/m²</H> für starre und <H k="wpPerM2Flexible">{settings.wpPerM2Flexible} Wp/m²</H> für flexible Module.
                         An bewölkten Tagen rechnen wir pauschal mit <H k="cloudyYieldFactor">{(settings.cloudyYieldFactor * 100).toFixed(0)}%</H> des normalen Ertrags (Worst-Case).
-                        Für die <strong>Empfehlung</strong> sind wir etwas optimistischer, trauen dem Solarertrag aber auch nur zu <H k="recommendedSolarYieldFactor">{settings.recommendedSolarYieldFactor * 100}%</H> (Sicherheitspuffer)."
+                        Für die Empfehlung sind wir etwas optimistischer, trauen dem <strong>Solarertrag</strong> aber auch nur zu <H k="recommendedSolarYieldFactor">{settings.recommendedSolarYieldFactor * 100}%</H> (Sicherheitspuffer)."
+                    </p>
+                    <p className="mt-2">
+                        "Der <strong>Solar-Laderegler</strong> wird mit einem Sicherheitsfaktor von <H k="solarSafetyFactor">{settings.solarSafetyFactor || 1.1}x</H> (also +{(((settings.solarSafetyFactor || 1.1) - 1) * 100).toFixed(0)}%) berechnet, um Spannungsspitzen an kalten Tagen sicher abzufangen."
                     </p>
                 </div>
 
@@ -401,11 +405,11 @@ function SettingsSummary({ settings, onHighlightClick }: { settings: AlgorithmSe
                 <div>
                     <h4 className="font-semibold mb-2 flex items-center gap-2"><Zap className="h-4 w-4" /> Technik: Booster & Wechselrichter</h4>
                     <p>
-                        "Der Ladebooster wird basierend auf der Lichtmaschine gewählt: Bei einer Standard-LiMa empfehlen wir <H k="alternatorStandard">{settings.alternatorStandard}A</H>, bei verstärkten Modellen bis zu <H k="alternatorEnhanced">{settings.alternatorEnhanced}A</H>.
-                        Ein Wechselrichter wird dimensioniert nach der Summe aller 230V-Geräte multipliziert mit dem Faktor <H k="simultaneousModerate">{settings.simultaneousModerate}</H> (bei moderater Nutzung), aber mindestens so stark wie das größte Einzelgerät."
+                        "Der <strong>Ladebooster</strong> wird basierend auf der <strong>Lichtmaschine</strong> gewählt: Bei einer Standard-LiMa empfehlen wir <H k="alternatorStandard">{settings.alternatorStandard}A</H>, bei verstärkten Modellen bis zu <H k="alternatorEnhanced">{settings.alternatorEnhanced}A</H>.
+                        Ein <strong>Wechselrichter</strong> wird dimensioniert nach der Summe aller 230V-Geräte multipliziert mit dem Faktor <H k="simultaneousModerate">{settings.simultaneousModerate}</H> (bei moderater Nutzung), aber mindestens so stark wie das größte Einzelgerät."
                     </p>
                     <p className="mt-2">
-                        "Für das Landstrom-Ladegerät: Bei der Einstellung 'Langsam' planen wir <H k="chargerTimeHoursSlow">{settings.chargerTimeHoursSlow}h</H> Ladezeit,
+                        "Für das <strong>Landstrom-Ladegerät</strong>: Bei der Einstellung 'Langsam' planen wir <H k="chargerTimeHoursSlow">{settings.chargerTimeHoursSlow}h</H> Ladezeit,
                         bei 'Normal' <H k="chargerTimeHoursNormal">{settings.chargerTimeHoursNormal}h</H> und bei 'Schnell' nur <H k="chargerTimeHoursFast">{settings.chargerTimeHoursFast}h</H>.
                         Die Formel: Batteriekapazität ÷ Zielzeit = benötigter Ladestrom."
                     </p>

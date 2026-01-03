@@ -16,6 +16,9 @@ import {
 import Link from "next/link";
 import { MediaModal } from "@/components/admin/media-modal";
 import { EmojiPickerModal } from "@/components/admin/emoji-picker-modal";
+import { getGeneralSettings } from "@/app/actions/general-settings";
+import { getBrands, Brand } from "@/app/actions/brands"; // Import brands
+import { getAmazonLink } from "@/lib/amazon-link-helper";
 
 interface Category {
     id: string;
@@ -27,10 +30,12 @@ export default function NewProductPage() {
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [categories, setCategories] = useState<Category[]>([]);
+    const [brands, setBrands] = useState<Brand[]>([]); // Brands state
     const [error, setError] = useState<string | null>(null);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
     const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
     const [isEmojiModalOpen, setIsEmojiModalOpen] = useState(false);
+    const [partnerTag, setPartnerTag] = useState<string>("");
     const [isOptimizing, setIsOptimizing] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -42,6 +47,7 @@ export default function NewProductPage() {
         price: "",
         categoryId: "",
         specs: "",
+        isActive: true,
         // Filter fields
         powerW: "",
         capacityAh: "",
@@ -55,6 +61,8 @@ export default function NewProductPage() {
         waveform: "pure_sine",
         fuseType: "thermal",
         asin: "",
+        // New fields
+        brandId: "",
     });
 
     // ASIN extraction helper
@@ -110,6 +118,7 @@ export default function NewProductPage() {
                     waveform: formData.waveform || null,
                     fuseType: formData.fuseType || null,
                     asin: formData.asin || null,
+                    brandId: formData.brandId || null,
                 }),
             });
 
@@ -274,6 +283,24 @@ export default function NewProductPage() {
                                 <p className="text-sm text-muted-foreground">
                                     Diese Werte werden für die Vorfilterung vor der KI-Auswahl verwendet.
                                 </p>
+                            </div>
+
+                            {/* Brand Filter Field */}
+                            <div className="space-y-2 border-b pb-4 mb-4">
+                                <Label htmlFor="brandId">Marke (aus Marken-Verwaltung)</Label>
+                                <select
+                                    id="brandId"
+                                    value={formData.brandId}
+                                    onChange={(e) => setFormData({ ...formData, brandId: e.target.value })}
+                                    className="w-full px-3 py-2 border rounded-md bg-background"
+                                >
+                                    <option value="">Keine Marke</option>
+                                    {brands.map((b) => (
+                                        <option key={b.id} value={b.id}>
+                                            {b.name} ({b.type})
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
 
                             {showPowerW && (

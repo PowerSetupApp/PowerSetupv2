@@ -34,6 +34,9 @@ export interface AlgorithmSettingsData {
     // Batterie-Sicherheitspuffer
     batterySafetyFactor: number;
 
+    // Solar-Regler Sicherheitspuffer
+    solarSafetyFactor: number;
+
     // Standing Duration (Days)
     standingDaysShort: number;
     standingDaysMedium: number;
@@ -99,7 +102,10 @@ export async function getAlgorithmSettings(): Promise<AlgorithmSettingsData> {
     // Create default if not exists
     if (!settings) {
         settings = await prisma.algorithmSettings.create({
-            data: { id: "default" }
+            data: {
+                id: "default",
+                solarSafetyFactor: 1.1
+            }
         });
     }
 
