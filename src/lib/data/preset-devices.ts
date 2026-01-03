@@ -21,7 +21,7 @@ export const PRESET_DEVICES: PresetDevice[] = [
     {
         id: 'hairdryer',
         name: 'Haartrockner',
-        category: 'haushalt',
+        category: 'comfort',
         defaultPower: 1800,
         defaultVoltage: '230V',
         defaultHours: 0.25,

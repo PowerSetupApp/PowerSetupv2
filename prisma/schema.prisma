@@ -301,6 +301,15 @@ model AlgorithmSettings {
   wpPerM2Flexible       Int      @default(160)
   cloudyYieldFactor     Float    @default(0.2) // Anteil des Ertrags bei Bewölkung (0.0 - 1.0)
   recommendedSolarYieldFactor Float @default(0.7) // Anteil des Ertrags für die "Empfohlene" Berechnung (0.0 - 1.0)
+
+  // Dach-Auslastung (0.0-1.0): Anteil der Dachfläche, der real nutzbar ist
+  roofUtilizationFactor   Float    @default(0.75)
+
+  // Effizienz-Faktor für fest verbaute Module (nicht ausrichtbar)
+  roofOrientationFactor   Float    @default(0.85)
+
+  // Effizienz-Faktor für mobile Solartaschen (ausrichtbar)
+  portableOrientationFactor Float  @default(1.0)
   
   // Sonnenstunden pro Tag (Durchschnitt D-A-CH)
   sunHoursSummer        Float    @default(5.0)

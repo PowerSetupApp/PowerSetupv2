@@ -51,6 +51,11 @@ export interface AlgorithmSettingsData {
     cloudyYieldFactor: number;
     recommendedSolarYieldFactor: number;
 
+    // Solar Efficiency
+    roofUtilizationFactor: number;
+    roofOrientationFactor: number;
+    portableOrientationFactor: number;
+
     // Sun Hours
     sunHoursSummer: number;
     sunHoursAllYear: number;
@@ -104,7 +109,10 @@ export async function getAlgorithmSettings(): Promise<AlgorithmSettingsData> {
         settings = await prisma.algorithmSettings.create({
             data: {
                 id: "default",
-                solarSafetyFactor: 1.1
+                solarSafetyFactor: 1.1,
+                roofUtilizationFactor: 0.75,
+                roofOrientationFactor: 0.85,
+                portableOrientationFactor: 1.0
             }
         });
     }
@@ -120,10 +128,11 @@ export async function updateAlgorithmSettings(
     data: Partial<Omit<AlgorithmSettingsData, "id">>
 ): Promise<{ success: boolean; error?: string }> {
     try {
+        const { updatedAt, ...cleanData } = data as any;
         await prisma.algorithmSettings.upsert({
             where: { id: "default" },
-            update: data,
-            create: { id: "default", ...data }
+            update: cleanData,
+            create: { id: "default", ...cleanData }
         });
 
         revalidatePath("/admin/settings");

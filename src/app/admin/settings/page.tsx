@@ -1,3 +1,5 @@
+"use client";
+
 import { AISettings } from "@/components/admin/settings/ai-settings";
 import { AmazonSettings } from "@/components/admin/settings/amazon-settings";
 import { PricingSettings } from "@/components/admin/settings/pricing-settings";

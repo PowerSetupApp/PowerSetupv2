@@ -94,6 +94,9 @@ const SETTINGS_GROUPS: SettingsGroup[] = [
             { key: "cloudyYieldFactor", label: "Bewölkt-Faktor", type: "float", suffix: "x" },
             { key: "recommendedSolarYieldFactor", label: "Solar-Puffer (Empfehlung)", type: "float", suffix: "x" },
             { key: "solarSafetyFactor", label: "Regler-Sicherheitsfaktor", type: "float", suffix: "x" },
+            { key: "roofUtilizationFactor", label: "Dach-Auslastung", type: "float", suffix: "x" },
+            { key: "roofOrientationFactor", label: "Dach-Orientierung (Fest)", type: "float", suffix: "x" },
+            { key: "portableOrientationFactor", label: "Taschen-Orientierung", type: "float", suffix: "x" },
         ]
     },
     {
@@ -385,6 +388,10 @@ function SettingsSummary({ settings, onHighlightClick }: { settings: AlgorithmSe
                         "Die Modulleistung selbst kalkulieren wir mit <H k="wpPerM2Rigid">{settings.wpPerM2Rigid} Wp/m²</H> für starre und <H k="wpPerM2Flexible">{settings.wpPerM2Flexible} Wp/m²</H> für flexible Module.
                         An bewölkten Tagen rechnen wir pauschal mit <H k="cloudyYieldFactor">{(settings.cloudyYieldFactor * 100).toFixed(0)}%</H> des normalen Ertrags (Worst-Case).
                         Für die Empfehlung sind wir etwas optimistischer, trauen dem <strong>Solarertrag</strong> aber auch nur zu <H k="recommendedSolarYieldFactor">{settings.recommendedSolarYieldFactor * 100}%</H> (Sicherheitspuffer)."
+                    </p>
+                    <p className="mt-2">
+                        "Zusätzlich berücksichtigen wir, dass man nie 100% der Dachfläche belegen kann (<H k="roofUtilizationFactor">{(settings.roofUtilizationFactor * 100).toFixed(0)}%</H> Auslastung).
+                        Fest verbaute Module verlieren etwas Leistung durch schlechtere Ausrichtung (<H k="roofOrientationFactor">{settings.roofOrientationFactor}x</H>), während mobile Solartaschen oft optimal ausgerichtet werden können (<H k="portableOrientationFactor">{settings.portableOrientationFactor}x</H>)."
                     </p>
                     <p className="mt-2">
                         "Der <strong>Solar-Laderegler</strong> wird mit einem Sicherheitsfaktor von <H k="solarSafetyFactor">{settings.solarSafetyFactor || 1.1}x</H> (also +{(((settings.solarSafetyFactor || 1.1) - 1) * 100).toFixed(0)}%) berechnet, um Spannungsspitzen an kalten Tagen sicher abzufangen."

@@ -289,15 +289,18 @@ function calculateBattery(
             ? settings.wpPerM2Rigid
             : settings.wpPerM2Flexible;
 
+        // Apply Roof Utilization (0.75) and Orientation Factor (0.85)
         const roofWp = input.solarSetupType !== 'portable'
             ? input.roofAreas.reduce((sum, area) => {
                 const m2 = (area.length * area.width) / 10000;
                 return sum + (m2 * wpPerM2);
-            }, 0)
+            }, 0) * settings.roofUtilizationFactor * settings.roofOrientationFactor
             : 0;
 
+        // Apply Portable Orientation Factor (1.0 - can be aligned perfectly)
         const portableWp = input.solarSetupType !== 'roof'
             ? input.solarBags.reduce((sum, bag) => sum + bag.power, 0)
+            * settings.portableOrientationFactor
             : 0;
         const totalWp = roofWp + portableWp;
 
@@ -593,11 +596,13 @@ function calculateSolarModules(
         ? input.roofAreas.reduce((sum, area) => {
             const m2 = (area.length * area.width) / 10000;
             return sum + (m2 * wpPerM2);
-        }, 0)
+        }, 0) * settings.roofUtilizationFactor * settings.roofOrientationFactor
         : 0;
 
+    // Apply Portable Orientation Factor (1.0 - can be aligned perfectly)
     const portableWp = input.solarSetupType !== 'roof'
         ? input.solarBags.reduce((sum, bag) => sum + bag.power, 0)
+        * settings.portableOrientationFactor
         : 0;
     const totalAvailableWp = maxRoofWp + portableWp;
 

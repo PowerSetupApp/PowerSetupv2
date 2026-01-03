@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { AlertTriangle, Battery, Calculator, Check, Info, RotateCcw, Settings2, Sun, Zap, Bug } from "lucide-react";
+import { AlertTriangle, Battery, Calculator, Check, Info, RotateCcw, Settings2, Sun, Zap, Bug, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -72,7 +72,12 @@ export function Step8Recommendation() {
         customInverterPower,
         setCustomInverterPower,
         customChargerCurrent,
-        setCustomChargerCurrent
+        setCustomChargerCurrent,
+
+        // Actions
+        addSolarBag,
+        removeSolarBag,
+        setSolarSetupType
     } = useWizardStore();
 
     const [isLoading, setIsLoading] = useState(true);
@@ -393,6 +398,76 @@ export function Step8Recommendation() {
                                     </AccordionContent>
                                 </AccordionItem>
                             </Accordion>
+
+                            {/* Solar Deficit Warning & Quick Add */}
+                            {calculations.solarModules.requiredWp > calculations.solarModules.totalAvailableWp && (
+                                <Alert className="mt-4 border-amber-500/50 bg-amber-500/10 text-amber-900 dark:text-amber-100 animate-in fade-in slide-in-from-top-2">
+                                    <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                                    <AlertTitle className="mb-2 text-amber-800 dark:text-amber-300 flex items-center gap-2">
+                                        Dachfläche reicht nicht aus
+                                    </AlertTitle>
+                                    <AlertDescription>
+                                        <div className="space-y-3">
+                                            <p className="text-sm">
+                                                Die verfügbare Dachfläche ist zu klein für die empfohlene Leistung.
+                                                Du kannst mobile Solartaschen ergänzen:
+                                            </p>
+
+                                            {/* Preset Buttons - Touch Optimized */}
+                                            <div className="flex flex-wrap gap-2">
+                                                {[100, 200, 300, 400].map((watts) => (
+                                                    <Button
+                                                        key={watts}
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className="h-12 min-w-[3.5rem] border-amber-500/30 bg-background/50 hover:bg-amber-500/20 hover:border-amber-500 transition-all font-medium"
+                                                        onClick={() => {
+                                                            addSolarBag({
+                                                                id: `bag-${Date.now()}-${watts}`,
+                                                                power: watts
+                                                            });
+                                                            if (solarSetupType === 'roof') {
+                                                                setSolarSetupType('mixed');
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Plus className="mr-1 h-3 w-3" />
+                                                        {watts}W
+                                                    </Button>
+                                                ))}
+                                            </div>
+
+                                            {/* List of added bags */}
+                                            {solarBags.length > 0 && (
+                                                <div className="rounded-lg border bg-background/50 p-3 space-y-2 mt-2">
+                                                    <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wider opacity-70">
+                                                        <span>Ergänzte Solartaschen</span>
+                                                        <span>{solarBags.reduce((sum, b) => sum + b.power, 0)} Wp</span>
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        {solarBags.map((bag) => (
+                                                            <div key={bag.id} className="flex items-center justify-between rounded-md bg-background px-2 py-1.5 text-sm border shadow-sm">
+                                                                <span className="flex items-center gap-2">
+                                                                    <Sun className="h-3 w-3 text-amber-500" />
+                                                                    Solartasche {bag.power}Wp
+                                                                </span>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-6 w-6 text-muted-foreground hover:text-destructive -mr-1"
+                                                                    onClick={() => removeSolarBag(bag.id)}
+                                                                >
+                                                                    <Trash2 className="h-3 w-3" />
+                                                                </Button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </AlertDescription>
+                                </Alert>
+                            )}
 
                             <div className="space-y-2">
                                 <div className="flex items-center gap-2">
