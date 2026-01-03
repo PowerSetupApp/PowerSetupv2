@@ -213,8 +213,14 @@ function roundDownToClass(value: number, classes: number[], fallback: number[]):
 function calculateDailyWh(consumers: Consumer[], settings: AlgorithmSettingsData): number {
     return consumers.reduce((sum, c) => {
         // Cooling devices have duty cycle
-        if (c.coolingMethod) {
-            const dutyCycle = c.coolingMethod === 'compressor'
+        // FALLBACK: Check name if coolingMethod is missing but name implies cooling
+        const isLikelyCooling = !c.coolingMethod &&
+            (c.name.toLowerCase().includes('kühl') || c.name.toLowerCase().includes('cool') || c.name.toLowerCase().includes('fridge'));
+
+        const effectiveCoolingMethod = c.coolingMethod || (isLikelyCooling ? 'compressor' : undefined);
+
+        if (effectiveCoolingMethod) {
+            const dutyCycle = effectiveCoolingMethod === 'compressor'
                 ? settings.dutyCycleCompressor
                 : settings.dutyCycleAbsorber;
 
@@ -314,7 +320,9 @@ function calculateBattery(
 
     // Effective Autarchy Days: User wish vs. Standing Reality
     // If user wants 18 days but only stands 3 days, we calc for 3 days.
-    const effectiveAutarchyDays = Math.min(input.autarchyDays, standingDaysLimit);
+    // UPDATE: We now trust the user's autarchy slider (input.autarchyDays) for the recommended capacity.
+    // The standingDaysLimit is only used for the "worst case" / minimum backup calculation to ensure a safe floor.
+    const effectiveAutarchyDays = input.autarchyDays; // Was: Math.min(input.autarchyDays, standingDaysLimit);
 
     // Worse Case Solar Yield (Cloudy Day)
     // We assume a fraction of the seasonal average yield
@@ -324,7 +332,9 @@ function calculateBattery(
     // Calculate minimum required capacity (worst case: only cloudy solar)
     // Capped by maxBackupDays to avoid "18 days of darkness" scenarios
     // Logic: min(effectiveDays, settings.maxBackupDays)
-    const backupDays = Math.min(effectiveAutarchyDays, settings.maxBackupDays);
+    // For MINIMUM backup, we still respect the standing limit to avoid oversizing the "must have" battery
+    const limitedAutarchyDays = Math.min(effectiveAutarchyDays, standingDaysLimit);
+    const backupDays = Math.min(limitedAutarchyDays, settings.maxBackupDays);
     const minCapacityAh = (netDailyDeficitWorstCase * backupDays) / (input.systemVoltage * dod);
 
     // Calculate recommended capacity (with solar offset)
@@ -335,11 +345,11 @@ function calculateBattery(
     let calculatedRecAh: number;
 
     if (!hasSolar) {
-        // No solar: Calculate based on full daily consumption
-        calculatedRecAh = (dailyWh * backupDays) / (input.systemVoltage * dod);
+        // No solar: Calculate based on full autarchy days
+        calculatedRecAh = (dailyWh * effectiveAutarchyDays) / (input.systemVoltage * dod);
     } else if (netDailyDeficitRecommendation > 0) {
         // Solar present but doesn't cover all consumption
-        calculatedRecAh = (netDailyDeficitRecommendation * backupDays) / (input.systemVoltage * dod);
+        calculatedRecAh = (netDailyDeficitRecommendation * effectiveAutarchyDays) / (input.systemVoltage * dod);
     } else {
         // Solar covers all consumption (e.g., summer_only with high solar yield)
         // Still need buffer capacity for nights and cloudy periods

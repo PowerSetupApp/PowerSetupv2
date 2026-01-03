@@ -31,6 +31,8 @@ export async function testAlgorithmCalculations(
                 usageHoursPerDay: c.usageHoursPerDay || 0,
                 isFixed: c.isFixed,
                 coolingMethod: c.coolingMethod,
+                usesGas: c.usesGas,
+                electricPercentage: c.electricPercentage,
             })),
             simultaneousLoad: formData.simultaneousLoad || 'moderate',
             travelBehavior: formData.travelBehavior || {

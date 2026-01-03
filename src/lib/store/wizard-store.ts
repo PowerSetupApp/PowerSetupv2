@@ -200,7 +200,7 @@ export interface WizardState {
     setStep: (step: number) => void;
 
     // Sync
-    syncConsumers: (validDevices: { id: string; name: string }[]) => void;
+    syncConsumers: (validDevices: { id: string; name: string; isCooling?: boolean }[]) => void;
 
     // Reset
     reset: () => void;
@@ -429,6 +429,7 @@ export const useWizardStore = create<WizardState>()(
             syncConsumers: (validDevices) => set((state) => {
                 const validIds = new Set(validDevices.map(d => d.id));
                 const validNames = new Map(validDevices.map(d => [d.id, d.name]));
+                const coolingDevices = new Set(validDevices.filter(d => d.isCooling).map(d => d.id));
 
                 const newConsumers = state.consumers.filter(c => {
                     // 1. Identify if it is a "Native" device (not custom, not preset-copy, not duplicate)
@@ -443,10 +444,18 @@ export const useWizardStore = create<WizardState>()(
                     // 3. Update Name if it exists (for Native devices)
                     // (We don't update name for copies/customs to preserve user edits potentially, 
                     // though for native ones we want the latest official name)
+                    let updated = { ...c };
+
                     if (validNames.has(c.id)) {
-                        return { ...c, name: validNames.get(c.id)! };
+                        updated.name = validNames.get(c.id)!;
                     }
-                    return c;
+
+                    // 4. NEW: Sync coolingMethod for cooling devices that don't have it set
+                    if (coolingDevices.has(c.id) && !c.coolingMethod) {
+                        updated.coolingMethod = 'compressor';
+                    }
+
+                    return updated;
                 });
 
                 // Only update if something changed to avoid unnecessary re-renders (though zustand handles this well)

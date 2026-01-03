@@ -133,7 +133,14 @@ export function Step3Consumers() {
                 if (Array.isArray(data)) {
                     const allDevices = data.flatMap(c => c.devices.map(d => ({
                         id: d.id,
-                        name: d.i18nKey ? t(`Consumers.${d.i18nKey}`) : d.name
+                        name: d.i18nKey ? (() => {
+                            try {
+                                return t(`Consumers.${d.i18nKey}`);
+                            } catch (e) {
+                                return d.name;
+                            }
+                        })() : d.name,
+                        isCooling: d.isCooling
                     })));
                     syncConsumers(allDevices);
                 }
@@ -229,7 +236,14 @@ export function Step3Consumers() {
     ];
 
     const getDisplayName = (device: ApiConsumerDevice) => {
-        return device.i18nKey ? t(`Consumers.${device.i18nKey}`) : device.name;
+        if (device.i18nKey) {
+            try {
+                return t(`Consumers.${device.i18nKey}`);
+            } catch (e) {
+                return device.name;
+            }
+        }
+        return device.name;
     };
 
     const handleToggle = (device: ApiConsumerDevice, categorySlug: string) => {

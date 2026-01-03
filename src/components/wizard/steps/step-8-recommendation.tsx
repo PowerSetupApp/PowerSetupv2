@@ -86,7 +86,16 @@ export function Step8Recommendation() {
         vehicleVoltage,
         systemVoltage,
         energySources,
-        consumers: consumers.length, // Just count to avoid huge dump
+        consumers: consumers.map(c => ({
+            id: c.id,
+            name: c.name,
+            power: c.power,
+            daily: c.usageHoursPerDay,
+            voltage: c.voltage,
+            coolingMethod: c.coolingMethod,
+            usesGas: c.usesGas,
+            electricPercentage: c.electricPercentage
+        })),
         autarchyGoal,
         autarchyDays,
         solarSetupType,
