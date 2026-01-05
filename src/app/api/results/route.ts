@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { FormDataSchema } from "@/lib/schemas/result";
-import { calculateSystemRequirements, type WizardInput } from "@/lib/requirements-engine";
+import { calculateSystemRequirements, type WizardInput } from "@/lib/algorithm";
 
 // POST /api/results - Neues Result erstellen
 export async function POST(request: NextRequest) {

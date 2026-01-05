@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { AIInput, AIConsumerInput, AIProductInput, generateProductSelection } from "@/lib/ai";
-import { calculateSystemRequirements } from "@/lib/calculations";
+// calculateSystemRequirements is now part of @/lib/algorithm but not used directly here
 import { getAISettings } from "@/app/actions/settings";
 import { getGeneralSettings } from "@/app/actions/general-settings";
 import { appendAmazonTag } from "@/lib/affiliate";
 import { formatFormDataForAI, formatProductsForAI, AIProductContext, formatFormDataCompact, formatSystemRequirementsForAI } from "@/lib/format-for-ai";
-import { preFilterProducts, getFilterStats, type ProductWithFilter, type SystemRequirements } from "@/lib/requirements-engine";
+import { preFilterProducts, getFilterStats, type ProductWithFilter, type SystemRequirements } from "@/lib/algorithm";
 
 // POST /api/results/[id]/generate - Generate AI recommendations
 export async function POST(
@@ -63,7 +63,8 @@ export async function POST(
             products: [], // Not needed for calc
         };
 
-        const calculations = calculateSystemRequirements(calculationInput);
+        // Note: calculations are already precomputed and stored in result.calculations
+        // Use those instead of recalculating
 
         // --- 2. Single-Pass Product Selection ---
 
@@ -98,8 +99,8 @@ export async function POST(
             preCalculatedRequirements
         );
 
-        const filterStats = getFilterStats(allProducts.length, filteredProducts.length);
-        console.log(`[Product Pre-Filter] ${filterStats.originalCount} → ${filterStats.filteredCount} products (${filterStats.reductionPercent}% reduction)`);
+        const filterStats = getFilterStats(allProducts as unknown as ProductWithFilter[], filteredProducts);
+        console.log(`[Product Pre-Filter] ${filterStats.total} → ${filterStats.filtered} products (${filterStats.removed} removed)`);
 
         const productContext = formatProductsForAI(filteredProducts as unknown as AIProductContext[]);
 
@@ -255,7 +256,7 @@ export async function POST(
         const updatedResult = await prisma.result.update({
             where: { id },
             data: {
-                calculations: JSON.parse(JSON.stringify(calculations)),
+                calculations: result.calculations ? JSON.parse(JSON.stringify(result.calculations)) : undefined, // Keep pre-stored calculations
                 recommendations: JSON.parse(JSON.stringify(recommendations)),
                 schematicData: {},
                 version: result.version + 1,
@@ -267,7 +268,7 @@ export async function POST(
 
         return NextResponse.json({
             success: true,
-            calculations: calculations,
+            calculations: preCalculatedRequirements,
             recommendations: recommendations,
             schematic: {},
             result: updatedResult,

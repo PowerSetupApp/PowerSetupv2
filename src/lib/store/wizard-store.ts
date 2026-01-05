@@ -200,7 +200,7 @@ export interface WizardState {
     setStep: (step: number) => void;
 
     // Sync
-    syncConsumers: (validDevices: { id: string; name: string; isCooling?: boolean }[]) => void;
+    syncConsumers: (validDevices: { id: string; name: string; isCooling?: boolean; defaultHoursPerDay?: number; defaultPower?: number }[]) => void;
 
     // Reset
     reset: () => void;
@@ -442,24 +442,24 @@ export const useWizardStore = create<WizardState>()(
                     return validIds.has(c.id);
                 }).map(c => {
                     // 3. Update Name if it exists (for Native devices)
-                    // (We don't update name for copies/customs to preserve user edits potentially, 
-                    // though for native ones we want the latest official name)
                     let updated = { ...c };
 
                     if (validNames.has(c.id)) {
                         updated.name = validNames.get(c.id)!;
                     }
 
-                    // 4. NEW: Sync coolingMethod for cooling devices that don't have it set
+                    // 4. Sync coolingMethod for cooling devices that don't have it set
                     if (coolingDevices.has(c.id) && !c.coolingMethod) {
                         updated.coolingMethod = 'compressor';
                     }
 
+                    // NOTE: We intentionally do NOT sync usageHoursPerDay here
+                    // to preserve user modifications. The DB values are only used
+                    // when a consumer is first added via handleToggle().
+
                     return updated;
                 });
 
-                // Only update if something changed to avoid unnecessary re-renders (though zustand handles this well)
-                // JSON.stringify check is heavy, maybe just length check or assuming it's fine.
                 return { consumers: newConsumers };
             }),
         }),

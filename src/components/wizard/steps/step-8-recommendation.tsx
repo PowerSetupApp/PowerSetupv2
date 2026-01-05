@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { useWizardStore } from "@/lib/store/wizard-store";
 import { testAlgorithmCalculations } from "@/app/actions/test-algorithm";
-import { type SystemRequirements } from "@/lib/requirements-engine";
+import { type SystemRequirements } from "@/lib/algorithm";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -124,7 +124,15 @@ export function Step8Recommendation() {
             controller: customSolarControllerCurrent,
             inverter: customInverterPower,
             charger: customChargerCurrent
-        }
+        },
+        // Results
+        calculations: calculations ? {
+            battery: calculations.battery,
+            solar: calculations.solarModules,
+            booster: calculations.booster,
+            charger: calculations.charger,
+            cables: calculations.cables
+        } : "Not calculated"
     };
 
     const lastPayloadRef = useRef<string>("");
@@ -189,7 +197,8 @@ export function Step8Recommendation() {
         vehicleType, vehicleVoltage, systemVoltage, energySources, consumers,
         autarchyGoal, autarchyDays, solarSetupType, solarDimensions,
         roofModuleType, solarModulePreference, solarBags, cableLengths,
-        comfortLevel, schematicPreference, batteryPreference, travelBehavior,
+        comfortLevel, schematicPreference, batteryPreference,
+        travelBehavior.season, travelBehavior.tripDuration, travelBehavior.winterLocation, travelBehavior.standingDuration,
         simultaneousLoad, alternatorSize, batterySpaceSize, roofAreas, shoreChargingSpeed,
         calculations // Added calculations to dependency to allow skipping if already exists
     ]);
@@ -395,6 +404,29 @@ export function Step8Recommendation() {
                                             </div>
                                             <div className="font-medium text-primary">{Math.ceil(calculations.solarModules.totalAvailableWp)} Wp</div>
                                         </div>
+
+                                        {/* Added Solar Bags List - Indented under Available */}
+                                        {solarBags.length > 0 && (
+                                            <div className="space-y-1 pl-4 border-l-2 border-muted border-dashed ml-1">
+                                                {solarBags.map((bag) => (
+                                                    <div key={bag.id} className="flex items-center justify-between text-sm py-1 group">
+                                                        <span className="flex items-center gap-2 text-muted-foreground">
+                                                            <Sun className="h-3 w-3" />
+                                                            Solartasche {bag.power}Wp
+                                                        </span>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                                                            onClick={() => removeSolarBag(bag.id)}
+                                                            title="Entfernen"
+                                                        >
+                                                            <Trash2 className="h-3 w-3" />
+                                                        </Button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </AccordionContent>
                                 </AccordionItem>
                             </Accordion>
@@ -409,7 +441,7 @@ export function Step8Recommendation() {
                                     <AlertDescription>
                                         <div className="space-y-3">
                                             <p className="text-sm">
-                                                Die verfügbare Dachfläche ist zu klein für die empfohlene Leistung.
+                                                Es fehlen <strong>{Math.ceil(calculations.solarModules.requiredWp - calculations.solarModules.totalAvailableWp)} Wp</strong> zur empfohlenen Leistung.
                                                 Du kannst mobile Solartaschen ergänzen:
                                             </p>
 
@@ -437,33 +469,7 @@ export function Step8Recommendation() {
                                                 ))}
                                             </div>
 
-                                            {/* List of added bags */}
-                                            {solarBags.length > 0 && (
-                                                <div className="rounded-lg border bg-background/50 p-3 space-y-2 mt-2">
-                                                    <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wider opacity-70">
-                                                        <span>Ergänzte Solartaschen</span>
-                                                        <span>{solarBags.reduce((sum, b) => sum + b.power, 0)} Wp</span>
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        {solarBags.map((bag) => (
-                                                            <div key={bag.id} className="flex items-center justify-between rounded-md bg-background px-2 py-1.5 text-sm border shadow-sm">
-                                                                <span className="flex items-center gap-2">
-                                                                    <Sun className="h-3 w-3 text-amber-500" />
-                                                                    Solartasche {bag.power}Wp
-                                                                </span>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    className="h-6 w-6 text-muted-foreground hover:text-destructive -mr-1"
-                                                                    onClick={() => removeSolarBag(bag.id)}
-                                                                >
-                                                                    <Trash2 className="h-3 w-3" />
-                                                                </Button>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
+
                                         </div>
                                     </AlertDescription>
                                 </Alert>
@@ -477,7 +483,7 @@ export function Step8Recommendation() {
                                 <RecommendationAdjustmentInput
                                     id="solar-override"
                                     value={customSolarPower}
-                                    recommendedValue={Math.min(Math.ceil(calculations.solarModules.requiredWp), Math.ceil(calculations.solarModules.totalAvailableWp))}
+                                    recommendedValue={Math.ceil(calculations.solarModules.totalAvailableWp)}
                                     onChange={setCustomSolarPower}
                                     unit="Wp"
                                 />

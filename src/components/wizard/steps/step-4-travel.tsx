@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+
 import { useTranslations } from "next-intl";
 import { useWizardStore, TravelSeason, TripDuration, WinterLocation, StandingDuration } from "@/lib/store/wizard-store";
 import { CardSelection } from "@/components/ui/card-selection";
@@ -7,10 +9,24 @@ import { Sun, Snowflake, CalendarRange, Map, Timer, ChevronRight, Thermometer, M
 
 export function Step4Travel() {
     const t = useTranslations("Wizard.Step5");
-    const { travelBehavior, setTravelBehavior } = useWizardStore();
+    const { travelBehavior, setTravelBehavior, energySources } = useWizardStore();
+
+    const season = travelBehavior.season;
+    const hasAlternator = energySources.includes('alternator');
+
+    // Constraint: Permanent living only makes sense for "All Year"
+    const isPermanentDisabled = season === 'summer_only' || season === 'winter_focused';
+
+    // Auto-correct trip duration if permanent selected with restricted seasons
+    useEffect(() => {
+        if (isPermanentDisabled && travelBehavior.tripDuration === 'permanent') {
+            setTravelBehavior({ tripDuration: 'extended' });
+        }
+    }, [isPermanentDisabled, travelBehavior.tripDuration, setTravelBehavior]);
 
     // Season options
     const seasonOptions = [
+
         {
             value: "summer_only",
             title: t("season_summer"),
@@ -54,8 +70,9 @@ export function Step4Travel() {
         {
             value: "permanent",
             title: t("duration_permanent"),
-            description: t("duration_permanent_desc"),
-            icon: <Compass className="h-5 w-5" />
+            description: isPermanentDisabled ? "Nur bei Ganzjahresnutzung" : t("duration_permanent_desc"),
+            icon: <Compass className="h-5 w-5" />,
+            disabled: isPermanentDisabled
         }
     ];
 
@@ -154,19 +171,21 @@ export function Step4Travel() {
                 </div>
             )}
 
-            {/* Standing Duration */}
-            <div className="space-y-4">
-                <h3 className="text-lg font-semibold">{t("standing_title")}</h3>
-                <CardSelection
-                    options={standingOptions}
-                    value={travelBehavior.standingDuration}
-                    onChange={(val) => setTravelBehavior({ standingDuration: val as StandingDuration })}
-                    columns={3}
-                />
-                <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
-                    {t("standing_hint")}
-                </p>
-            </div>
+            {/* Standing Duration - Only show when alternator is selected */}
+            {hasAlternator && (
+                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <h3 className="text-lg font-semibold">{t("standing_title")}</h3>
+                    <CardSelection
+                        options={standingOptions}
+                        value={travelBehavior.standingDuration}
+                        onChange={(val) => setTravelBehavior({ standingDuration: val as StandingDuration })}
+                        columns={3}
+                    />
+                    <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
+                        Je kürzer du stehst, desto häufiger lädst du während der Fahrt über die Lichtmaschine.
+                    </p>
+                </div>
+            )}
         </div>
     );
 }

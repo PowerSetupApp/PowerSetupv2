@@ -1,6 +1,6 @@
 "use server";
 
-import { calculateSystemRequirements, type WizardInput, type SystemRequirements } from "@/lib/requirements-engine";
+import { calculateSystemRequirements, type WizardInput, type SystemRequirements } from "@/lib/algorithm";
 
 /**
  * Server action to test the algorithm calculations without saving to the database.
@@ -21,7 +21,6 @@ export async function testAlgorithmCalculations(
                 : 12,
             batteryPreference: formData.batteryPreference || 'lifepo4',
             energySources: formData.energySources || [],
-            alternatorSize: formData.alternatorSize || 'unknown',
             consumers: (formData.consumers || []).map((c: any) => ({
                 id: c.id,
                 category: c.category || 'custom',
@@ -29,6 +28,7 @@ export async function testAlgorithmCalculations(
                 power: c.power || 0,
                 voltage: typeof c.voltage === 'number' ? c.voltage : 12,
                 usageHoursPerDay: c.usageHoursPerDay || 0,
+                usage: 'daily',
                 isFixed: c.isFixed,
                 coolingMethod: c.coolingMethod,
                 usesGas: c.usesGas,
@@ -37,10 +37,12 @@ export async function testAlgorithmCalculations(
             simultaneousLoad: formData.simultaneousLoad || 'moderate',
             travelBehavior: formData.travelBehavior || {
                 season: 'all_year',
+                tripDuration: 'week',
                 winterLocation: 'varies',
+                standingDuration: 'medium',
             },
+            autarchyGoal: formData.autarchyGoal || 'holiday',
             autarchyDays: formData.autarchyDays || 3,
-            batterySpaceSize: formData.batterySpaceSize || 'medium',
             solarSetupType: formData.solarSetupType || 'roof',
             roofAreas: formData.roofAreas || [],
             roofModuleType: formData.roofModuleType || 'rigid',
@@ -51,7 +53,6 @@ export async function testAlgorithmCalculations(
                 solarToRegulator: 5,
                 custom: {},
             },
-            comfortLevel: formData.comfortLevel || 'standard',
             shoreChargingSpeed: formData.shoreChargingSpeed || 'normal',
         };
 

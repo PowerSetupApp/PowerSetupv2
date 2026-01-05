@@ -1,16 +1,43 @@
 "use client";
 
+import { useMemo, useEffect } from "react";
+
 import { useTranslations } from "next-intl";
 import { useWizardStore, AutarchyLevel, type BatterySpaceSize } from "@/lib/store/wizard-store";
 import { CardSelection } from "@/components/ui/card-selection";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { CalendarDays, Map, BatteryCharging, Box, Package, Warehouse } from "lucide-react";
+import { CalendarDays, Map, BatteryCharging, Box, Package, Warehouse, Info } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export function Step5Autarky() {
     const t = useTranslations("Wizard.Step6");
-    const { autarchyGoal, autarchyDays, setAutarchyGoal, batterySpaceSize, setBatterySpaceSize } = useWizardStore();
+    const { autarchyGoal, autarchyDays, setAutarchyGoal, batterySpaceSize, setBatterySpaceSize, travelBehavior } = useWizardStore();
+
+    // Determine max allowed autarchy days based on trip duration
+    const maxDays = useMemo(() => {
+        const duration = travelBehavior?.tripDuration;
+        switch (duration) {
+            case 'weekend': return 3; // Max 3 days for weekend trips
+            case 'week': return 10;    // Max 10 days for week trips (allows overlap)
+            case 'extended': return 45;   // Extended trips
+            case 'permanent': return 90;  // Permanent living
+            default: return 30; // Fallback
+        }
+    }, [travelBehavior?.tripDuration]);
+
+    // Auto-correct days if they exceed the limit
+    useEffect(() => {
+        if (autarchyDays > maxDays) {
+            // Find appropriate goal for the max days
+            let newGoal: AutarchyLevel = 'full';
+            if (maxDays <= 3) newGoal = 'weekend';
+            else if (maxDays <= 14) newGoal = 'holiday';
+
+            setAutarchyGoal(newGoal, maxDays);
+        }
+    }, [maxDays, autarchyDays, setAutarchyGoal]);
 
     const presets: { value: AutarchyLevel; label: string; icon: React.ReactNode; days: number }[] = [
         {
@@ -66,13 +93,25 @@ export function Step5Autarky() {
             </div>
 
             <div className="space-y-6">
+                {/* Info Alert if limited */}
+                {maxDays < 30 && (
+                    <Alert className="bg-muted/50 border-primary/20">
+                        <Info className="h-4 w-4 text-primary" />
+                        <AlertTitle>Autarkie begrenzt</AlertTitle>
+                        <AlertDescription>
+                            Passend zu deiner Reisedauer ist die Autarkie auf maximal {maxDays} Tage begrenzt.
+                        </AlertDescription>
+                    </Alert>
+                )}
+
                 {/* Presets */}
                 <CardSelection
                     options={presets.map(p => ({
                         value: p.value,
                         title: p.label,
-                        description: p.days + " Tage", // Simple description or empty
-                        icon: p.icon
+                        description: p.days > maxDays ? `(Max. ${maxDays} Tage)` : p.days + " Tage",
+                        icon: p.icon,
+                        disabled: p.days > maxDays
                     }))}
                     value={autarchyGoal}
                     onChange={handlePresetChange}
@@ -84,14 +123,14 @@ export function Step5Autarky() {
                         <Label className="text-base font-medium">
                             {t("days_label", { days: autarchyDays })}
                         </Label>
-                        <span className="text-xs text-muted-foreground">1 - 30 Tage</span>
+                        <span className="text-xs text-muted-foreground">1 - {maxDays} Tage</span>
                     </div>
 
                     <Slider
                         value={[autarchyDays]}
                         onValueChange={handleSliderChange}
                         min={1}
-                        max={30}
+                        max={maxDays}
                         step={1}
                         className="w-full"
                     />

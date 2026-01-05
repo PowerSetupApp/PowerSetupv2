@@ -140,7 +140,9 @@ export function Step3Consumers() {
                                 return d.name;
                             }
                         })() : d.name,
-                        isCooling: d.isCooling
+                        isCooling: d.isCooling,
+                        defaultHoursPerDay: d.defaultHoursPerDay, // Sync daily hours from DB
+                        defaultPower: d.defaultPower // Sync power from DB
                     })));
                     syncConsumers(allDevices);
                 }

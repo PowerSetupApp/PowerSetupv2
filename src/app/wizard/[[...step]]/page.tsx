@@ -8,7 +8,7 @@ import { Step3Consumers } from "@/components/wizard/steps/step-3-consumers";
 import { Step4Travel } from "@/components/wizard/steps/step-4-travel";
 import { Step5Autarky } from "@/components/wizard/steps/step-5-autarky";
 import { Step6Cabling } from "@/components/wizard/steps/step-6-cabling";
-import { Step7Comfort } from "@/components/wizard/steps/step-7-comfort";
+import { Step7Brands } from "@/components/wizard/steps/step-7-brands";
 // Step 9 Schematic was not rendered in previous version either
 import { Step8Recommendation } from "@/components/wizard/steps/step-8-recommendation";
 import { useTranslations } from "next-intl";
@@ -91,7 +91,7 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
         { id: 4, label: "Reise" },
         { id: 5, label: "Autarkie" },
         { id: 6, label: "Kabel" },
-        { id: 7, label: "Budget" },
+        { id: 7, label: "Marken" },
         { id: 8, label: "Empfehlung" }
     ];
 
@@ -205,7 +205,7 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
                 {stepIndex === 4 && <Step4Travel />}
                 {stepIndex === 5 && <Step5Autarky />}
                 {stepIndex === 6 && <Step6Cabling />}
-                {stepIndex === 7 && <Step7Comfort />}
+                {stepIndex === 7 && <Step7Brands />}
                 {stepIndex === 8 && <Step8Recommendation />}
             </div>
 

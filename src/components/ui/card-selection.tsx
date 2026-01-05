@@ -9,6 +9,7 @@ export interface CardOption<T extends string = string> {
     title: string;
     description?: string;
     badge?: string;
+    disabled?: boolean;
 }
 
 export interface CardSelectionProps<T extends string = string> {
@@ -43,17 +44,21 @@ export function CardSelection<T extends string = string>({
                 <button
                     key={option.value}
                     type="button"
-                    onClick={() => onChange(option.value)}
+                    disabled={option.disabled}
+                    onClick={() => !option.disabled && onChange(option.value)}
                     className={cn(
                         "relative flex flex-col items-center p-6",
                         "rounded-2xl border-2 transition-all duration-200",
                         "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
-                        "hover:border-primary/50 hover:shadow-md",
-                        "active:scale-[0.98]",
                         "min-h-[160px]",
-                        value === option.value
+                        option.disabled
+                            ? "opacity-50 cursor-not-allowed border-muted bg-muted/20 grayscale"
+                            : "hover:border-primary/50 hover:shadow-md active:scale-[0.98]",
+                        !option.disabled && value === option.value
                             ? "border-primary bg-primary/5 shadow-sm"
-                            : "border-muted-foreground/20 bg-card"
+                            : !option.disabled
+                                ? "border-muted-foreground/20 bg-card"
+                                : ""
                     )}
                 >
                     {/* Badge */}

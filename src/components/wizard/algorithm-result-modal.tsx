@@ -3,7 +3,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { type SystemRequirements } from "@/lib/requirements-engine";
+import { type SystemRequirements } from "@/lib/algorithm";
 import { Check, X, AlertTriangle, Battery, Zap, Sun, Cable, Plug } from "lucide-react";
 
 interface AlgorithmResultModalProps {
