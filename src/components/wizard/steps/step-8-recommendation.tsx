@@ -482,7 +482,7 @@ export function Step8Recommendation() {
                                         if (newValue === null) {
                                             setCustomSolarPower(null);
                                         } else {
-                                            setCustomSolarPower(newValue + (calculations.solarModules.portableWp || 0));
+                                            setCustomSolarPower(newValue + (calculations.solarModules?.portableWp || 0));
                                         }
                                     }}
                                     unit="Wp"
