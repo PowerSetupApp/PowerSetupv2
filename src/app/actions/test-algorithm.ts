@@ -54,6 +54,7 @@ export async function testAlgorithmCalculations(
                 custom: {},
             },
             shoreChargingSpeed: formData.shoreChargingSpeed || 'normal',
+            customOverrides: formData.customOverrides || {},
         };
 
         // Calculate requirements

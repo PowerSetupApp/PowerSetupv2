@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useWizardStore } from "@/lib/store/wizard-store";
 import { testAlgorithmCalculations } from "@/app/actions/test-algorithm";
 import { type SystemRequirements } from "@/lib/algorithm";
+import { MAX_PORTABLE_WP } from "@/lib/algorithm/constants";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,7 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RecommendationAdjustmentInput } from "@/components/wizard/recommendation-adjustment-input";
 
 export function Step8Recommendation() {
@@ -52,7 +54,6 @@ export function Step8Recommendation() {
         batteryPreference,
         travelBehavior,
         simultaneousLoad,
-        alternatorSize,
         batterySpaceSize,
         roofAreas,
         shoreChargingSpeed,
@@ -77,13 +78,34 @@ export function Step8Recommendation() {
         // Actions
         addSolarBag,
         removeSolarBag,
+        clearSolarBags,
         setSolarSetupType
     } = useWizardStore();
 
     const [isLoading, setIsLoading] = useState(true);
+    const [isUpdating, setIsUpdating] = useState(false);
     const [calculations, setCalculations] = useState<SystemRequirements | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isDebugOpen, setIsDebugOpen] = useState(false);
+
+    // Calculate portable solar controller when solar bags are present
+    const portableSolarController = useMemo(() => {
+        if (solarBags.length === 0) return null;
+
+        const totalPortableWp = solarBags.reduce((sum, bag) => sum + bag.power, 0);
+        const safetyFactor = 1.10; // SOLAR_CONTROLLER_SAFETY
+        const rawCurrentA = totalPortableWp / systemVoltage;
+        const bufferedCurrentA = rawCurrentA * safetyFactor;
+
+        // No rounding to standard sizes - AI will pick appropriate products
+        const recommendedCurrentA = Math.ceil(bufferedCurrentA);
+
+        return {
+            totalWp: totalPortableWp,
+            rawCurrentA: Math.round(rawCurrentA * 10) / 10,
+            recommendedCurrentA,
+        };
+    }, [solarBags, systemVoltage]);
 
     // Filter out functions and only keep data for debug view
     const debugData = {
@@ -114,7 +136,6 @@ export function Step8Recommendation() {
         batteryPreference,
         travelBehavior,
         simultaneousLoad,
-        alternatorSize,
         batterySpaceSize,
         roofAreas,
         customOverrides: {
@@ -159,10 +180,17 @@ export function Step8Recommendation() {
             batteryPreference,
             travelBehavior,
             simultaneousLoad,
-            alternatorSize,
             batterySpaceSize,
             roofAreas: roofAreas && roofAreas.length > 0 ? roofAreas : (solarDimensions ? [{ id: 'main', name: 'Hauptfläche', length: solarDimensions.length, width: solarDimensions.width }] : []),
             shoreChargingSpeed,
+            customOverrides: {
+                battery: customBatteryCapacity,
+                solar: customSolarPower,
+                booster: customBoosterCurrent,
+                controller: customSolarControllerCurrent,
+                inverter: customInverterPower,
+                charger: customChargerCurrent
+            }
         };
 
         const payloadStr = JSON.stringify(formData);
@@ -173,7 +201,13 @@ export function Step8Recommendation() {
         }
 
         lastPayloadRef.current = payloadStr;
-        setIsLoading(true);
+
+        // Only show full skeleton load on first load
+        if (!calculations) {
+            setIsLoading(true);
+        } else {
+            setIsUpdating(true);
+        }
 
         try {
             const apiPayload = {
@@ -192,6 +226,7 @@ export function Step8Recommendation() {
             setError("Berechnungsfehler");
         } finally {
             setIsLoading(false);
+            setIsUpdating(false);
         }
     }, [
         vehicleType, vehicleVoltage, systemVoltage, energySources, consumers,
@@ -199,7 +234,8 @@ export function Step8Recommendation() {
         roofModuleType, solarModulePreference, solarBags, cableLengths,
         comfortLevel, schematicPreference, batteryPreference,
         travelBehavior.season, travelBehavior.tripDuration, travelBehavior.winterLocation, travelBehavior.standingDuration,
-        simultaneousLoad, alternatorSize, batterySpaceSize, roofAreas, shoreChargingSpeed,
+        simultaneousLoad, batterySpaceSize, roofAreas, shoreChargingSpeed,
+        customBatteryCapacity, customSolarPower, customBoosterCurrent, customSolarControllerCurrent, customInverterPower, customChargerCurrent,
         calculations // Added calculations to dependency to allow skipping if already exists
     ]);
 
@@ -208,15 +244,19 @@ export function Step8Recommendation() {
         // Removed window.focus listener to prevent mobile keyboard loops
     }, [calculate]);
 
-    // Sync Solar Controller with Custom Solar Power
+    // Sync Solar Controller with Custom Solar Power (ROOF ONLY)
     useEffect(() => {
         if (calculations && customSolarPower !== null) {
             const voltage = calculations.systemVoltage;
             // Get safety factor from settings (via debug info) or default to 1.1 (10%)
             const safetyFactor = calculations.debug?.solarSafetyFactor || 1.1;
 
-            // Formula: Wp / Voltage * Safety Factor
-            const calculatedAmps = (customSolarPower / voltage) * safetyFactor;
+            // Calculate ROOF-ONLY power by subtracting portable from total
+            const portableWp = calculations.solarModules?.portableWp || 0;
+            const roofOnlyPower = Math.max(0, customSolarPower - portableWp);
+
+            // Formula: RoofWp / Voltage * Safety Factor
+            const calculatedAmps = (roofOnlyPower / voltage) * safetyFactor;
 
             // Show the raw calculated value - AI will select appropriate products
             setCustomSolarControllerCurrent(Math.ceil(calculatedAmps));
@@ -265,11 +305,19 @@ export function Step8Recommendation() {
                     <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => calculate()}
-                        disabled={isLoading}
-                        title="Neu berechnen"
+                        onClick={() => {
+                            setCustomBatteryCapacity(null);
+                            setCustomSolarPower(null);
+                            setCustomBoosterCurrent(null);
+                            setCustomSolarControllerCurrent(null);
+                            setCustomInverterPower(null);
+                            setCustomChargerCurrent(null);
+                            clearSolarBags();
+                        }}
+                        disabled={isLoading || isUpdating}
+                        title="Alle manuellen Anpassungen zurücksetzen"
                     >
-                        <RotateCcw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                        <RotateCcw className={`h-4 w-4 ${isLoading || isUpdating ? 'animate-spin' : ''}`} />
                     </Button>
                     <Button
                         variant="ghost"
@@ -294,7 +342,7 @@ export function Step8Recommendation() {
                 </AlertDescription>
             </Alert>
 
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6">
                 {/* ... existing code ... */}
                 {/* Battery Section */}
                 <Card className="p-6 space-y-4 border-2 border-transparent focus-within:border-primary/20 transition-all">
@@ -374,12 +422,22 @@ export function Step8Recommendation() {
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 font-semibold">
                                 <Sun className="h-5 w-5 text-primary" />
-                                Solarleistung
+                                Solarleistung {solarSetupType === 'roof' && solarBags.length > 0 ? '(Dach)' : ''}
                             </div>
                         </div>
 
                         <div className="space-y-4">
-                            <Accordion type="single" collapsible className="w-full">
+                            <Accordion
+                                type="single"
+                                collapsible
+                                className="w-full"
+                                defaultValue={
+                                    calculations.solarModules.requiredWp > calculations.solarModules.totalAvailableWp &&
+                                        calculations.solarModules.portableWp < MAX_PORTABLE_WP
+                                        ? "details"
+                                        : undefined
+                                }
+                            >
                                 <AccordionItem value="details" className="border-none">
                                     <AccordionTrigger className="py-2 text-sm text-muted-foreground hover:text-foreground">
                                         Berechnungs-Details
@@ -390,106 +448,181 @@ export function Step8Recommendation() {
                                                 <span className="truncate">Benötigt:</span>
                                                 <InfoModal title="Benötigte Solarleistung" description="Die Menge an Solarleistung (Wp), die theoretisch nötig ist, um deinen Tagesbedarf im Durchschnitt vollständig durch Sonnenenergie zu decken." />
                                             </div>
-                                            <div className="font-medium">{calculations.solarModules.requiredWp} Wp</div>
+                                            <div className="font-medium">{Math.min(
+                                                calculations.solarModules.requiredWp,
+                                                calculations.solarModules.maxRoofWp + MAX_PORTABLE_WP
+                                            )} Wp</div>
                                         </div>
 
                                         <div className="flex items-center justify-between">
                                             <div className="text-muted-foreground text-sm flex items-center gap-1.5 min-w-0">
                                                 <span className="truncate">
-                                                    {solarSetupType === 'roof' ? 'Verfügbar (Dach):' :
-                                                        solarSetupType === 'portable' ? 'Verfügbar (Tasche):' :
-                                                            'Verfügbar (Dach+Tasche):'}
+                                                    Verfügbar (Dach):
                                                 </span>
-                                                <InfoModal title="Verfügbare Leistung" description="Die maximal mögliche Solarleistung basierend auf deiner verfügbaren Dachfläche und gewählten Solartaschen." />
+                                                <InfoModal title="Verfügbare Dach-Leistung" description="Die maximal mögliche Solarleistung auf deinem Dach." />
                                             </div>
-                                            <div className="font-medium text-primary">{Math.ceil(calculations.solarModules.totalAvailableWp)} Wp</div>
+                                            <div className="font-medium text-primary">{Math.ceil(calculations.solarModules.maxRoofWp)} Wp</div>
                                         </div>
-
-                                        {/* Added Solar Bags List - Indented under Available */}
-                                        {solarBags.length > 0 && (
-                                            <div className="space-y-1 pl-4 border-l-2 border-muted border-dashed ml-1">
-                                                {solarBags.map((bag) => (
-                                                    <div key={bag.id} className="flex items-center justify-between text-sm py-1 group">
-                                                        <span className="flex items-center gap-2 text-muted-foreground">
-                                                            <Sun className="h-3 w-3" />
-                                                            Solartasche {bag.power}Wp
-                                                        </span>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                                                            onClick={() => removeSolarBag(bag.id)}
-                                                            title="Entfernen"
-                                                        >
-                                                            <Trash2 className="h-3 w-3" />
-                                                        </Button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
                                     </AccordionContent>
                                 </AccordionItem>
                             </Accordion>
 
-                            {/* Solar Deficit Warning & Quick Add */}
-                            {calculations.solarModules.requiredWp > calculations.solarModules.totalAvailableWp && (
-                                <Alert className="mt-4 border-amber-500/50 bg-amber-500/10 text-amber-900 dark:text-amber-100 animate-in fade-in slide-in-from-top-2">
-                                    <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                                    <AlertTitle className="mb-2 text-amber-800 dark:text-amber-300 flex items-center gap-2">
-                                        Dachfläche reicht nicht aus
-                                    </AlertTitle>
-                                    <AlertDescription>
-                                        <div className="space-y-3">
-                                            <p className="text-sm">
-                                                Es fehlen <strong>{Math.ceil(calculations.solarModules.requiredWp - calculations.solarModules.totalAvailableWp)} Wp</strong> zur empfohlenen Leistung.
-                                                Du kannst mobile Solartaschen ergänzen:
-                                            </p>
-
-                                            {/* Preset Buttons - Touch Optimized */}
-                                            <div className="flex flex-wrap gap-2">
-                                                {[100, 200, 300, 400].map((watts) => (
-                                                    <Button
-                                                        key={watts}
-                                                        size="sm"
-                                                        variant="outline"
-                                                        className="h-12 min-w-[3.5rem] border-amber-500/30 bg-background/50 hover:bg-amber-500/20 hover:border-amber-500 transition-all font-medium"
-                                                        onClick={() => {
-                                                            addSolarBag({
-                                                                id: `bag-${Date.now()}-${watts}`,
-                                                                power: watts
-                                                            });
-                                                            if (solarSetupType === 'roof') {
-                                                                setSolarSetupType('mixed');
-                                                            }
-                                                        }}
-                                                    >
-                                                        <Plus className="mr-1 h-3 w-3" />
-                                                        {watts}W
-                                                    </Button>
-                                                ))}
-                                            </div>
-
-
-                                        </div>
-                                    </AlertDescription>
-                                </Alert>
-                            )}
-
                             <div className="space-y-2">
                                 <div className="flex items-center gap-2">
-                                    <Label htmlFor="solar-override">Geplante Leistung (Wp)</Label>
-                                    <InfoModal title="Leistung anpassen" description="Lege fest, wie viel Watt Peak (Wp) an Solarleistung du tatsächlich installieren möchtest." />
+                                    <Label htmlFor="solar-override">Geplante Leistung (Dach)</Label>
+                                    <InfoModal title="Leistung anpassen" description="Lege fest, wie viel Watt Peak (Wp) du fest auf dem Dach installieren möchtest." />
                                 </div>
                                 <RecommendationAdjustmentInput
                                     id="solar-override"
-                                    value={customSolarPower}
-                                    recommendedValue={Math.ceil(calculations.solarModules.totalAvailableWp)}
-                                    onChange={setCustomSolarPower}
+                                    // Logic: If customSolarPower is set, it represents TOTAL. So Roof = Total - Portable.
+                                    value={customSolarPower !== null ? Math.max(0, customSolarPower - (calculations.solarModules?.portableWp || 0)) : null}
+                                    recommendedValue={Math.ceil(calculations.solarModules.maxRoofWp)}
+                                    // OnChange: User sets Roof. Total = Roof + Portable.
+                                    onChange={(newValue) => {
+                                        if (newValue === null) {
+                                            setCustomSolarPower(null);
+                                        } else {
+                                            setCustomSolarPower(newValue + (calculations.solarModules.portableWp || 0));
+                                        }
+                                    }}
                                     unit="Wp"
                                 />
                             </div>
                         </div>
 
+                        {/* Separate Portable Solar Section */}
+                        {(solarBags.length > 0 || (calculations.solarModules.requiredWp > calculations.solarModules.totalAvailableWp && calculations.solarModules.portableWp < MAX_PORTABLE_WP)) ? (
+                            <>
+                                <Separator className="my-4" />
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2 font-semibold">
+                                            <Sun className="h-5 w-5 text-amber-500" />
+                                            Solarleistung (Solartasche)
+                                        </div>
+                                        {solarBags.length > 0 && (
+                                            <Badge variant="outline" className="border-amber-500/50 text-amber-600 dark:text-amber-400">Separat</Badge>
+                                        )}
+                                    </div>
+
+                                    {/* Deficit Warning - Buttons moved out */}
+                                    {calculations.solarModules.requiredWp > calculations.solarModules.totalAvailableWp &&
+                                        calculations.solarModules.portableWp < MAX_PORTABLE_WP && (
+                                            <Alert className="border-amber-500/50 bg-amber-500/10 text-amber-900 dark:text-amber-100">
+                                                <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                                                <AlertTitle className="mb-2 text-amber-800 dark:text-amber-300 flex items-center gap-2">
+                                                    Ergänzung empfohlen
+                                                </AlertTitle>
+                                                <AlertDescription>
+                                                    Es fehlen <strong>{Math.min(
+                                                        Math.ceil(calculations.solarModules.requiredWp - calculations.solarModules.totalAvailableWp),
+                                                        MAX_PORTABLE_WP - calculations.solarModules.portableWp
+                                                    )} Wp</strong>. Du kannst mobile Solartaschen ergänzen.
+                                                </AlertDescription>
+                                            </Alert>
+                                        )}
+
+                                    {/* List of active bags */}
+                                    {solarBags.length > 0 && (
+                                        <div className="space-y-2">
+                                            <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
+                                                <span>Aktuelle Solartaschen:</span>
+                                                <span className="font-medium text-foreground">{calculations.solarModules.portableWp} Wp</span>
+                                            </div>
+                                            <div className="space-y-2">
+                                                {solarBags.map((bag) => (
+                                                    <div key={bag.id} className="flex items-center justify-between p-3 rounded-md border bg-card/50 hover:bg-card/80 transition-colors group">
+                                                        <span className="flex items-center gap-2 font-medium">
+                                                            <Sun className="h-4 w-4 text-amber-500" />
+                                                            Solartasche {bag.power}Wp
+                                                        </span>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                                            onClick={() => {
+                                                                removeSolarBag(bag.id);
+                                                                // Update custom override if set
+                                                                if (customSolarPower !== null) {
+                                                                    setCustomSolarPower(Math.max(0, customSolarPower - bag.power));
+                                                                }
+                                                            }}
+                                                            title="Entfernen"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Add Buttons - Always visible in this section */}
+                                    <div className="pt-2">
+                                        <div className="text-sm font-medium mb-2 flex items-center gap-2">
+                                            <Plus className="h-4 w-4" />
+                                            Solartasche hinzufügen:
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {[100, 200, 300, 400].map((watts) => (
+                                                <Button
+                                                    key={watts}
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="h-9 border-dashed border-2 hover:border-solid hover:border-amber-500 hover:text-amber-600 dark:hover:text-amber-400"
+                                                    onClick={() => {
+                                                        addSolarBag({
+                                                            id: `bag-${Date.now()}-${watts}`,
+                                                            power: watts
+                                                        });
+                                                        if (solarSetupType === 'roof') {
+                                                            setSolarSetupType('mixed');
+                                                        }
+                                                        if (customSolarPower !== null) {
+                                                            setCustomSolarPower(customSolarPower + watts);
+                                                        }
+                                                    }}
+                                                >
+                                                    {watts}W
+                                                </Button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            /* Hidden Section - Show Add Options */
+                            <div className="pt-2 space-y-2">
+                                <div className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
+                                    <Plus className="h-4 w-4" />
+                                    Mobile Solartasche hinzufügen:
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {[100, 200, 300, 400].map((watts) => (
+                                        <Button
+                                            key={watts}
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-9 border-dashed border-2 hover:border-solid hover:border-amber-500 hover:text-amber-600 dark:hover:text-amber-400"
+                                            onClick={() => {
+                                                addSolarBag({
+                                                    id: `bag-${Date.now()}-${watts}`,
+                                                    power: watts
+                                                });
+                                                if (solarSetupType === 'roof') {
+                                                    setSolarSetupType('mixed');
+                                                }
+                                                if (customSolarPower !== null) {
+                                                    setCustomSolarPower(customSolarPower + watts);
+                                                }
+                                            }}
+                                        >
+                                            {watts}W
+                                        </Button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </Card>
                 )}
 
@@ -538,7 +671,7 @@ export function Step8Recommendation() {
                                 <RecommendationAdjustmentInput
                                     id="booster-override"
                                     value={customBoosterCurrent}
-                                    recommendedValue={calculations.booster.currentA}
+                                    recommendedValue={calculations.booster.originalCurrentA ?? calculations.booster.currentA}
                                     onChange={setCustomBoosterCurrent}
                                     unit="A"
                                 />
@@ -577,7 +710,7 @@ export function Step8Recommendation() {
                                                 <span className="truncate">Empfohlener Strom:</span>
                                                 <InfoModal title="Ladestrom" description="Der empfohlene Ladestrom für das 230V Ladegerät, um die Batterie schonend und effektiv zu laden." />
                                             </div>
-                                            <div className="font-bold text-primary">{calculations.charger.recommendedCurrentA} A</div>
+                                            <div className="font-bold text-primary">{calculations.charger.originalRecommendedCurrentA ?? calculations.charger.recommendedCurrentA} A</div>
                                         </div>
                                     </AccordionContent>
                                 </AccordionItem>
@@ -591,7 +724,7 @@ export function Step8Recommendation() {
                                 <RecommendationAdjustmentInput
                                     id="charger-override"
                                     value={customChargerCurrent}
-                                    recommendedValue={calculations.charger.recommendedCurrentA}
+                                    recommendedValue={calculations.charger.originalRecommendedCurrentA ?? calculations.charger.recommendedCurrentA}
                                     onChange={setCustomChargerCurrent}
                                     unit="A"
                                 />
@@ -632,7 +765,7 @@ export function Step8Recommendation() {
                                                 <span className="truncate">Empfohlene Dauerleistung:</span>
                                                 <InfoModal title="Empfohlene Dauerleistung" description="Die empfohlene Größe des Wechselrichters Inklusive Sicherheitsreserven für Anlaufströme." />
                                             </div>
-                                            <div className="font-bold text-primary">{calculations.inverter.recommendedW} W</div>
+                                            <div className="font-bold text-primary">{calculations.inverter.originalRecommendedW ?? calculations.inverter.recommendedW} W</div>
                                         </div>
                                     </AccordionContent>
                                 </AccordionItem>
@@ -646,7 +779,7 @@ export function Step8Recommendation() {
                                 <RecommendationAdjustmentInput
                                     id="inverter-override"
                                     value={customInverterPower}
-                                    recommendedValue={calculations.inverter.recommendedW}
+                                    recommendedValue={calculations.inverter.originalRecommendedW ?? calculations.inverter.recommendedW}
                                     onChange={setCustomInverterPower}
                                     unit="W"
                                 />
@@ -661,7 +794,7 @@ export function Step8Recommendation() {
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 font-semibold">
                                 <Settings2 className="h-5 w-5 text-primary" />
-                                Solar-Laderegler
+                                Solar-Laderegler {portableSolarController && "(Dach)"}
                             </div>
                             <Badge variant="secondary">{calculations.solarController.type}</Badge>
                         </div>
@@ -683,16 +816,8 @@ export function Step8Recommendation() {
 
                                         <div className="flex items-center justify-between">
                                             <div className="text-muted-foreground text-sm flex items-center gap-1.5 min-w-0">
-                                                <span className="truncate">Max. Strom (Berechnet):</span>
-                                                <InfoModal title="Maximaler Strom" description="Der theoretische maximale Strom, der von den Solarmodulen zur Batterie fließt. Der Regler muss diesen Strom verarbeiten können." />
-                                            </div>
-                                            <div className="font-medium">{calculations.solarController.currentA.toFixed(1)} A</div>
-                                        </div>
-
-                                        <div className="flex items-center justify-between">
-                                            <div className="text-muted-foreground text-sm flex items-center gap-1.5 min-w-0">
-                                                <span className="truncate">Empfohlene Klasse:</span>
-                                                <InfoModal title="Empfohlene Größe" description="Die nächsthöhere Standardgröße für den Solarladeregler, um sicheren Betrieb und Reserven zu gewährleisten." />
+                                                <span className="truncate">Empfohlener Strom:</span>
+                                                <InfoModal title="Empfohlener Strom" description="Der berechnete Strom inkl. Sicherheitsreserve (10%). Die KI wählt später ein passendes Produkt." />
                                             </div>
                                             <div className="font-bold text-primary">{calculations.solarController.recommendedCurrentA} A</div>
                                         </div>
@@ -708,11 +833,125 @@ export function Step8Recommendation() {
                                 <RecommendationAdjustmentInput
                                     id="controller-override"
                                     value={customSolarControllerCurrent}
-                                    recommendedValue={calculations.solarController.recommendedCurrentA}
+                                    recommendedValue={calculations.solarController.originalCurrentA ?? calculations.solarController.currentA}
                                     onChange={setCustomSolarControllerCurrent}
                                     unit="A"
                                 />
                             </div>
+                        </div>
+
+                        {/* Portable Solar Controller Sub-Section */}
+                        {portableSolarController && (
+                            <>
+                                <Separator className="my-4" />
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2 font-semibold">
+                                            <Sun className="h-5 w-5 text-amber-500" />
+                                            Solar-Laderegler (Solartasche)
+                                        </div>
+                                        <Badge variant="outline" className="border-amber-500/50 text-amber-600 dark:text-amber-400">Separat</Badge>
+                                    </div>
+
+                                    <Accordion type="single" collapsible className="w-full">
+                                        <AccordionItem value="portable-details" className="border-none">
+                                            <AccordionTrigger className="py-2 text-sm text-muted-foreground hover:text-foreground">
+                                                Berechnungs-Details
+                                            </AccordionTrigger>
+                                            <AccordionContent className="space-y-3 pt-2">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="text-muted-foreground text-sm flex items-center gap-1.5 min-w-0">
+                                                        <span className="truncate">Solartaschen:</span>
+                                                    </div>
+                                                    <div className="font-medium">{solarBags.map(b => `${b.power}Wp`).join(' + ')}</div>
+                                                </div>
+
+                                                <div className="flex items-center justify-between">
+                                                    <div className="text-muted-foreground text-sm flex items-center gap-1.5 min-w-0">
+                                                        <span className="truncate">Gesamt-Leistung:</span>
+                                                    </div>
+                                                    <div className="font-medium">{portableSolarController.totalWp} Wp</div>
+                                                </div>
+
+                                                <div className="flex items-center justify-between">
+                                                    <div className="text-muted-foreground text-sm flex items-center gap-1.5 min-w-0">
+                                                        <span className="truncate">Empfohlener Strom:</span>
+                                                    </div>
+                                                    <div className="font-bold text-amber-600 dark:text-amber-400">{portableSolarController.recommendedCurrentA} A</div>
+                                                </div>
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    </Accordion>
+
+                                    <Alert className="bg-amber-500/10 border-amber-500/30">
+                                        <Info className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                                        <AlertDescription className="text-sm">
+                                            Für Solartaschen wird ein <strong>separater Laderegler</strong> benötigt, da diese unabhängig vom Dachsystem betrieben werden.
+                                        </AlertDescription>
+                                    </Alert>
+                                </div>
+                            </>
+                        )}
+                    </Card>
+                )}
+
+                {/* Cables Section */}
+                {calculations.cables && calculations.cables.length > 0 && (
+                    <Card className="p-6 space-y-4 border-2 border-transparent focus-within:border-primary/20 transition-all">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 font-semibold">
+                                <Zap className="h-5 w-5 text-primary" />
+                                Kabel
+                            </div>
+                            <Badge variant="outline">{calculations.cables.length} Verbindungen</Badge>
+                        </div>
+
+                        <div className="space-y-3">
+                            {calculations.cables.map((cable, index) => (
+                                <div key={cable.route} className="border rounded-lg p-3 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm font-medium">{cable.displayName}</span>
+                                            {cable.isCritical && (
+                                                <Badge variant="destructive" className="text-xs">Kritisch</Badge>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <Accordion type="single" collapsible className="w-full">
+                                        <AccordionItem value={`cable-${index}`} className="border-none">
+                                            <AccordionTrigger className="py-1 text-xs text-muted-foreground hover:text-foreground">
+                                                Details
+                                            </AccordionTrigger>
+                                            <AccordionContent className="space-y-2 pt-1 text-sm">
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted-foreground">Länge:</span>
+                                                    <span>{cable.lengthM} m</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted-foreground">Strom:</span>
+                                                    <span>{cable.currentA.toFixed(1)} A</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted-foreground">Spannung:</span>
+                                                    <span>{cable.voltage} V</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted-foreground">Min. Querschnitt:</span>
+                                                    <span>{cable.minCrossSection.toFixed(2)} mm²</span>
+                                                </div>
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    </Accordion>
+
+                                    <div className="flex items-center justify-between pt-1">
+                                        <span className="text-sm text-muted-foreground">Empf. Querschnitt:</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-bold text-primary">{cable.recommendedCrossSection} mm²</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </Card>
                 )}
@@ -726,9 +965,90 @@ export function Step8Recommendation() {
                             Aktuelle Eingabewerte, die für die Berechnung verwendet werden.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="bg-muted p-4 rounded-lg font-mono text-xs overflow-x-auto whitespace-pre-wrap">
-                        {JSON.stringify(debugData, null, 2)}
-                    </div>
+                    <Tabs defaultValue="state" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="state">Wizard State</TabsTrigger>
+                            <TabsTrigger value="prompt">AI Prompt</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="state">
+                            <div className="bg-muted p-4 rounded-lg font-mono text-xs overflow-x-auto whitespace-pre-wrap max-h-[60vh]">
+                                {JSON.stringify(debugData, null, 2)}
+                            </div>
+                        </TabsContent>
+                        <TabsContent value="prompt">
+                            <div className="bg-muted p-4 rounded-lg font-mono text-xs overflow-x-auto whitespace-pre-wrap max-h-[60vh]">
+                                {(() => {
+                                    if (!calculations) return "Keine Berechnung vorhanden.";
+
+                                    const battCap = customBatteryCapacity ?? calculations.battery.recommendedCapacityAh;
+
+                                    // Calculate split values
+                                    const totalSolarWp = customSolarPower ?? Math.ceil(calculations.solarModules?.totalAvailableWp ?? 0);
+                                    const portableWp = calculations.solarModules?.portableWp ?? 0;
+                                    const roofWp = Math.max(0, totalSolarWp - portableWp);
+
+                                    // Solar Details (Roof)
+                                    let roofDetails = "";
+                                    if (customSolarPower) {
+                                        roofDetails = "- (Manuell festgelegt)";
+                                    } else {
+                                        if ((calculations.solarModules?.maxRoofWp ?? 0) > 0) {
+                                            roofDetails += `- Verfügbare Dachfläche: ${Math.ceil(calculations.solarModules!.maxRoofWp)} Wp\n`;
+                                            // Add dimensions if available
+                                            if (roofAreas && roofAreas.length > 0) {
+                                                roofAreas.forEach((area, idx) => {
+                                                    roofDetails += `  - Fläche ${idx + 1}: ${area.length}x${area.width} cm\n`;
+                                                });
+                                            } else if (solarDimensions) {
+                                                roofDetails += `  - Fläche: ${solarDimensions.length}x${solarDimensions.width} cm\n`;
+                                            }
+                                        }
+                                    }
+
+                                    // Portable Details Handled in separate block below
+
+                                    return `
+## Batterie
+- Typ: ${batteryPreference?.toUpperCase() || 'LIFEPO4'}
+- Kapazität: ${battCap} Ah
+- Spannung: ${systemVoltage}V
+
+## Solarleistung (Dach)
+- Leistung: ${roofWp} Wp
+${roofDetails.trim()}
+${portableWp > 0 ? `
+## Solarleistung (Solartaschen)
+- Solartaschen: ${portableWp} Wp
+- Konfiguration: ${solarBags.length > 0 ? solarBags.map(b => `${b.power}Wp`).join(' + ') : 'Standard'}
+` : ''}
+## Ladebooster
+${calculations.booster?.needed ? `- Ladestrom: ${customBoosterCurrent ?? calculations.booster.currentA} A
+- Spannung: ${calculations.booster.inputVoltage}V (Input) -> ${calculations.booster.outputVoltage}V (Output)` : '- Nicht benötigt'}
+
+## Wechselrichter
+${calculations.inverter?.needed ? `- Dauerleistung: ${customInverterPower ?? calculations.inverter.recommendedW} W` : '- Nicht benötigt'}
+
+## Ladegerät (Landstrom)
+${calculations.charger?.needed ? `- Ladestrom: ${customChargerCurrent ?? calculations.charger.recommendedCurrentA} A` : '- Nicht benötigt'}
+
+## Solar-Laderegler (Dach)
+${calculations.solarController?.needed ? `- Für Dach-Solarmodule
+- Ladestrom: ${customSolarControllerCurrent ?? calculations.solarController.recommendedCurrentA} A` : '- Nicht benötigt'}
+${portableSolarController ? `
+## Solar-Laderegler (Solartaschen) - SEPARATES GERÄT
+- Für mobile Solartaschen (${solarBags.map(b => `${b.power}Wp`).join(' + ')})
+- Gesamtleistung: ${portableSolarController.totalWp} Wp
+- Ladestrom: ${portableSolarController.recommendedCurrentA} A
+- Hinweis: Separater Laderegler erforderlich, da Solartaschen unabhängig vom Dachsystem angeschlossen werden` : ''}
+${calculations.cables && calculations.cables.length > 0 ? `
+## Kabel
+${calculations.cables.map(cable => `- ${cable.displayName}: ${cable.recommendedCrossSection} mm² (${cable.lengthM}m, ${cable.currentA.toFixed(1)}A)`).join('\n')}
+` : ''}
+                                    `.trim();
+                                })()}
+                            </div>
+                        </TabsContent>
+                    </Tabs>
                 </DialogContent>
             </Dialog>
         </div >

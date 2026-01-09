@@ -278,8 +278,10 @@ export interface SolarRecommendation {
 export interface BoosterRecommendation {
     /** Is booster required/selected? */
     needed: boolean;
-    /** Recommended charging current (A) */
+    /** Recommended charging current (A) (Effective value used for calculation) */
     currentA: number;
+    /** Original calculated current (A) before override */
+    originalCurrentA?: number;
     /** Vehicle voltage (V) */
     inputVoltage: VehicleVoltage;
     /** System voltage (V) */
@@ -298,8 +300,10 @@ export interface ChargerRecommendation {
     needed: boolean;
     /** Calculated charging current (A) */
     targetCurrentA: number;
-    /** Rounded to standard size (A) */
+    /** Rounded to standard size (A) (Effective value used for calculation) */
     recommendedCurrentA: number;
+    /** Original recommended current (A) before override */
+    originalRecommendedCurrentA?: number;
     /** Expected charge time 0→100% (h) */
     chargingTimeHours: number;
 }
@@ -312,8 +316,10 @@ export interface InverterRecommendation {
     needed: boolean;
     /** Maximum simultaneous load (W) */
     peakLoadW: number;
-    /** Rounded to standard size (W) */
+    /** Rounded to standard size (W) (Effective value used for calculation) */
     recommendedW: number;
+    /** Original recommended power (W) before override */
+    originalRecommendedW?: number;
 }
 
 /**
@@ -324,8 +330,10 @@ export interface ControllerRecommendation {
     needed: boolean;
     /** Controller type (always mppt) */
     type: ControllerType;
-    /** Recommended current rating (A) */
+    /** Recommended current rating (A) (Effective value used for calculation) */
     currentA: number;
+    /** Original recommended current (A) before override */
+    originalCurrentA?: number;
     /** Max input capacity (Wp) */
     maxInputWp: number;
 }

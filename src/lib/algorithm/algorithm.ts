@@ -205,8 +205,14 @@ export function roundUpTo100(value: number): number {
 
 /**
  * Round up to next standard value from array
+ * If standards array is empty, returns ceil of raw value (no rounding to standards)
  */
 export function roundUpToStandard(value: number, standards: readonly number[]): number {
+    // If no standards defined, return the raw value rounded up
+    if (standards.length === 0) {
+        return Math.ceil(value);
+    }
+
     for (const std of standards) {
         if (value <= std) {
             return std;
@@ -303,23 +309,43 @@ export function calculateSolar(input: AlgorithmInput, dailyWh: number, psh: numb
     const recommendedWp = rawRequiredWp * RECOMMENDED_SOLAR_FACTOR;
 
     // 3.3 Portable Solar ermitteln (gecappt auf MAX_PORTABLE_WP = 400)
-    // Portable Wp = Summe der solarBags, aber MAX 400 Wp!
     const existingPortableWp = input.solarBags.reduce((sum, bag) => sum + bag.power, 0);
     const portableWp = Math.min(existingPortableWp, MAX_PORTABLE_WP);
 
+    // =========================================================================
+    // DYNAMIC OVERRIDE: Check if user has set a custom solar power
+    // This override essentially replaces the "Available System" logic for calculations
+    // =========================================================================
+
+    // Default: Total Wp is sum of roof + portable
+    let totalWp = maxRoofWp + portableWp;
+
+    // Override: If user set custom Wp, we assume that IS the system size they will build
+    // For calculation purposes, we treat it as roof solar (or generic solar)
+    if (input.customOverrides.solar !== null) {
+        totalWp = input.customOverrides.solar;
+    }
+
     // 3.4 Täglicher Solar-Ertrag berechnen
-    // Dach-Ertrag mit Orientierungsfaktor für Flachmontage
-    const roofYieldWh = maxRoofWp * psh * SOLAR_SYSTEM_EFFICIENCY * ROOF_ORIENTATION_FACTOR;
-    // Portable-Ertrag mit besserem Orientierungsfaktor (ausgerichtet)
-    const portableYieldWh = portableWp * psh * SOLAR_SYSTEM_EFFICIENCY * PORTABLE_ORIENTATION_FACTOR;
-    // Gesamt-Ertrag
-    const dailySolarYieldWh = roofYieldWh + portableYieldWh;
-    const totalWp = maxRoofWp + portableWp;
+    // Note: If overridden, we calculate yield based on totalWp using roof efficiency for simplicity
+    // If not overridden, we treat roof and portable separately as before
+
+    let dailySolarYieldWh: number;
+
+    if (input.customOverrides.solar !== null) {
+        // Override scenario: All solar treated with roof efficiency (conservative)
+        dailySolarYieldWh = totalWp * psh * SOLAR_SYSTEM_EFFICIENCY * ROOF_ORIENTATION_FACTOR;
+    } else {
+        // Standard scenario
+        const roofYieldWh = maxRoofWp * psh * SOLAR_SYSTEM_EFFICIENCY * ROOF_ORIENTATION_FACTOR;
+        const portableYieldWh = portableWp * psh * SOLAR_SYSTEM_EFFICIENCY * PORTABLE_ORIENTATION_FACTOR;
+        dailySolarYieldWh = roofYieldWh + portableYieldWh;
+    }
 
     // 3.5 Solar-Shortfall berechnen (für Batterie-Kompensation)
     const solarShortfallWh = Math.max(0, dailyWh - dailySolarYieldWh);
 
-    // 3.6 Empfehlungstext generieren
+    // 3.6 Empfehlungstext generieren - remains based on original calculations to show gap
     let recommendation: string;
     if (maxRoofWp >= recommendedWp) {
         recommendation = 'Dachfläche reicht aus';
@@ -335,12 +361,12 @@ export function calculateSolar(input: AlgorithmInput, dailyWh: number, psh: numb
 
     return {
         needed: true,
-        requiredWp: Math.round(recommendedWp),
+        requiredWp: Math.round(recommendedWp), // The theoretical need remains unchanged
         maxRoofWp,
         portableWp,
-        totalAvailableWp: totalWp,
-        dailySolarYieldWh: Math.round(dailySolarYieldWh),
-        solarShortfallWh: Math.round(solarShortfallWh),
+        totalAvailableWp: totalWp, // Now reflects the OVERRIDDEN value if present
+        dailySolarYieldWh: Math.round(dailySolarYieldWh), // Updated yield based on override
+        solarShortfallWh: Math.round(solarShortfallWh), // Updated shortfall based on override
         recommendation,
     };
 }
@@ -362,12 +388,21 @@ export function calculateBooster(input: AlgorithmInput, standingDays: number): B
         };
     }
 
-    const currentA = DEFAULT_BOOSTER_AMPS;
-    const dailyAlternatorChargeWh = (currentA * input.vehicleVoltage * ALTERNATOR_DRIVE_HOURS) / standingDays;
+    const standardCurrentA = DEFAULT_BOOSTER_AMPS;
+
+    // Override logic
+    let effectiveCurrentA = standardCurrentA;
+    if (input.customOverrides.booster !== null) {
+        effectiveCurrentA = input.customOverrides.booster;
+    }
+
+    // Use EFFECTIVE current for yield calculation logic
+    const dailyAlternatorChargeWh = (effectiveCurrentA * input.vehicleVoltage * ALTERNATOR_DRIVE_HOURS) / standingDays;
 
     return {
         needed: true,
-        currentA,
+        currentA: effectiveCurrentA,
+        originalCurrentA: standardCurrentA, // Store original for UI
         inputVoltage: input.vehicleVoltage,
         outputVoltage: input.systemVoltage,
         needsConversion: input.vehicleVoltage !== input.systemVoltage,
@@ -497,13 +532,22 @@ export function calculateCharger(input: AlgorithmInput, batteryAh: number): Char
 
     const chargerTimeHours = getChargerTimeHours(input.chargerSpeed);
     const targetCurrentA = batteryAh / chargerTimeHours;
-    const recommendedCurrentA = roundUpToStandard(targetCurrentA, STANDARD_CURRENT_SIZES);
-    const actualChargingTimeHours = batteryAh / recommendedCurrentA;
+    const standardRecommendedCurrentA = roundUpToStandard(targetCurrentA, STANDARD_CURRENT_SIZES);
+
+    // Override logic
+    let effectiveRecommendedCurrentA = standardRecommendedCurrentA;
+    if (input.customOverrides.charger !== null) {
+        effectiveRecommendedCurrentA = input.customOverrides.charger;
+    }
+
+    // Use EFFECTIVE current for charging time calculation
+    const actualChargingTimeHours = batteryAh / effectiveRecommendedCurrentA;
 
     return {
         needed: true,
         targetCurrentA: Math.round(targetCurrentA * 10) / 10,
-        recommendedCurrentA,
+        recommendedCurrentA: effectiveRecommendedCurrentA,
+        originalRecommendedCurrentA: standardRecommendedCurrentA, // Store original
         chargingTimeHours: Math.round(actualChargingTimeHours * 10) / 10,
     };
 }
@@ -511,7 +555,7 @@ export function calculateCharger(input: AlgorithmInput, batteryAh: number): Char
 /**
  * Calculate inverter recommendation
  */
-export function calculateInverter(consumers: Consumer[], simultaneousFactor: number): InverterRecommendation {
+export function calculateInverter(input: AlgorithmInput, consumers: Consumer[], simultaneousFactor: number): InverterRecommendation {
     // Filter 230V consumers
     const consumers230V = consumers.filter(c => c.voltage === 230);
 
@@ -533,12 +577,19 @@ export function calculateInverter(consumers: Consumer[], simultaneousFactor: num
     const peakLoadW = maxSingleLoad + (total230VPower - maxSingleLoad) * simultaneousFactor;
 
     // Round up to standard size
-    const recommendedW = roundUpToStandard(peakLoadW, STANDARD_INVERTER_SIZES);
+    const standardRecommendedW = roundUpToStandard(peakLoadW, STANDARD_INVERTER_SIZES);
+
+    // Override logic
+    let effectiveRecommendedW = standardRecommendedW;
+    if (input.customOverrides.inverter !== null) {
+        effectiveRecommendedW = input.customOverrides.inverter;
+    }
 
     return {
         needed: true,
         peakLoadW: Math.round(peakLoadW),
-        recommendedW,
+        recommendedW: effectiveRecommendedW,
+        originalRecommendedW: standardRecommendedW, // Store original
     };
 }
 
@@ -559,12 +610,19 @@ export function calculateController(input: AlgorithmInput, totalWp: number): Con
 
     const rawCurrentA = totalWp / input.systemVoltage;
     const bufferedCurrentA = rawCurrentA * SOLAR_CONTROLLER_SAFETY;
-    const recommendedCurrentA = roundUpToStandard(bufferedCurrentA, STANDARD_CURRENT_SIZES);
+    const standardCurrentA = roundUpToStandard(bufferedCurrentA, STANDARD_CURRENT_SIZES);
+
+    // Override logic
+    let effectiveCurrentA = standardCurrentA;
+    if (input.customOverrides.controller !== null) {
+        effectiveCurrentA = input.customOverrides.controller;
+    }
 
     return {
         needed: true,
         type: 'mppt', // Always recommend MPPT
-        currentA: recommendedCurrentA,
+        currentA: effectiveCurrentA,
+        originalCurrentA: standardCurrentA, // Store original
         maxInputWp: totalWp,
     };
 }
@@ -716,22 +774,24 @@ export function applyOverrides(
     const result = { ...output };
 
     if (overrides.battery !== null) {
-        result.battery = { ...result.battery, recommendedCapacityAh: overrides.battery };
+        // Do not override recommendation - we want to show the calculated value vs manual value
+        // result.battery = { ...result.battery, recommendedCapacityAh: overrides.battery };
     }
     if (overrides.solar !== null) {
-        result.solar = { ...result.solar, requiredWp: overrides.solar };
+        // Do not override requirement - allow comparison
+        // result.solar = { ...result.solar, requiredWp: overrides.solar };
     }
     if (overrides.booster !== null) {
-        result.booster = { ...result.booster, currentA: overrides.booster };
+        // result.booster = { ...result.booster, currentA: overrides.booster };
     }
     if (overrides.controller !== null) {
-        result.controller = { ...result.controller, currentA: overrides.controller };
+        // result.controller = { ...result.controller, currentA: overrides.controller };
     }
     if (overrides.inverter !== null) {
-        result.inverter = { ...result.inverter, recommendedW: overrides.inverter };
+        // result.inverter = { ...result.inverter, recommendedW: overrides.inverter };
     }
     if (overrides.charger !== null) {
-        result.charger = { ...result.charger, recommendedCurrentA: overrides.charger };
+        // result.charger = { ...result.charger, recommendedCurrentA: overrides.charger };
     }
 
     return result;
@@ -772,10 +832,12 @@ export function calculateRequirements(input: AlgorithmInput): AlgorithmOutput {
     const charger = calculateCharger(input, battery.recommendedCapacityAh);
 
     // 7. Calculate inverter
-    const inverter = calculateInverter(input.consumers, simultaneousFactor);
+    const inverter = calculateInverter(input, input.consumers, simultaneousFactor);
 
     // 8. Calculate controller
-    const controller = calculateController(input, solar.totalAvailableWp);
+    // Use maxRoofWp directly to ensure the main controller is sized for Roof only.
+    // This is independent of customOverrides and portable solar.
+    const controller = calculateController(input, solar.maxRoofWp);
 
     // 9. Calculate cables
     const cables = calculateCables(input, booster, charger, inverter, controller);

@@ -78,7 +78,7 @@ export function RecommendationAdjustmentInput({
                     onChange={handleChange}
                     className={cn(
                         "pr-8 text-center", // Center text for better numeric input feel
-                        value ? "border-amber-500 ring-amber-500/20 font-medium" : ""
+                        value && value !== recommendedValue ? "border-amber-500 ring-amber-500/20 font-medium" : ""
                     )}
                 />
                 {value && (

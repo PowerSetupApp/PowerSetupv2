@@ -68,8 +68,8 @@ export const MAX_PORTABLE_WP = 400;
 export const TRIP_MAX_BACKUP_DAYS = {
   weekend: 2,
   week: 4,
-  extended: 5,
-  permanent: 5,
+  extended: 6,
+  permanent: 8,
 } as const;
 
 // =============================================================================
@@ -166,14 +166,17 @@ export const COPPER_CONDUCTIVITY = 56;
 // STANDARD SIZES FOR ROUNDING
 // =============================================================================
 
-/** Standard charger/controller current sizes (A) */
-export const STANDARD_CURRENT_SIZES = [10, 20, 30, 40, 50, 60] as const;
+/** Standard charger/controller current sizes (A) - DISABLED: AI will pick products */
+// export const STANDARD_CURRENT_SIZES = [10, 20, 30, 40, 50, 60, 80, 100, 120, 150] as const;
+export const STANDARD_CURRENT_SIZES: readonly number[] = []; // Empty = no rounding
 
-/** Standard inverter sizes (W) */
-export const STANDARD_INVERTER_SIZES = [500, 1000, 1500, 2000, 3000] as const;
+/** Standard inverter sizes (W) - DISABLED: AI will pick products */
+// export const STANDARD_INVERTER_SIZES = [500, 1000, 1500, 2000, 3000, 4000, 5000] as const;
+export const STANDARD_INVERTER_SIZES: readonly number[] = []; // Empty = no rounding
 
-/** Standard cable cross-sections (mm²) */
-export const STANDARD_CABLE_SIZES = [1.5, 2.5, 4, 6, 10, 16, 25, 35, 50] as const;
+/** Standard cable cross-sections (mm²) - DISABLED: AI will pick products */
+// export const STANDARD_CABLE_SIZES = [1.5, 2.5, 4, 6, 10, 16, 25, 35, 50] as const;
+export const STANDARD_CABLE_SIZES: readonly number[] = []; // Empty = no rounding
 
 /** Standard battery capacity step (Ah) */
 export const BATTERY_CAPACITY_STEP = 50;

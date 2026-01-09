@@ -1,12 +1,12 @@
 'use server';
 
 /**
- * Server Action for importing products from Amazon (Mock) with AI extraction.
- * Orchestrates: ASIN -> Amazon Service -> AI Extraction -> Create Draft Product
+ * Server Action for importing products from Amazon with AI extraction.
+ * Orchestrates: ASIN -> Amazon API -> AI Extraction -> Create Draft Product
  */
 
 import { prisma } from '@/lib/db';
-import { mockAmazonService } from '@/lib/services/amazon';
+import { amazonService } from '@/lib/services/amazon';
 import { extractProductData } from '@/lib/services/ai/product-extractor';
 import { revalidatePath } from 'next/cache';
 
@@ -113,10 +113,10 @@ export async function importProductFromAmazon(
 
         console.log(`[ImportAction] Starting import for ASIN: ${asin}, Category: ${category.slug}`);
 
-        // 3. Fetch from Amazon (Mock)
-        const amazonItem = await mockAmazonService.getItem(asin);
+        // 3. Fetch from Amazon API
+        const amazonItem = await amazonService.getItem(asin);
         if (!amazonItem) {
-            return { success: false, error: `Produkt mit ASIN "${asin}" nicht gefunden. (Mock: Nur B075NQQRPD, B09LIONBAT, B08VICINV2 verfügbar)` };
+            return { success: false, error: `Produkt mit ASIN "${asin}" nicht auf Amazon gefunden.` };
         }
 
         // 4. AI Extraction

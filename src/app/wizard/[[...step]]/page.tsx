@@ -49,7 +49,6 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
 
         reset,
         roofAreas,
-        alternatorSize,
         shoreChargingSpeed
     } = useWizardStore();
 
@@ -135,7 +134,6 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
                 schematicPreference,
                 batteryPreference,
                 travelBehavior,
-                alternatorSize,
                 shoreChargingSpeed,
                 // Defaults for fields not yet in wizard store
                 simultaneousLoad: 'moderate',
@@ -150,7 +148,6 @@ function WizardContent({ params }: { params: Promise<{ step?: string[] }> }) {
             };
 
             console.log("Submitting Wizard FormData:", formData);
-            console.log("Alternator Size:", alternatorSize);
             console.log("Energy Sources:", energySources);
 
             // POST to API

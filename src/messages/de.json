@@ -49,14 +49,6 @@
                 "generator": "Generator",
                 "generator_sub": "Benzin/Diesel Generator"
             },
-            "alternator_title": "Welche Lichtmaschine hat dein Fahrzeug?",
-            "alternator_hint": "Bestimmt die maximale Ladeleistung des Ladeboosters.",
-            "alternator_options": {
-                "standard": "Standard (~90-120A)",
-                "enhanced": "Verstärkt (~150-180A)",
-                "euro6d_smart": "Euro 6d / Smart Generator",
-                "unknown": "Unbekannt"
-            },
             "shore_charging_title": "Wie schnell soll die Batterie am Landstrom laden?",
             "shore_charging_hint": "Schnellere Ladung = größeres Ladegerät = höhere Kosten.",
             "shore_charging_options": {
@@ -232,7 +224,7 @@
             "duration_week": "Wochenreisen",
             "duration_week_desc": "5-7 Tage",
             "duration_extended": "Langzeitreisen",
-            "duration_extended_desc": "Mehrere Wochen",
+            "duration_extended_desc": "2-4 Wochen",
             "duration_permanent": "Dauerhaft",
             "duration_permanent_desc": "Vollzeit im Fahrzeug",
             "winter_title": "Wo verbringst du den Winter?",

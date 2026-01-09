@@ -13,7 +13,7 @@ export type BatteryType = 'agm' | 'lifepo4' | 'gel' | 'any';
 
 // Additional Questions for AI Accuracy
 export type SimultaneousLoad = 'low' | 'moderate' | 'high';
-export type AlternatorSize = 'standard' | 'enhanced' | 'euro6d_smart' | 'unknown';
+// export type AlternatorSize = 'standard' | 'enhanced' | 'euro6d_smart' | 'unknown'; // REMOVED
 export type ShoreChargingSpeed = 'slow' | 'normal' | 'fast';
 export type BatterySpaceSize = 'compact' | 'medium' | 'spacious';
 
@@ -130,7 +130,7 @@ export interface WizardState {
 
     // Additional AI-Relevant Data
     simultaneousLoad: SimultaneousLoad;
-    alternatorSize: AlternatorSize;
+    // alternatorSize: AlternatorSize; // REMOVED
     batterySpaceSize: BatterySpaceSize;
     shoreChargingSpeed: ShoreChargingSpeed;
 
@@ -159,6 +159,7 @@ export interface WizardState {
 
     addSolarBag: (bag: SolarBag) => void;
     removeSolarBag: (id: string) => void;
+    clearSolarBags: () => void;
 
     setCableLengths: (lengths: Partial<CableLengths>) => void;
     setCustomCableLength: (consumerId: string, length: number) => void;
@@ -167,7 +168,7 @@ export interface WizardState {
     setSchematicPreference: (type: SchematicType) => void;
     setBatteryPreference: (type: BatteryType) => void;
     setSimultaneousLoad: (load: SimultaneousLoad) => void;
-    setAlternatorSize: (size: AlternatorSize) => void;
+    // setAlternatorSize: (size: AlternatorSize) => void; // REMOVED
     setBatterySpaceSize: (size: BatterySpaceSize) => void;
     setShoreChargingSpeed: (speed: ShoreChargingSpeed) => void;
 
@@ -253,7 +254,7 @@ export const useWizardStore = create<WizardState>()(
 
             // Additional AI-Relevant Defaults
             simultaneousLoad: 'moderate',
-            alternatorSize: 'unknown',
+            // alternatorSize: 'unknown', // REMOVED
             batterySpaceSize: 'medium',
             shoreChargingSpeed: 'normal',
 
@@ -309,7 +310,7 @@ export const useWizardStore = create<WizardState>()(
                     standingDuration: 'medium',
                 },
                 simultaneousLoad: 'moderate',
-                alternatorSize: 'unknown',
+                // alternatorSize: 'unknown', // REMOVED
                 batterySpaceSize: 'medium',
                 shoreChargingSpeed: 'normal',
                 customBatteryCapacity: null,
@@ -389,6 +390,7 @@ export const useWizardStore = create<WizardState>()(
 
             addSolarBag: (bag) => set((state) => ({ solarBags: [...state.solarBags, bag] })),
             removeSolarBag: (id) => set((state) => ({ solarBags: state.solarBags.filter(b => b.id !== id) })),
+            clearSolarBags: () => set({ solarBags: [] }),
 
             setCableLengths: (lengths) => set((state) => ({ cableLengths: { ...state.cableLengths, ...lengths } })),
             setCustomCableLength: (id, length) => set((state) => ({
@@ -405,7 +407,7 @@ export const useWizardStore = create<WizardState>()(
             setSchematicPreference: (type) => set({ schematicPreference: type }),
             setBatteryPreference: (type) => set({ batteryPreference: type }),
             setSimultaneousLoad: (load) => set({ simultaneousLoad: load }),
-            setAlternatorSize: (size) => set({ alternatorSize: size }),
+            // setAlternatorSize: (size) => set({ alternatorSize: size }),
             setBatterySpaceSize: (size) => set({ batterySpaceSize: size }),
             setShoreChargingSpeed: (speed) => set({ shoreChargingSpeed: speed }),
 

@@ -36,6 +36,7 @@ export interface InverterRequirement {
     needed: boolean;
     requiredW: number;
     recommendedW: number;
+    originalRecommendedW?: number;
     maxSingleLoadW: number;
     total230VLoadW: number;
     simultaneousFactor: number;
@@ -44,6 +45,7 @@ export interface InverterRequirement {
 export interface BoosterRequirement {
     needed: boolean;
     currentA: number;
+    originalCurrentA?: number;
     inputVoltage: number;
     outputVoltage: number;
     needsConversion: boolean;
@@ -54,6 +56,7 @@ export interface ChargerRequirement {
     needed: boolean;
     targetCurrentA: number;
     recommendedCurrentA: number;
+    originalRecommendedCurrentA?: number;
     chargingTimeHours: number;
     isLimitedByBattery?: boolean;
 }
@@ -64,6 +67,7 @@ export interface SolarControllerRequirement {
     roofWp: number;
     portableWp: number;
     currentA: number;
+    originalCurrentA?: number;
     recommendedCurrentA: number;
     type: 'MPPT' | 'PWM';
     needsSeparatePortableController: boolean;
@@ -158,6 +162,7 @@ export function convertToSystemRequirements(
             needed: output.inverter.needed,
             requiredW: output.inverter.peakLoadW,
             recommendedW: output.inverter.recommendedW,
+            originalRecommendedW: output.inverter.originalRecommendedW,
             maxSingleLoadW,
             total230VLoadW,
             simultaneousFactor,
@@ -166,6 +171,7 @@ export function convertToSystemRequirements(
         booster: output.booster.needed ? {
             needed: output.booster.needed,
             currentA: output.booster.currentA,
+            originalCurrentA: output.booster.originalCurrentA,
             inputVoltage: output.booster.inputVoltage,
             outputVoltage: output.booster.outputVoltage,
             needsConversion: output.booster.needsConversion,
@@ -176,15 +182,17 @@ export function convertToSystemRequirements(
             needed: output.charger.needed,
             targetCurrentA: output.charger.targetCurrentA,
             recommendedCurrentA: output.charger.recommendedCurrentA,
+            originalRecommendedCurrentA: output.charger.originalRecommendedCurrentA,
             chargingTimeHours: output.charger.chargingTimeHours,
         } : null,
 
         solarController: output.controller.needed ? {
             needed: output.controller.needed,
-            totalWp: output.solar.totalAvailableWp,
+            totalWp: output.controller.maxInputWp,
             roofWp: output.solar.maxRoofWp,
             portableWp: output.solar.portableWp,
             currentA: output.controller.currentA,
+            originalCurrentA: output.controller.originalCurrentA,
             recommendedCurrentA: output.controller.currentA, // Same in new algo
             type: output.controller.type.toUpperCase() as 'MPPT' | 'PWM',
             needsSeparatePortableController: false, // Simplified
@@ -269,6 +277,14 @@ export interface WizardInput {
     brandPreferenceCharger?: string | null;
     brandPreferenceBattery?: string | null;
     brandPreferenceSolar?: string | null;
+    customOverrides?: {
+        battery?: number | null;
+        solar?: number | null;
+        booster?: number | null;
+        controller?: number | null;
+        inverter?: number | null;
+        charger?: number | null;
+    };
 }
 
 /**
@@ -354,12 +370,12 @@ export function convertWizardInputToAlgorithmInput(wizard: WizardInput): Algorit
             solar: wizard.brandPreferenceSolar || null,
         },
         customOverrides: {
-            battery: null,
-            solar: null,
-            booster: null,
-            controller: null,
-            inverter: null,
-            charger: null,
+            battery: wizard.customOverrides?.battery ?? null,
+            solar: wizard.customOverrides?.solar ?? null,
+            booster: wizard.customOverrides?.booster ?? null,
+            controller: wizard.customOverrides?.controller ?? null,
+            inverter: wizard.customOverrides?.inverter ?? null,
+            charger: wizard.customOverrides?.charger ?? null,
         },
     };
 }
