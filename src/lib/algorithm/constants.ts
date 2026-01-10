@@ -174,9 +174,26 @@ export const STANDARD_CURRENT_SIZES: readonly number[] = []; // Empty = no round
 // export const STANDARD_INVERTER_SIZES = [500, 1000, 1500, 2000, 3000, 4000, 5000] as const;
 export const STANDARD_INVERTER_SIZES: readonly number[] = []; // Empty = no rounding
 
-/** Standard cable cross-sections (mm²) - DISABLED: AI will pick products */
-// export const STANDARD_CABLE_SIZES = [1.5, 2.5, 4, 6, 10, 16, 25, 35, 50] as const;
-export const STANDARD_CABLE_SIZES: readonly number[] = []; // Empty = no rounding
+/** Standard cable cross-sections (mm²) */
+export const STANDARD_CABLE_SIZES = [1, 1.5, 2.5, 4, 6, 10, 16, 25, 35, 50, 70, 95] as const;
+
+/**
+ * Max current (Ampacity) per cable size (ISO 6722 / DIN 72551 approximation)
+ * Conservative values for continuous load in conduit/bundled
+ */
+export const CABLE_AMPACITY_LIMITS: Record<number, number> = {
+  1.5: 12,  // Reduced from 15
+  2.5: 18,  // Reduced from 22
+  4: 25,    // Reduced from 30 - this ensures 30A upgrades to 6mm²
+  6: 35,    // Reduced from 40
+  10: 50,   // Reduced from 60
+  16: 70,   // Reduced from 80
+  25: 90,   // Reduced from 110 (conservative)
+  35: 120,  // Reduced from 150
+  50: 170,  // Reduced from 200
+  70: 220,  // Reduced from 250
+  95: 280,  // Reduced from 300
+};
 
 /** Standard battery capacity step (Ah) */
 export const BATTERY_CAPACITY_STEP = 50;

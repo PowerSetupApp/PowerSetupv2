@@ -85,6 +85,7 @@ import {
     STANDARD_CURRENT_SIZES,
     STANDARD_INVERTER_SIZES,
     STANDARD_CABLE_SIZES,
+    CABLE_AMPACITY_LIMITS,
 
     // Mappings
     STANDING_DAYS_MAP,
@@ -238,6 +239,26 @@ export function roundToNearest(value: number, standards: readonly number[]): num
     }
 
     return closest;
+}
+
+
+/**
+ * Determine minimum cable size based on ampacity (Current Carrying Capacity)
+ * Returns the smallest standard size that can handle the current.
+ */
+export function getMinCrossSectionForAmpacity(currentA: number): number {
+    // Check defined limits, sorted by size asc
+    const sortedLimits = Object.entries(CABLE_AMPACITY_LIMITS)
+        .map(([s, l]) => ({ size: parseFloat(s), limit: l }))
+        .sort((a, b) => a.size - b.size);
+
+    for (const { size, limit } of sortedLimits) {
+        if (currentA <= limit) {
+            return size;
+        }
+    }
+    // If logical limit exceeded, return largest
+    return 95; // Max defined size
 }
 
 // =============================================================================
@@ -679,7 +700,7 @@ export function calculateCables(
             currentA,
             voltage,
             minCrossSection: Math.round(minCrossSection * 100) / 100,
-            recommendedCrossSection,
+            recommendedCrossSection: Math.max(recommendedCrossSection, getMinCrossSectionForAmpacity(currentA)),
             isCritical,
         });
     };

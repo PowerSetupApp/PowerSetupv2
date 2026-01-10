@@ -17,8 +17,9 @@ import Link from "next/link";
 import { MediaModal } from "@/components/admin/media-modal";
 import { EmojiPickerModal } from "@/components/admin/emoji-picker-modal";
 import { getGeneralSettings } from "@/app/actions/general-settings";
-import { getBrands, Brand } from "@/app/actions/brands"; // Import brands
+import { getBrands, Brand } from "@/app/actions/brands";
 import { getAmazonLink } from "@/lib/amazon-link-helper";
+import { FilterField, CategoryFilter } from "@/components/admin/filter-field";
 
 interface Category {
     id: string;
@@ -37,6 +38,8 @@ export default function NewProductPage() {
     const [isEmojiModalOpen, setIsEmojiModalOpen] = useState(false);
     const [partnerTag, setPartnerTag] = useState<string>("");
     const [isOptimizing, setIsOptimizing] = useState(false);
+    const [categoryFilters, setCategoryFilters] = useState<CategoryFilter[]>([]);
+    const [filterValues, setFilterValues] = useState<Record<string, unknown>>({});
 
     const [formData, setFormData] = useState({
         name: "",
@@ -82,7 +85,44 @@ export default function NewProductPage() {
             .then((res) => res.json())
             .then((data) => setCategories(data))
             .catch(console.error);
+
+        getBrands().then(setBrands).catch(console.error);
     }, []);
+
+    // Load filters when category changes
+    useEffect(() => {
+        if (formData.categoryId) {
+            fetch(`/api/admin/categories/${formData.categoryId}/filters`)
+                .then((res) => res.json())
+                .then((data) => {
+                    setCategoryFilters(data);
+                    // Reset filter values when category changes
+                    setFilterValues({});
+                })
+                .catch(console.error);
+        } else {
+            setCategoryFilters([]);
+            setFilterValues({});
+        }
+    }, [formData.categoryId]);
+
+    const handleAddBrand = async (name: string): Promise<Brand | null> => {
+        try {
+            const res = await fetch("/api/admin/brands", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, isActive: true }),
+            });
+            if (res.ok) {
+                const newBrand = await res.json();
+                setBrands(prev => [...prev, newBrand]);
+                return newBrand;
+            }
+        } catch (err) {
+            console.error("Error creating brand:", err);
+        }
+        return null;
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -119,6 +159,7 @@ export default function NewProductPage() {
                     fuseType: formData.fuseType || null,
                     asin: formData.asin || null,
                     brandId: formData.brandId || null,
+                    filterValues: Object.keys(filterValues).length > 0 ? filterValues : null,
                 }),
             });
 
@@ -261,248 +302,29 @@ export default function NewProductPage() {
                     </div>
                 </div>
 
-                {/* Filter Values Card - Conditional based on category */}
-                {formData.categoryId && (() => {
-                    const selectedCategory = categories.find(c => c.id === formData.categoryId);
-                    const slug = selectedCategory?.slug || "";
-
-                    const showPowerW = slug.startsWith("wechselrichter");
-                    const showBattery = slug.startsWith("batterie") && !slug.includes("ladegeraet") && !slug.includes("charger");
-                    const showVoltage = showBattery || showPowerW;
-                    const showCurrentA = slug.includes("laderegler") || slug.includes("ladebooster") || slug.includes("ladegeraet") || slug.includes("charger") || slug.includes("booster");
-                    const showCable = slug.startsWith("kabel") || slug.includes("cable");
-                    const showSolarWp = (slug.includes("solar") || slug.includes("panel") || slug.includes("modul")) && !slug.includes("regler");
-                    const showFuse = slug.includes("sicherung");
-
-                    if (!showPowerW && !showBattery && !showCurrentA && !showCable && !showSolarWp && !showFuse) return null;
-
-                    return (
-                        <div className="bg-card rounded-xl border p-6 space-y-4">
-                            <div>
-                                <h2 className="font-semibold">Filter-Werte</h2>
-                                <p className="text-sm text-muted-foreground">
-                                    Diese Werte werden für die Vorfilterung vor der KI-Auswahl verwendet.
-                                </p>
-                            </div>
-
-                            {/* Brand Filter Field */}
-                            <div className="space-y-2 border-b pb-4 mb-4">
-                                <Label htmlFor="brandId">Marke (aus Marken-Verwaltung)</Label>
-                                <select
-                                    id="brandId"
-                                    value={formData.brandId}
-                                    onChange={(e) => setFormData({ ...formData, brandId: e.target.value })}
-                                    className="w-full px-3 py-2 border rounded-md bg-background"
-                                >
-                                    <option value="">Keine Marke</option>
-                                    {brands.map((b) => (
-                                        <option key={b.id} value={b.id}>
-                                            {b.name} ({b.type})
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {showPowerW && (
-                                <>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="powerW">Dauerleistung (W)</Label>
-                                        <Input
-                                            id="powerW"
-                                            type="number"
-                                            min="0"
-                                            value={formData.powerW}
-                                            onChange={(e) => setFormData({ ...formData, powerW: e.target.value })}
-                                            placeholder="z.B. 2000"
-                                        />
-                                        <p className="text-xs text-muted-foreground">Die maximale Dauerleistung des Wechselrichters</p>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="waveform">Sinus-Welle</Label>
-                                        <select
-                                            id="waveform"
-                                            value={formData.waveform}
-                                            onChange={(e) => setFormData({ ...formData, waveform: e.target.value })}
-                                            className="w-full px-3 py-2 border rounded-md bg-background"
-                                        >
-                                            <option value="pure_sine">Reiner Sinus</option>
-                                            <option value="modified_sine">Modifizierter Sinus</option>
-                                        </select>
-                                        <p className="text-xs text-muted-foreground">Reiner Sinus ist für empfindliche Geräte (z.B. Kompressor-Kühlschrank) erforderlich</p>
-                                    </div>
-                                </>
-                            )}
-
-                            {showBattery && (
-                                <>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="capacityAh">Kapazität (Ah)</Label>
-                                        <Input
-                                            id="capacityAh"
-                                            type="number"
-                                            min="0"
-                                            value={formData.capacityAh}
-                                            onChange={(e) => setFormData({ ...formData, capacityAh: e.target.value })}
-                                            placeholder="z.B. 200"
-                                        />
-                                    </div>
-                                </>
-                            )}
-
-                            {showVoltage && (
-                                <div className="space-y-2">
-                                    <Label htmlFor="voltageV">{showPowerW ? "Eingangsspannung (V)" : "Spannung (V)"}</Label>
-                                    <select
-                                        id="voltageV"
-                                        value={formData.voltageV}
-                                        onChange={(e) => setFormData({ ...formData, voltageV: e.target.value })}
-                                        className="w-full px-3 py-2 border rounded-md bg-background"
-                                    >
-                                        <option value="">Bitte wählen...</option>
-                                        <option value="12">12V</option>
-                                        <option value="24">24V</option>
-                                        <option value="48">48V</option>
-                                    </select>
-                                    <p className="text-xs text-muted-foreground">
-                                        {showPowerW
-                                            ? "Mit welcher Systemspannung arbeitet dieser Wechselrichter?"
-                                            : "Nennspannung der Batterie"}
-                                    </p>
-                                </div>
-                            )}
-
-                            {showBattery && (
-                                <>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="batteryType">Batterietyp</Label>
-                                        <select
-                                            id="batteryType"
-                                            value={formData.batteryType}
-                                            onChange={(e) => setFormData({ ...formData, batteryType: e.target.value })}
-                                            className="w-full px-3 py-2 border rounded-md bg-background"
-                                        >
-                                            <option value="">Bitte wählen...</option>
-                                            <option value="lifepo4">LiFePO4</option>
-                                            <option value="agm">AGM</option>
-                                            <option value="gel">GEL</option>
-                                        </select>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="maxDischargeA">Max. Entladestrom (A)</Label>
-                                        <Input
-                                            id="maxDischargeA"
-                                            type="number"
-                                            min="0"
-                                            value={formData.maxDischargeA}
-                                            onChange={(e) => setFormData({ ...formData, maxDischargeA: e.target.value })}
-                                            placeholder="z.B. 200"
-                                        />
-                                        <p className="text-xs text-muted-foreground">Maximaler Strom, den das BMS erlaubt</p>
-                                    </div>
-                                </>
-                            )}
-
-                            {showCurrentA && (
-                                <>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="currentA">Ladestrom (A)</Label>
-                                        <Input
-                                            id="currentA"
-                                            type="number"
-                                            min="0"
-                                            value={formData.currentA}
-                                            onChange={(e) => setFormData({ ...formData, currentA: e.target.value })}
-                                            placeholder="z.B. 40"
-                                        />
-                                        <p className="text-xs text-muted-foreground">Max. Strom, der zur Batterie fließt</p>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Unterstützte Spannungen</Label>
-                                        <div className="flex gap-4">
-                                            {[12, 24, 48].map(v => (
-                                                <label key={v} className="flex items-center gap-2 cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={formData.supportedVoltages.includes(v)}
-                                                        onChange={(e) => {
-                                                            const newVoltages = e.target.checked
-                                                                ? [...formData.supportedVoltages, v]
-                                                                : formData.supportedVoltages.filter(x => x !== v);
-                                                            setFormData({ ...formData, supportedVoltages: newVoltages.sort((a, b) => a - b) });
-                                                        }}
-                                                        className="h-4 w-4"
-                                                    />
-                                                    <span>{v}V</span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                        <p className="text-xs text-muted-foreground">Welche Batterie-Spannungen werden unterstützt?</p>
-                                    </div>
-                                </>
-                            )}
-
-                            {showCable && (
-                                <div className="space-y-2">
-                                    <Label htmlFor="crossSectionMm2">Querschnitt (mm²)</Label>
-                                    <Input
-                                        id="crossSectionMm2"
-                                        type="number"
-                                        min="0"
-                                        step="0.5"
-                                        value={formData.crossSectionMm2}
-                                        onChange={(e) => setFormData({ ...formData, crossSectionMm2: e.target.value })}
-                                        placeholder="z.B. 25"
-                                    />
-                                </div>
-                            )}
-
-                            {showSolarWp && (
-                                <div className="space-y-2">
-                                    <Label htmlFor="solarWp">Leistung (Wp)</Label>
-                                    <Input
-                                        id="solarWp"
-                                        type="number"
-                                        min="0"
-                                        value={formData.solarWp}
-                                        onChange={(e) => setFormData({ ...formData, solarWp: e.target.value })}
-                                        placeholder="z.B. 200"
-                                    />
-                                    <p className="text-xs text-muted-foreground">Nennleistung des Solarmoduls</p>
-                                </div>
-                            )}
-
-                            {showFuse && (
-                                <>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="currentA">Ampere (A)</Label>
-                                        <Input
-                                            id="currentA"
-                                            type="number"
-                                            min="0"
-                                            value={formData.currentA}
-                                            onChange={(e) => setFormData({ ...formData, currentA: e.target.value })}
-                                            placeholder="z.B. 100"
-                                        />
-                                        <p className="text-xs text-muted-foreground">Nennstrom der Sicherung</p>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="fuseType">Sicherungs-Typ</Label>
-                                        <select
-                                            id="fuseType"
-                                            value={formData.fuseType}
-                                            onChange={(e) => setFormData({ ...formData, fuseType: e.target.value })}
-                                            className="w-full px-3 py-2 border rounded-md bg-background"
-                                        >
-                                            <option value="thermal">Thermisch</option>
-                                            <option value="magnetic">Magnetisch</option>
-                                        </select>
-                                        <p className="text-xs text-muted-foreground">Art der Auslösung</p>
-                                    </div>
-                                </>
-                            )}
+                {/* Dynamic Filter Values Card */}
+                {formData.categoryId && categoryFilters.length > 0 && (
+                    <div className="bg-card rounded-xl border p-6 space-y-4">
+                        <div>
+                            <h2 className="font-semibold">Filter-Werte</h2>
+                            <p className="text-sm text-muted-foreground">
+                                Diese Werte werden für die Vorfilterung vor der KI-Auswahl verwendet.
+                            </p>
                         </div>
-                    );
-                })()}
+                        <div className="space-y-4">
+                            {categoryFilters.map((filter) => (
+                                <FilterField
+                                    key={filter.id}
+                                    filter={filter}
+                                    value={filterValues[filter.key]}
+                                    onChange={(val) => setFilterValues(prev => ({ ...prev, [filter.key]: val }))}
+                                    brands={brands}
+                                    onAddBrand={handleAddBrand}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 <div className="bg-card rounded-xl border p-6 space-y-4">
                     <h2 className="font-semibold">Bild & Links</h2>
