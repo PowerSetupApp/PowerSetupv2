@@ -23,18 +23,27 @@ class AmazonService implements IAmazonService {
 
         const clientId = process.env.AMAZON_CLIENT_ID;
         const clientSecret = process.env.AMAZON_CLIENT_SECRET;
+        const partnerTag = process.env.AMAZON_PARTNER_TAG;
 
-        if (!clientId || !clientSecret) {
-            console.warn('[AmazonService] Credentials missing. Service will fail if used.');
+        const missingVars: string[] = [];
+        if (!clientId) missingVars.push('AMAZON_CLIENT_ID');
+        if (!clientSecret) missingVars.push('AMAZON_CLIENT_SECRET');
+        if (!partnerTag) missingVars.push('AMAZON_PARTNER_TAG');
+
+        if (missingVars.length > 0) {
+            console.warn(`[AmazonService] Credentials missing: ${missingVars.join(', ')}. Service will fail if used.`);
+            // store error to throw it later when used? 
+            // For now, we leave initialized=false so getItem throws.
             return;
         }
 
         try {
             const apiClient = new ApiClient();
+            // @ts-ignore
             apiClient.credentialId = clientId;
+            // @ts-ignore
             apiClient.credentialSecret = clientSecret;
             // "2.2" is typically for EU region. 
-            // We could make this part of env in the future if needed: process.env.AMAZON_CREATOR_API_VERSION
             apiClient.version = "2.2";
 
             this.api = new DefaultApi(apiClient);
@@ -52,13 +61,22 @@ class AmazonService implements IAmazonService {
         if (!this.initialized) {
             this.initialize();
             if (!this.initialized) {
-                throw new Error('Amazon Service not initialized (check credentials).');
+                // Diagnose why
+                const missingVars: string[] = [];
+                if (!process.env.AMAZON_CLIENT_ID) missingVars.push('AMAZON_CLIENT_ID');
+                if (!process.env.AMAZON_CLIENT_SECRET) missingVars.push('AMAZON_CLIENT_SECRET');
+                if (!process.env.AMAZON_PARTNER_TAG) missingVars.push('AMAZON_PARTNER_TAG');
+
+                if (missingVars.length > 0) {
+                    throw new Error(`Amazon Service Configuration Error: Missing environment variables: ${missingVars.join(', ')}`);
+                }
+                throw new Error('Amazon Service not active (unknown initialization failure).');
             }
         }
 
         const partnerTag = process.env.AMAZON_PARTNER_TAG;
         if (!partnerTag) {
-            throw new Error('AMAZON_PARTNER_TAG not configured.');
+            throw new Error('Amazon Service Configuration Error: AMAZON_PARTNER_TAG is defined but missing at runtime.');
         }
 
         const normalizedAsin = asin.toUpperCase().trim();
