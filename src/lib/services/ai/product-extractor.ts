@@ -154,8 +154,16 @@ export async function extractProductData(
         if (!apiKey) throw new Error('OpenAI API Key is missing.');
 
         const openai = new OpenAI({ apiKey });
+
+        let model = settings.model || 'gpt-4o';
+        // Safety check: If model string looks like a Google model, fallback to GPT-4o
+        if (model.includes('gemini') || model.includes('models/')) {
+            console.warn(`[AiProductExtractor] Invalid OpenAI model "${model}" detected. Falling back to gpt-4o.`);
+            model = 'gpt-4o';
+        }
+
         const response = await openai.chat.completions.create({
-            model: settings.model || 'gpt-4o',
+            model: model,
             messages: [
                 { role: 'system', content: 'You are a structured data extraction assistant. Output only valid JSON.' },
                 { role: 'user', content: prompt },
@@ -170,15 +178,40 @@ export async function extractProductData(
         if (!apiKey) throw new Error('Google Gemini API Key is missing.');
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({
-            model: settings.model || 'gemini-2.0-flash-exp',
-            generationConfig: { responseMimeType: 'application/json' },
-        });
+        const preferredModel = settings.model || 'gemini-2.0-flash-exp';
 
-        const result = await model.generateContent({
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        });
-        responseText = result.response.text();
+        try {
+            const model = genAI.getGenerativeModel({
+                model: preferredModel,
+                generationConfig: { responseMimeType: 'application/json' },
+            });
+
+            const result = await model.generateContent({
+                contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            });
+            responseText = result.response.text();
+
+        } catch (error: any) {
+            console.warn(`[AiProductExtractor] Gemini Error (${error.message}). Checking for OpenAI fallback...`);
+
+            if (settings.openaiApiKey) {
+                console.log('[AiProductExtractor] Falling back to OpenAI (gpt-4o)...');
+                const openai = new OpenAI({ apiKey: settings.openaiApiKey });
+                const response = await openai.chat.completions.create({
+                    model: 'gpt-4o',
+                    messages: [
+                        { role: 'system', content: 'You are a structured data extraction assistant. Output only valid JSON.' },
+                        { role: 'user', content: prompt },
+                    ],
+                    temperature: 0.1,
+                    response_format: { type: 'json_object' },
+                });
+                responseText = response.choices[0]?.message?.content || '{}';
+            } else {
+                // No fallback available, rethrow
+                throw error;
+            }
+        }
     }
 
     console.log('[AiProductExtractor] Raw AI Response:', responseText.substring(0, 500));
@@ -208,6 +241,27 @@ export async function extractProductData(
         brandName: parsed.brandName || amazonItem.itemInfo?.byLineInfo?.brand?.displayValue || null,
         specs: parsed.specs || '',
     };
+
+    // Post-processing: Ensure extracted technical fields are included in specs
+    let specs = extracted.specs;
+    const appendSpec = (key: string, value: any, unit: string = '') => {
+        if (value !== null && value !== undefined && !specs.toLowerCase().includes(key.toLowerCase())) {
+            specs += `\n- ${key}: ${value}${unit}`;
+        }
+    };
+
+    appendSpec('Leistung', extracted.powerW, ' W');
+    appendSpec('Kapazität', extracted.capacityAh, ' Ah');
+    appendSpec('Spannung', extracted.voltageV, ' V');
+    appendSpec('Max. Ladestrom', extracted.currentA, ' A');
+    appendSpec('Max. Entladestrom', extracted.maxDischargeA, ' A');
+    appendSpec('Solar-Leistung', extracted.solarWp, ' Wp');
+    if (extracted.supportedVoltages) appendSpec('Unterstützte Spannungen', extracted.supportedVoltages.join(', '), ' V');
+    appendSpec('Kabelquerschnitt', extracted.crossSectionMm2, ' mm²');
+    appendSpec('Batterietyp', extracted.batteryType);
+    appendSpec('Wellenform', extracted.waveform);
+
+    extracted.specs = specs.trim();
 
     console.log('[AiProductExtractor] Extracted:', {
         name: extracted.name,

@@ -7,6 +7,7 @@
 
 import { prisma } from '@/lib/db';
 import { amazonService } from '@/lib/services/amazon';
+import { scrapeAmazonProduct } from '@/lib/services/amazon/scraper';
 import { extractProductData } from '@/lib/services/ai/product-extractor';
 import { revalidatePath } from 'next/cache';
 
@@ -94,7 +95,8 @@ function extractAsin(input: string): string | null {
  */
 export async function importProductFromAmazon(
     asinOrUrl: string,
-    categoryId: string
+    categoryId: string,
+    mode: 'api' | 'scrape' = 'api'
 ): Promise<ImportResult> {
     try {
         // 1. Extract/validate ASIN
@@ -113,10 +115,19 @@ export async function importProductFromAmazon(
 
         console.log(`[ImportAction] Starting import for ASIN: ${asin}, Category: ${category.slug}`);
 
-        // 3. Fetch from Amazon API
-        const amazonItem = await amazonService.getItem(asin);
+        // 3. Fetch from Amazon API or Scraper
+        let amazonItem;
+
+        if (mode === 'scrape') {
+            console.log(`[ImportAction] Mode: SCRAPE - Fetching via Cheerio...`);
+            amazonItem = await scrapeAmazonProduct(asin);
+        } else {
+            console.log(`[ImportAction] Mode: API - Fetching via Creators API...`);
+            amazonItem = await amazonService.getItem(asin);
+        }
+
         if (!amazonItem) {
-            return { success: false, error: `Produkt mit ASIN "${asin}" nicht auf Amazon gefunden.` };
+            return { success: false, error: `Produkt mit ASIN "${asin}" nicht auf Amazon ${mode === 'scrape' ? '(via Scraper)' : ''} gefunden.` };
         }
 
         // 4. AI Extraction

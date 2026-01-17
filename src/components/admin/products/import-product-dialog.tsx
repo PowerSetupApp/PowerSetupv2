@@ -47,7 +47,7 @@ export function ImportProductDialog() {
         }
     }, [open, categories.length]);
 
-    const handleImport = async (e: React.FormEvent) => {
+    const handleImport = async (e: React.FormEvent, mode: 'api' | 'scrape' = 'api') => {
         e.preventDefault();
         if (!categoryId || !asinInput.trim()) return;
 
@@ -57,10 +57,15 @@ export function ImportProductDialog() {
         try {
             // Visual feedback stages
             setImportStatus('fetching');
-            await new Promise((r) => setTimeout(r, 300)); // Brief pause for UX
+            if (mode === 'scrape') {
+                // Slightly longer delay message for scraping to indicate it works
+                await new Promise((r) => setTimeout(r, 500));
+            } else {
+                await new Promise((r) => setTimeout(r, 300));
+            }
 
             setImportStatus('analyzing');
-            const result = await importProductFromAmazon(asinInput, categoryId);
+            const result = await importProductFromAmazon(asinInput, categoryId, mode);
 
             if (result.success && result.productId) {
                 setImportStatus('creating');
@@ -108,7 +113,7 @@ export function ImportProductDialog() {
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
-                <form onSubmit={handleImport}>
+                <form onSubmit={(e) => handleImport(e, 'api')}>
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Sparkles className="h-5 w-5 text-amber-500" />
@@ -182,14 +187,27 @@ export function ImportProductDialog() {
                     </div>
 
                     <DialogFooter className="flex-col sm:flex-row gap-2">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setOpen(false)}
-                            disabled={isImporting}
-                        >
-                            Abbrechen
-                        </Button>
+                        <div className="flex gap-2 w-full sm:w-auto">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setOpen(false)}
+                                disabled={isImporting}
+                                className="flex-1 sm:flex-none"
+                            >
+                                Abbrechen
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                onClick={(e) => handleImport(e, 'scrape')}
+                                disabled={isImporting || !categoryId || !asinInput.trim()}
+                                className="flex-1 sm:flex-none"
+                                title="Alternative Methode falls API nicht geht"
+                            >
+                                Scrape (Backup)
+                            </Button>
+                        </div>
                         <Link href="/admin/products/new" className="sm:hidden">
                             <Button type="button" variant="ghost" className="w-full">
                                 Manuell erstellen
