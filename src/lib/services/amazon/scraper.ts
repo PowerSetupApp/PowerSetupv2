@@ -16,7 +16,9 @@ export async function scrapeAmazonProduct(urlOrAsin: string): Promise<AmazonItem
 
     try {
         // Random delay to mimic human behavior (1-3 seconds)
-        const delay = Math.floor(Math.random() * 2000) + 1000;
+        // Random delay to mimic human behavior
+        // Vercel execution time is precious, keep it shorter (500-1500ms)
+        const delay = Math.floor(Math.random() * 1000) + 500;
         await new Promise(r => setTimeout(r, delay));
 
         const response = await fetch(url, {
@@ -46,6 +48,8 @@ export async function scrapeAmazonProduct(urlOrAsin: string): Promise<AmazonItem
 
         // Check for CAPTCHA title
         const title = $('title').text();
+        console.log(`[AmazonScraper] Page Title: "${title}" (Length: ${html.length})`);
+
         if (title.includes('Robot Check') || title.includes('CAPTCHA')) {
             throw new Error('Amazon CAPTCHA detected.');
         }
@@ -54,6 +58,11 @@ export async function scrapeAmazonProduct(urlOrAsin: string): Promise<AmazonItem
 
         // 1. Title
         const productTitle = $('#productTitle').text().trim();
+        if (!productTitle) {
+            console.error('[AmazonScraper] Failed to extract product title. Dumping HTML snippet:');
+            console.error(html.substring(0, 500));
+            throw new Error('Scraping fehlgeschlagen: Kein Produkttitel gefunden. (Amazon blockiert wahrscheinlich die Anfrage oder verlangt Login)');
+        }
 
         // 2. Brand
         // "Besuchen Sie den Victron Energy-Store" -> "Victron Energy"
