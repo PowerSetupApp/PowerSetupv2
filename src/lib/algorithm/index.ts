@@ -70,3 +70,14 @@ export {
     type CableRequirement,
     type ProductWithFilter,
 } from './adapter';
+
+// Export product preselection
+export {
+    preselectProducts,
+    formatPreselectionForAI,
+    getCategoryRequirements,
+    type PreselectedProduct,
+    type CategoryPreselection,
+    type CategoryRequirement,
+    type PreselectionResult,
+} from './product-preselection';

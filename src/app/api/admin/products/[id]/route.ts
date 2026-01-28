@@ -8,9 +8,9 @@ const UpdateProductSchema = z.object({
     icon: z.string().optional(),
     imageUrl: z.string().optional(),
     affiliateUrl: z.string().url().optional(),
-    price: z.number().optional(),
+    price: z.number().nullable().optional(),
     categoryId: z.string().uuid().optional(),
-    specs: z.string().optional(),
+    specs: z.string().nullable().optional(),
     isActive: z.boolean().optional(),
     // Filter fields
     powerW: z.number().nullable().optional(),
@@ -27,6 +27,7 @@ const UpdateProductSchema = z.object({
     asin: z.string().nullable().optional(),
     // New Filter Fields
     brandId: z.string().nullable().optional(),
+    filterValues: z.record(z.string(), z.any()).nullable().optional(),
 });
 
 // GET /api/admin/products/[id] - Get single product
@@ -130,19 +131,19 @@ export async function DELETE(
                 if (product.imageUrl.includes('vercel-storage.com')) {
                     const { del } = await import("@vercel/blob");
                     await del(product.imageUrl);
-                } else if (product.imageUrl.startsWith("/uploads/")) {
-                    // Legacy local file deletion
-                    // Extract filename from URL (assuming /uploads/filename.ext format)
-                    const filename = product.imageUrl.split('/').pop();
-                    if (filename) {
-                        const { unlink } = await import("fs/promises");
-                        const { join } = await import("path");
+                } else if (product.imageUrl.startsWith("/uploads/") || product.imageUrl.startsWith("/images/products/")) {
+                    // Local file deletion
+                    // Extract relative path and join with cwd public
+                    const { unlink } = await import("fs/promises");
+                    const { join } = await import("path");
 
-                        const filepath = join(process.cwd(), "public/uploads", filename);
-                        await unlink(filepath).catch(e => {
-                            console.warn("Could not delete image file:", filepath, e);
-                        });
-                    }
+                    // remove leading slash
+                    const relativePath = product.imageUrl.startsWith("/") ? product.imageUrl.slice(1) : product.imageUrl;
+                    const filepath = join(process.cwd(), "public", relativePath);
+
+                    await unlink(filepath).catch(e => {
+                        console.warn("Could not delete image file:", filepath, e);
+                    });
                 }
             } catch (err) {
                 console.error("Error cleaning up image:", err);

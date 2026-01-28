@@ -27,12 +27,31 @@ export interface ExtractedProductData {
     solarWp: number | null;
     supportedVoltages: number[] | null;
     maxDischargeA: number | null;
+    maxChargeA: number | null;
     waveform: string | null;
     fuseType: string | null;
+    triggerType: string | null;
+    color: string | null;
+    // Dimensions & Weight
+    dimensions_length: number | null;
+    dimensions_width: number | null;
+    weight: number | null;
     // Brand name for fuzzy matching
     brandName: string | null;
     // Raw specs for display
     specs: string;
+    cellType: string | null;
+    constructionType: string | null; // "Starr" or "Flexibel"
+    // Solar Controller Specifics
+    maxInputVoltageV: number | null;
+    hasBluetooth: boolean | null;
+    // Inverter Specifics
+    outputPowerW: number | null;
+    peakPowerW: number | null;
+    // Booster Specifics
+    maxChargeCurrent: number | null;
+    inputVolts: number[] | null;
+    outputVolts: number[] | null;
 }
 
 // Category-specific extraction rules
@@ -42,24 +61,34 @@ Focus on extracting:
 - capacityAh: Battery capacity in Ah (e.g., "100Ah" -> 100)
 - voltageV: Nominal voltage (e.g., "12.8V" -> 12, "25.6V" -> 24)
 - batteryType: One of "lifepo4", "agm", "gel" (look for "LiFePO4", "Lithium", "AGM", "GEL")
-- maxDischargeA: Maximum discharge current in Amps (often near BMS specs)
+- maxDischargeA: Maximum discharge current in Amps
+- maxChargeA: Maximum charge current in Amps (e.g., "50A Ladestrom" -> 50)
+- dimensions: Length, Width in mm (Format: Length x Width)
+- weight: Weight in kg
 `,
     'wechselrichter': `
 Focus on extracting:
 - powerW: Continuous power in Watts (e.g., "2000W Dauerleistung" -> 2000)
+- peakPowerW: Peak/Surge power in Watts (e.g., "4000W Peak", "Spitzenleistung")
 - voltageV: Input voltage (e.g., "12V DC" -> 12)
 - waveform: "pure_sine" if "reiner Sinus" or "Pure Sine", else "modified_sine"
+- dimensions: Length, Width in mm
 `,
     'solar-laderegler': `
 Focus on extracting:
 - currentA: Maximum charging current in Amps (e.g., "15A" -> 15)
-- supportedVoltages: Array of supported voltages [12, 24] from "12V/24V Auto"
-- Identify if MPPT or PWM type from title/features
+- maxInputVoltageV: Max. PV input voltage (VoC) in Volts
+- supportedVoltages: Array of supported voltages [12, 24, 48]
+- hasBluetooth: true if built-in Bluetooth/Smart capability, else false
+- Identify if MPPT or PWM type
+- cellType: "monocrystalline" or "polycrystalline"
 `,
     'ladebooster': `
 Focus on extracting:
-- currentA: Charging current in Amps
-- supportedVoltages: Supported battery voltages [12, 24, 48]
+- currentA: Maximum charging current in Amps
+- inputVolts: Input voltage (e.g., 12V, 24V) - might be multiple
+- outputVolts: Output voltage (e.g., 12V, 24V) - might be multiple
+- manufacturer: Brand name
 `,
     'batterieladegeraete': `
 Focus on extracting:
@@ -69,16 +98,23 @@ Focus on extracting:
     'solarmodule': `
 Focus on extracting:
 - solarWp: Peak power in Watts (Wp)
-- voltageV: Open circuit voltage if available
+- voltageV: Open circuit voltage
+- dimensions_length: Length in mm (Longest side)
+- dimensions_width: Width in mm (Shortest side - excluding thickness)
+- weight: Weight in kg
+- cellType: "monocrystalline" or "polycrystalline"
+- constructionType: "Starr" (Rigid/Glass/Frame) or "Flexibel" (Flexible/Semi-flexible). Default to "Starr" if unclear.
 `,
     'kabel': `
 Focus on extracting:
 - crossSectionMm2: Cable cross-section (e.g., "25mm²" -> 25)
+- color: "Rot" (Red) or "Schwarz" (Black)
 `,
     'sicherungen': `
 Focus on extracting:
 - currentA: Fuse rating in Amps
-- fuseType: "thermal" or "magnetic"
+- fuseType: Extract exact type e.g. "Mini", "Standard", "Maxi", "Midi", "Mega", "ANL"
+- triggerType: "Thermisch" (Thermal) or "Magnetisch" (Magnetic)
 `,
 };
 
@@ -106,7 +142,9 @@ ${categoryRules ? `## Category-Specific Rules\n${categoryRules}` : ''}
 4. **brandName**: Manufacturer/Brand name
 5. **voltageV**: Always normalize to 12, 24, or 48 (e.g., "12.8V" -> 12)
 6. **supportedVoltages**: Array like [12, 24] if device supports multiple
-7. **specs**: Formatted Markdown for display (### Technische Daten\\n- Key: Value)
+7. **dimensions**: Always in MILLIMETERS (mm). Convert from cm/inches if needed.
+8. **weight**: Always in KILOGRAMS (kg).
+9. **specs**: Formatted Markdown for display (### Technische Daten\\n- Key: Value)
 
 ## Output Format
 Return ONLY valid JSON matching this structure:
@@ -124,9 +162,28 @@ Return ONLY valid JSON matching this structure:
   "solarWp": "number | null",
   "supportedVoltages": "[number] | null",
   "maxDischargeA": "number | null",
+  "maxChargeA": "number | null",
   "waveform": "string | null",
   "fuseType": "string | null",
-  "specs": "string"
+  "triggerType": "string | null",
+  "color": "string | null",
+  "dimensions_length": "number | null",
+  "dimensions_width": "number | null",
+  "weight": "number | null",
+  "specs": "string",
+  "cellType": "string | null",
+  "constructionType": "string | null",
+  "maxInputVoltageV": "number | null",
+  "hasBluetooth": "boolean | null",
+  "outputPowerW": "number | null",
+  "peakPowerW": "number | null",
+  "capacityAh": "number | null",
+  "voltageV": "number | null",
+  "batteryType": "string | null",
+  "maxDischargeA": "number | null",
+  "maxChargeCurrent": "number | null",
+  "inputVolts": "number[] | null",
+  "outputVolts": "number[] | null"
 }
 
 ## Amazon Product Data
@@ -236,10 +293,27 @@ export async function extractProductData(
         solarWp: typeof parsed.solarWp === 'number' ? parsed.solarWp : null,
         supportedVoltages: Array.isArray(parsed.supportedVoltages) ? parsed.supportedVoltages : null,
         maxDischargeA: typeof parsed.maxDischargeA === 'number' ? parsed.maxDischargeA : null,
+        maxChargeA: typeof parsed.maxChargeA === 'number' ? parsed.maxChargeA : null,
         waveform: parsed.waveform || null,
         fuseType: parsed.fuseType || null,
+        triggerType: parsed.triggerType || null,
+        color: parsed.color || null,
+        // Dimensions & Weight
+        dimensions_length: typeof parsed.dimensions_length === 'number' ? parsed.dimensions_length : null,
+        dimensions_width: typeof parsed.dimensions_width === 'number' ? parsed.dimensions_width : null,
+        weight: typeof parsed.weight === 'number' ? parsed.weight : null,
+
         brandName: parsed.brandName || amazonItem.itemInfo?.byLineInfo?.brand?.displayValue || null,
         specs: parsed.specs || '',
+        cellType: parsed.cellType || null,
+        constructionType: parsed.constructionType || null,
+        maxInputVoltageV: typeof parsed.maxInputVoltageV === 'number' ? parsed.maxInputVoltageV : null,
+        hasBluetooth: typeof parsed.hasBluetooth === 'boolean' ? parsed.hasBluetooth : null,
+        outputPowerW: typeof parsed.outputPowerW === 'number' ? parsed.outputPowerW : null,
+        peakPowerW: typeof parsed.peakPowerW === 'number' ? parsed.peakPowerW : null,
+        maxChargeCurrent: typeof parsed.maxChargeCurrent === 'number' ? parsed.maxChargeCurrent : null,
+        inputVolts: Array.isArray(parsed.inputVolts) ? parsed.inputVolts : null,
+        outputVolts: Array.isArray(parsed.outputVolts) ? parsed.outputVolts : null,
     };
 
     // Post-processing: Ensure extracted technical fields are included in specs
@@ -260,6 +334,12 @@ export async function extractProductData(
     appendSpec('Kabelquerschnitt', extracted.crossSectionMm2, ' mm²');
     appendSpec('Batterietyp', extracted.batteryType);
     appendSpec('Wellenform', extracted.waveform);
+    // Add Dimensions strings if available
+    if (extracted.dimensions_length && extracted.dimensions_width) {
+        appendSpec('Maße', `${extracted.dimensions_length}x${extracted.dimensions_width}`, ' mm');
+    }
+    appendSpec('Gewicht', extracted.weight, ' kg');
+    appendSpec('Zelltyp', extracted.cellType);
 
     extracted.specs = specs.trim();
 
@@ -267,8 +347,9 @@ export async function extractProductData(
         name: extracted.name,
         brandName: extracted.brandName,
         voltageV: extracted.voltageV,
-        currentA: extracted.currentA,
-        capacityAh: extracted.capacityAh,
+        dims: `${extracted.dimensions_length}x${extracted.dimensions_width}`,
+        weight: extracted.weight,
+        cellType: extracted.cellType,
     });
 
     return extracted;

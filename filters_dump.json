@@ -1,0 +1,396 @@
+[
+  {
+    "category": "Batterieladegeräte",
+    "slug": "batterieladegeraete",
+    "filters": [
+      {
+        "key": "brand",
+        "name": "Marke",
+        "type": "brand",
+        "options": []
+      },
+      {
+        "key": "maxChargeA",
+        "name": "Max. Ladestrom",
+        "type": "number",
+        "options": []
+      },
+      {
+        "key": "outputVoltage",
+        "name": "Ausgangsspannung",
+        "type": "multiselect",
+        "options": [
+          "12V",
+          "24V",
+          "48V"
+        ]
+      }
+    ]
+  },
+  {
+    "category": "Batterien",
+    "slug": "batterien",
+    "filters": [
+      {
+        "key": "brand",
+        "name": "Marke",
+        "type": "brand",
+        "options": []
+      },
+      {
+        "key": "capacityAh",
+        "name": "Kapazität",
+        "type": "number",
+        "options": []
+      },
+      {
+        "key": "voltageV",
+        "name": "Spannung",
+        "type": "select",
+        "options": [
+          "12V",
+          "24V",
+          "48V"
+        ]
+      },
+      {
+        "key": "maxDischargeA",
+        "name": "Max. Entladestrom",
+        "type": "number",
+        "options": []
+      },
+      {
+        "key": "maxChargeA",
+        "name": "Max. Ladestrom",
+        "type": "number",
+        "options": []
+      },
+      {
+        "key": "batteryType",
+        "name": "Batterie-Typ",
+        "type": "select",
+        "options": [
+          "LiFePo4",
+          "AGM",
+          "GEL"
+        ]
+      }
+    ]
+  },
+  {
+    "category": "Kabel",
+    "slug": "kabel",
+    "filters": [
+      {
+        "key": "brand",
+        "name": "Marke",
+        "type": "brand",
+        "options": []
+      },
+      {
+        "key": "crossSectionMm2",
+        "name": "Querschnitt",
+        "type": "number",
+        "options": []
+      },
+      {
+        "key": "cableType",
+        "name": "Kabel-Typ",
+        "type": "select",
+        "options": [
+          "Normal",
+          "Solarkabel (Solarmodul > Solar-Laderegler)",
+          "Batteriekabel (Solar-Laderegler > Batterie)"
+        ]
+      },
+      {
+        "key": "color",
+        "name": "Farbe",
+        "type": "select",
+        "options": [
+          "Rot",
+          "Schwarz"
+        ]
+      }
+    ]
+  },
+  {
+    "category": "Kabel: Laderegler - Batterie",
+    "slug": "kabel-laderegler-batterie",
+    "filters": [
+      {
+        "key": "fuse",
+        "name": "Sicherung",
+        "type": "number",
+        "options": []
+      }
+    ]
+  },
+  {
+    "category": "Kabel: Laderregler - Solarmodul",
+    "slug": "kabel-laderregler-solarmodul",
+    "filters": [
+      {
+        "key": "length",
+        "name": "Länge",
+        "type": "number",
+        "options": []
+      }
+    ]
+  },
+  {
+    "category": "Ladebooster",
+    "slug": "ladebooster",
+    "filters": [
+      {
+        "key": "brand",
+        "name": "Marke",
+        "type": "brand",
+        "options": []
+      },
+      {
+        "key": "maxChargeCurrent",
+        "name": "Ladestrom",
+        "type": "number",
+        "options": []
+      },
+      {
+        "key": "inputVoltage",
+        "name": "Eingangsspannung",
+        "type": "multiselect",
+        "options": [
+          "12V",
+          "24V"
+        ]
+      },
+      {
+        "key": "outputVoltage",
+        "name": "Ausgangsspannung",
+        "type": "multiselect",
+        "options": [
+          "12V",
+          "24V"
+        ]
+      }
+    ]
+  },
+  {
+    "category": "Sicherungen",
+    "slug": "sicherungen",
+    "filters": [
+      {
+        "key": "brand",
+        "name": "Marke",
+        "type": "brand",
+        "options": []
+      },
+      {
+        "key": "triggerType",
+        "name": "Auslöse-Art",
+        "type": "select",
+        "options": [
+          "Thermisch",
+          "Magnetisch"
+        ]
+      },
+      {
+        "key": "maxAmpere",
+        "name": "Max. Ampere",
+        "type": "number",
+        "options": []
+      },
+      {
+        "key": "fuseType",
+        "name": "Typ",
+        "type": "select",
+        "options": [
+          "Mini (ATM) – 5–30 A",
+          "Standard (ATO/ATC) – 5–40 A",
+          "Maxi (MAXI) – 20–120 A",
+          "Midi Fuse (30–200 A)",
+          "Mega Fuse (80–500 A)",
+          "FI-Schutzschalter (RCD)",
+          "Leitungsschutzschalter (LS)"
+        ]
+      }
+    ]
+  },
+  {
+    "category": "Sicherungskästen",
+    "slug": "sicherungskaesten",
+    "filters": [
+      {
+        "key": "brand",
+        "name": "Marke",
+        "type": "brand",
+        "options": []
+      },
+      {
+        "key": "slotCount",
+        "name": "Anzahl Steckplätze",
+        "type": "number",
+        "options": []
+      },
+      {
+        "key": "socketType",
+        "name": "Fassung",
+        "type": "select",
+        "options": [
+          "Mini (ATM) – 5–30 A",
+          "Standard (ATO/ATC) – 5–40 A",
+          "Maxi (MAXI) – 20–120 A",
+          "Midi Fuse (30–200 A)",
+          "Mega Fuse (80–500 A)",
+          "FI-Schutzschalter (RCD)",
+          "Leitungsschutzschalter (LS)"
+        ]
+      }
+    ]
+  },
+  {
+    "category": "Solar-Laderegler",
+    "slug": "solar-laderegler",
+    "filters": [
+      {
+        "key": "brand",
+        "name": "Marke",
+        "type": "brand",
+        "options": []
+      },
+      {
+        "key": "maxInputVoltageV",
+        "name": "Max. Eingangsspannung",
+        "type": "number",
+        "options": []
+      },
+      {
+        "key": "maxOutputCurrentA",
+        "name": "Max. Ausgangsstrom",
+        "type": "number",
+        "options": []
+      },
+      {
+        "key": "outputVoltage",
+        "name": "Ausgangsspannung",
+        "type": "multiselect",
+        "options": [
+          "12V",
+          "24V",
+          "48V"
+        ]
+      },
+      {
+        "key": "hasBluetooth",
+        "name": "Bluetooth-Fähig",
+        "type": "select",
+        "options": [
+          "Ja",
+          "Nein"
+        ]
+      }
+    ]
+  },
+  {
+    "category": "Solarmodule",
+    "slug": "solarmodule",
+    "filters": [
+      {
+        "key": "brand",
+        "name": "Marke",
+        "type": "brand",
+        "options": []
+      },
+      {
+        "key": "voltageV",
+        "name": "Spannung",
+        "type": "number",
+        "options": []
+      },
+      {
+        "key": "maxPowerWp",
+        "name": "Max. Leistung",
+        "type": "number",
+        "options": []
+      },
+      {
+        "key": "constructionType",
+        "name": "Bauart",
+        "type": "select",
+        "options": [
+          "Starr",
+          "Flexibel"
+        ]
+      },
+      {
+        "key": "dimensions_length",
+        "name": "Länge (mm)",
+        "type": "number",
+        "options": []
+      },
+      {
+        "key": "dimensions_width",
+        "name": "Breite (mm)",
+        "type": "number",
+        "options": []
+      }
+    ]
+  },
+  {
+    "category": "Solartaschen",
+    "slug": "solartaschen",
+    "filters": [
+      {
+        "key": "brand",
+        "name": "Marke",
+        "type": "brand",
+        "options": []
+      },
+      {
+        "key": "voltageV",
+        "name": "Spannung",
+        "type": "number",
+        "options": []
+      },
+      {
+        "key": "maxPowerWp",
+        "name": "Max. Leistung",
+        "type": "number",
+        "options": []
+      }
+    ]
+  },
+  {
+    "category": "Wechselrichter",
+    "slug": "wechselrichter",
+    "filters": [
+      {
+        "key": "brand",
+        "name": "Marke",
+        "type": "brand",
+        "options": []
+      },
+      {
+        "key": "outputPowerW",
+        "name": "Ausgangsleistung (Dauerhaft)",
+        "type": "number",
+        "options": []
+      },
+      {
+        "key": "peakPowerW",
+        "name": "Ausgangsleistung (Peak)",
+        "type": "number",
+        "options": []
+      },
+      {
+        "key": "inputVoltage",
+        "name": "Eingangsspannung",
+        "type": "multiselect",
+        "options": [
+          "12V",
+          "24V",
+          "48V"
+        ]
+      }
+    ]
+  }
+]

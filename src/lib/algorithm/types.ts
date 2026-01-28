@@ -278,9 +278,13 @@ export interface SolarRecommendation {
 export interface BoosterRecommendation {
     /** Is booster required/selected? */
     needed: boolean;
-    /** Recommended charging current (A) (Effective value used for calculation) */
+    /** Input current from alternator (A) - used for input cable calculation */
+    inputCurrentA: number;
+    /** Output current to service battery (A) - used for output cable and product selection */
+    outputCurrentA: number;
+    /** @deprecated Legacy field - use outputCurrentA instead. Kept for backward compatibility. */
     currentA: number;
-    /** Original calculated current (A) before override */
+    /** Original calculated output current (A) before override */
     originalCurrentA?: number;
     /** Vehicle voltage (V) */
     inputVoltage: VehicleVoltage;

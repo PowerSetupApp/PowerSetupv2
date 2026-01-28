@@ -164,6 +164,14 @@ const SETTINGS_GROUPS: SettingsGroup[] = [
             { key: "copperResistivity", label: "Ρ (Kupfer)", type: "float", suffix: "Ω·mm²/m" },
         ]
     },
+    {
+        title: "Produkt-Vorauswahl (KI)",
+        description: "Steuert, welche Produkte an die KI zur Auswahl weitergegeben werden",
+        tooltip: "Produkte werden vorab nach technischer Eignung bewertet (0-100 Match-Score). Nur Produkte über der Schwelle werden der KI zur Auswahl angeboten. Niedrigere Werte = mehr Auswahl für die KI, höhere Werte = genauere Vorfilterung.",
+        fields: [
+            { key: "minPreselectionScore", label: "Min. Match-Score", type: "int", suffix: "/ 100" },
+        ]
+    },
 ];
 
 export function AlgorithmSettings() {

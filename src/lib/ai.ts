@@ -217,6 +217,7 @@ export interface AIInput {
     productContext?: string;
     selectedProductsContext?: string;
     requirementsContext?: string; // NEW: Pre-calculated algorithm requirements
+    preselectionContext?: string; // NEW: Pre-selected products with match scores
 }
 
 export interface AISelectedProduct {
@@ -307,9 +308,21 @@ export function buildPrompt(template: string, input: AIInput): string {
     // NEW: Inject pre-calculated algorithm requirements
     if (input.requirementsContext) {
         prompt = prompt.replace(/\{\{REQUIREMENTS\}\}/g, input.requirementsContext);
+        // Also support REQUIREMENTS_CONTEXT alias for clarity
+        prompt = prompt.replace(/\{\{REQUIREMENTS_CONTEXT\}\}/g, input.requirementsContext);
     } else {
-        // Remove placeholder if no requirements available
         prompt = prompt.replace(/\{\{REQUIREMENTS\}\}/g, '');
+        prompt = prompt.replace(/\{\{REQUIREMENTS_CONTEXT\}\}/g, '');
+    }
+
+    // NEW: Inject product preselection (optional subset)
+    if (input.preselectionContext) {
+        prompt = prompt.replace(/\{\{PRESELECTION\}\}/g, input.preselectionContext);
+        // Also support PRESELECTION_CONTEXT alias
+        prompt = prompt.replace(/\{\{PRESELECTION_CONTEXT\}\}/g, input.preselectionContext);
+    } else {
+        prompt = prompt.replace(/\{\{PRESELECTION\}\}/g, '');
+        prompt = prompt.replace(/\{\{PRESELECTION_CONTEXT\}\}/g, '');
     }
 
     // Legacy Placeholders (Backward Compatibility)

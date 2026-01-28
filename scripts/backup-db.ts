@@ -1,61 +1,64 @@
-
-import { PrismaClient } from '@prisma/client';
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+import 'dotenv/config';
+import { prisma } from '../src/lib/db';
 import fs from 'fs';
 import path from 'path';
-import 'dotenv/config';
 
-console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'Loaded' : 'Not Loaded');
+async function main() {
+    console.log('📦 Starting database backup...');
 
-// @ts-ignore
-const prisma = new PrismaClient({
-    datasourceUrl: process.env.DATABASE_URL,
-});
-
-async function backup() {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const backupDir = path.join(process.cwd(), 'backup');
+    const filename = `backup-${timestamp}.json`;
+    const backupPath = path.join(process.cwd(), filename);
 
-    if (!fs.existsSync(backupDir)) {
-        fs.mkdirSync(backupDir);
-    }
+    const backupData: Record<string, any> = {};
 
-    const backupFile = path.join(backupDir, `backup-${timestamp}.json`);
-
-    console.log('Starting backup...');
+    // List of all models to backup
+    // These keys must match the Prisma Client model property names (usually lowercase/camelCase)
+    const models = [
+        'result',
+        'product',
+        'category',
+        'categoryFilter',
+        'creditPurchase',
+        'creditBalance',
+        'creditUsage',
+        'promptVersion',
+        'consumerCategory',
+        'consumerDevice',
+        'systemSetting',
+        'modelPricing',
+        'algorithmSettings',
+        'brand',
+        'brandFilterCategory'
+    ];
 
     try {
-        const data = {
-            Result: await prisma.result.findMany(),
-            Product: await prisma.product.findMany(),
-            Category: await prisma.category.findMany(),
-            CreditPurchase: await prisma.creditPurchase.findMany(),
-            CreditBalance: await prisma.creditBalance.findMany(),
-            CreditUsage: await prisma.creditUsage.findMany(),
-            PromptVersion: await prisma.promptVersion.findMany(),
-            ConsumerCategory: await prisma.consumerCategory.findMany(),
-            ConsumerDevice: await prisma.consumerDevice.findMany(),
-            SystemSetting: await prisma.systemSetting.findMany(),
-            ModelPricing: await prisma.modelPricing.findMany(),
-            AlgorithmSettings: await prisma.algorithmSettings.findMany(),
-            Brand: await prisma.brand.findMany(),
-            BrandFilterCategory: await prisma.brandFilterCategory.findMany(),
-        };
+        for (const model of models) {
+            console.log(`Scanning table: ${model}...`);
+            // @ts-ignore - Dynamic access to prisma models
+            if (prisma[model]) {
+                // @ts-ignore
+                const data = await prisma[model].findMany();
+                backupData[model] = data;
+                console.log(`  ✓ Found ${data.length} records`);
+            } else {
+                console.warn(`  ⚠️ Model ${model} not found on Prisma Client instance`);
+            }
+        }
 
-        fs.writeFileSync(backupFile, JSON.stringify(data, null, 2));
+        console.log(`Writing backup to ${filename}...`);
+        fs.writeFileSync(backupPath, JSON.stringify(backupData, null, 2));
 
-        console.log(`Backup completed successfully: ${backupFile}`);
-    } catch (err: any) {
-        console.error('Error during backup:', err);
-        console.error('Error details:', JSON.stringify(err, null, 2));
-        throw err;
+        console.log('✅ Backup completed successfully!');
+        console.log(`📁 Saved to: ${backupPath}`);
+
+    } catch (error) {
+        console.error('❌ Backup failed:', error);
+        process.exit(1);
+    } finally {
+        await prisma.$disconnect();
     }
 }
 
-backup()
-    .catch((e) => {
-        console.error('Fatal error:', e);
-        process.exit(1);
-    })
-    .finally(async () => {
-        await prisma.$disconnect();
-    });
+main();

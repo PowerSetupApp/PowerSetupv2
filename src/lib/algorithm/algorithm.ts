@@ -60,6 +60,7 @@ import {
 
     // Booster
     DEFAULT_BOOSTER_AMPS,
+    BOOSTER_EFFICIENCY,
     ALTERNATOR_DRIVE_HOURS,
 
     // Charger
@@ -318,7 +319,9 @@ export function calculateSolar(input: AlgorithmInput, dailyWh: number, psh: numb
 
     // 3.1 Maximales Dach-Wp berechnen
     let maxRoofWp = 0;
-    for (const area of input.roofAreas) {
+    // Defensive check: ensure roofAreas is an array
+    const roofAreas = Array.isArray(input.roofAreas) ? input.roofAreas : [];
+    for (const area of roofAreas) {
         const areaM2 = (area.length / 100) * (area.width / 100);
         const areaWp = areaM2 * wpPerM2 * ROOF_UTILIZATION_FACTOR * ROOF_ORIENTATION_FACTOR;
         maxRoofWp += areaWp;
@@ -401,6 +404,8 @@ export function calculateBooster(input: AlgorithmInput, standingDays: number): B
     if (!hasAlternator) {
         return {
             needed: false,
+            inputCurrentA: 0,
+            outputCurrentA: 0,
             currentA: 0,
             inputVoltage: input.vehicleVoltage,
             outputVoltage: input.systemVoltage,
@@ -409,21 +414,44 @@ export function calculateBooster(input: AlgorithmInput, standingDays: number): B
         };
     }
 
-    const standardCurrentA = DEFAULT_BOOSTER_AMPS;
+    // Input current from alternator (standard load)
+    const standardInputCurrentA = DEFAULT_BOOSTER_AMPS;
 
-    // Override logic
-    let effectiveCurrentA = standardCurrentA;
+    // Calculate output current based on power conservation
+    // Formula: OutputCurrent = (InputVoltage × InputCurrent × Efficiency) / OutputVoltage
+    const standardOutputCurrentA = (
+        input.vehicleVoltage *
+        standardInputCurrentA *
+        BOOSTER_EFFICIENCY
+    ) / input.systemVoltage;
+
+    // Override logic - applies to OUTPUT current (what products are rated by)
+    let effectiveInputCurrentA = standardInputCurrentA;
+    let effectiveOutputCurrentA = standardOutputCurrentA;
+
     if (input.customOverrides.booster !== null) {
-        effectiveCurrentA = input.customOverrides.booster;
+        // User override is for OUTPUT current (product rating)
+        effectiveOutputCurrentA = input.customOverrides.booster;
+        // Recalculate input current to maintain power balance
+        effectiveInputCurrentA = (
+            input.systemVoltage *
+            effectiveOutputCurrentA
+        ) / (input.vehicleVoltage * BOOSTER_EFFICIENCY);
     }
 
-    // Use EFFECTIVE current for yield calculation logic
-    const dailyAlternatorChargeWh = (effectiveCurrentA * input.vehicleVoltage * ALTERNATOR_DRIVE_HOURS) / standingDays;
+    // Daily charge calculation uses OUTPUT power
+    const dailyAlternatorChargeWh = (
+        effectiveOutputCurrentA *
+        input.systemVoltage *
+        ALTERNATOR_DRIVE_HOURS
+    ) / standingDays;
 
     return {
         needed: true,
-        currentA: effectiveCurrentA,
-        originalCurrentA: standardCurrentA, // Store original for UI
+        inputCurrentA: effectiveInputCurrentA,
+        outputCurrentA: effectiveOutputCurrentA,
+        currentA: effectiveOutputCurrentA, // Legacy - maps to output
+        originalCurrentA: standardOutputCurrentA,
         inputVoltage: input.vehicleVoltage,
         outputVoltage: input.systemVoltage,
         needsConversion: input.vehicleVoltage !== input.systemVoltage,
@@ -711,7 +739,7 @@ export function calculateCables(
             'starter_to_booster',
             'Starterbatterie → Ladebooster',
             input.cableLengths.starterToService,
-            booster.currentA,
+            booster.inputCurrentA,
             input.vehicleVoltage,
             true
         );
@@ -719,7 +747,7 @@ export function calculateCables(
             'booster_to_service',
             'Ladebooster → Versorgerbatterie',
             input.cableLengths.boosterToService,
-            booster.currentA,
+            booster.outputCurrentA,
             input.systemVoltage,
             true
         );

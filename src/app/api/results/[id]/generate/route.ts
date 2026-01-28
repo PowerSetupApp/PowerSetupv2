@@ -5,9 +5,10 @@ import { AIInput, AIConsumerInput, AIProductInput, generateProductSelection } fr
 // calculateSystemRequirements is now part of @/lib/algorithm but not used directly here
 import { getAISettings } from "@/app/actions/settings";
 import { getGeneralSettings } from "@/app/actions/general-settings";
+import { getAlgorithmSettings } from "@/app/actions/algorithm-settings";
 import { appendAmazonTag } from "@/lib/affiliate";
 import { formatFormDataForAI, formatProductsForAI, AIProductContext, formatFormDataCompact, formatSystemRequirementsForAI } from "@/lib/format-for-ai";
-import { preFilterProducts, getFilterStats, type ProductWithFilter, type SystemRequirements } from "@/lib/algorithm";
+import { preFilterProducts, getFilterStats, preselectProducts, formatPreselectionForAI, type ProductWithFilter, type SystemRequirements } from "@/lib/algorithm";
 
 // POST /api/results/[id]/generate - Generate AI recommendations
 export async function POST(
@@ -79,68 +80,89 @@ export async function POST(
 
         const settings = await getAISettings();
         const generalSettings = await getGeneralSettings();
+        const algorithmSettings = await getAlgorithmSettings();
         const amazonPartnerTag = generalSettings.amazonPartnerTag;
+
+        // Get min score threshold from settings (default 30)
+        const minScoreThreshold = algorithmSettings.minPreselectionScore ?? 30;
+
+        // Prepare Full Product Context - with pre-filtering
+        const preCalculatedRequirements = result.calculations as unknown as SystemRequirements | null;
+
+        // DEBUG: Log calculations status
+        console.log(`[DEBUG] result.calculations exists: ${!!result.calculations}`);
+        console.log(`[DEBUG] preCalculatedRequirements: ${preCalculatedRequirements ? 'has data' : 'null/undefined'}`);
+        if (preCalculatedRequirements) {
+            console.log(`[DEBUG] systemVoltage: ${preCalculatedRequirements.systemVoltage}`);
+        }
 
         // Prepare shared formatted prompt
         let formattedPrompt = "";
         try {
-            formattedPrompt = formatFormDataForAI(formData);
+            // Enhance formData with calculated values and fallbacks for old data
+            const enhancedFormData = {
+                ...formData,
+                recommendedCapacityAh: preCalculatedRequirements?.battery?.recommendedCapacityAh || null,
+                // Fallback: If roofAreas is missing or empty, derive from solarDimensions
+                roofAreas: (formData.roofAreas && formData.roofAreas.length > 0)
+                    ? formData.roofAreas
+                    : (formData.solarDimensions
+                        ? [{ id: 'main', name: 'main', length: formData.solarDimensions.length, width: formData.solarDimensions.width }]
+                        : [{ id: 'main', name: 'main', length: 200, width: 100 }]),
+                // Fallback for vehicleVoltage
+                vehicleVoltage: formData.vehicleVoltage || 12,
+            };
+            formattedPrompt = formatFormDataForAI(enhancedFormData);
         } catch (e) {
             console.error("Error formatting form data:", e);
             formattedPrompt = formatFormDataCompact(formData);
         }
 
-        // Prepare Full Product Context - with pre-filtering
-        const preCalculatedRequirements = result.calculations as unknown as SystemRequirements;
+        let compatibleProducts = allProducts as unknown as ProductWithFilter[];
+        let preselectionContext = "";
 
-        // Pre-filter products based on calculated requirements
-        const filteredProducts = preFilterProducts(
-            allProducts as unknown as ProductWithFilter[],
-            preCalculatedRequirements
-        );
+        // Only run preselection if we have calculated requirements
+        if (preCalculatedRequirements && preCalculatedRequirements.systemVoltage) {
+            // Step 1: Basic compatibility filter (voltage, battery type)
+            compatibleProducts = preFilterProducts(
+                allProducts as unknown as ProductWithFilter[],
+                preCalculatedRequirements
+            );
 
-        const filterStats = getFilterStats(allProducts as unknown as ProductWithFilter[], filteredProducts);
-        console.log(`[Product Pre-Filter] ${filterStats.total} → ${filterStats.filtered} products (${filterStats.removed} removed)`);
+            const filterStats = getFilterStats(allProducts as unknown as ProductWithFilter[], compatibleProducts);
+            console.log(`[Product Pre-Filter] ${filterStats.total} → ${filterStats.filtered} products (${filterStats.removed} removed)`);
 
-        const productContext = formatProductsForAI(filteredProducts as unknown as AIProductContext[]);
+            // Step 2: Advanced preselection with Match-Scores
+            const preselection = preselectProducts(
+                compatibleProducts,
+                preCalculatedRequirements,
+                formData,
+                minScoreThreshold
+            );
+
+            console.log(`[Product Preselection] Score threshold: ${minScoreThreshold}, selected: ${preselection.selectedProducts} products`);
+            for (const cat of preselection.categories) {
+                console.log(`  - ${cat.categoryName}: ${cat.candidates.length} candidates`);
+            }
+
+            // Format preselection for AI prompt (with scores)
+            preselectionContext = formatPreselectionForAI(preselection);
+        } else {
+            console.log(`[Product Preselection] Skipped - no calculations available`);
+        }
+
+        // Also keep the regular product context for full list
+        const productContext = formatProductsForAI(compatibleProducts as unknown as AIProductContext[]);
 
         // Prepare Pre-calculated Requirements Context
-        const requirementsContext = formatSystemRequirementsForAI(preCalculatedRequirements as any);
+        const requirementsContext = preCalculatedRequirements
+            ? formatSystemRequirementsForAI(preCalculatedRequirements as any)
+            : "";
 
         // Call AI
-        const selectedIds = await generateProductSelection(
-            { ...calculationInput, formattedPrompt, productContext, requirementsContext },
-            settings.userPromptTemplate
-        );
-
-        // Call AI using generic type return (string) - we parse it manually
-        // We know generateProductSelection returns a string[] OR object if we modify it.
-        // Actually generateProductSelection in lib/ai.ts is typed to return string[].
-        // We need to bypass or update lib/ai.ts too.
-        // BUT generateProductSelection merely parses whatever JSON it gets.
-        // Let's modify generateProductSelection in lib/ai.ts to return 'any' or update it later.
-
-        // Wait, generateProductSelection strictly looks for `selectedIds`.
-        // We need to update lib/ai.ts to support `productGroups`?
-        // Or we can cheat and let the AI return `selectedIds` as a flat list AND `productGroups` in the same JSON?
-        // Prompt says "Antworte ausschließlich mit einem JSON-Objekt...".
-        // The current lib/ai.ts looks for `selectedIds` or `productGroups`?
-        // Let's check lib/ai.ts again. It looks for `json.selectedIds`.
-
-        // We must update lib/ai.ts to support the new format OR we make the AI return BOTH formats (redundant but easier without touching lib/ai recursively).
-        // PROPOSAL: Update the prompt to include a flat list just for the parsing logic? NO, that confuses the grouping.
-
-        // BETTER: Use a new function or update `generateProductSelection` to optional generic return.
-        // Since I can't edit lib/ai.ts easily without potentially breaking other things (though it seems dedicated to this flow).
-
-        // Let's update lib/ai.ts to handle `productGroups`.
-
-        // Actually, let's assume I update lib/ai.ts first.
-        // I will do that in the next step.
-        // For now, let's write the route logic assuming `generateProductSelection` returns the full JSON object or we change how we call it.
-
+        // Call AI
         const { data: aiResponseRaw, usage, model } = await generateProductSelection(
-            { ...calculationInput, formattedPrompt, productContext, requirementsContext },
+            { ...calculationInput, formattedPrompt, productContext, requirementsContext, preselectionContext },
             settings.userPromptTemplate
         );
 
@@ -149,6 +171,8 @@ export async function POST(
 
         const selectedProductsEnriched: any[] = [];
         const foundCategories = new Set<string>();
+        // Track AI groupKey for each DB category slug (for alternatives later)
+        const categorySlugToAIGroupKey = new Map<string, string>();
 
         // Handle new grouped format
         if (aiResponse.productGroups) {
@@ -160,16 +184,77 @@ export async function POST(
                             const product = allProducts.find(p => p.id === pItem.productId);
                             if (product) {
                                 foundCategories.add(product.category.slug);
+                                // Track the AI groupKey for this DB category slug
+                                categorySlugToAIGroupKey.set(product.category.slug, categorySlug);
                                 selectedProductsEnriched.push({
                                     productId: product.id,
-                                    quantity: 1,
+                                    quantity: (() => {
+                                        // 1. Get AI Quantity
+                                        let qty = pItem.quantity || 1;
+
+                                        // 2. Battery Safety Override
+                                        if ((product.category.slug === 'batterie' || product.category.slug === 'batterien') && preCalculatedRequirements?.battery?.recommendedCapacityAh) {
+                                            try {
+                                                const specs: any = typeof product.specs === 'string' ? JSON.parse(product.specs) : product.specs;
+                                                const cap = specs?.capacityAh || specs?.capacity;
+                                                if (cap && cap > 0) {
+                                                    const needed = Math.ceil(preCalculatedRequirements.battery.recommendedCapacityAh / cap);
+                                                    if (needed > 0 && needed !== qty) {
+                                                        console.log(`[Battery Qty Override] Product: ${product.name}`);
+                                                        console.log(`  - AI suggested: ${qty}x`);
+                                                        console.log(`  - Calculated: ${needed}x (${preCalculatedRequirements.battery.recommendedCapacityAh}Ah ÷ ${cap}Ah)`);
+                                                        console.log(`  - Using calculated value: ${needed}x`);
+                                                        qty = needed;
+                                                    } else if (needed === qty) {
+                                                        console.log(`[Battery Qty Check] Product: ${product.name} - AI and calculated agree: ${qty}x`);
+                                                    }
+                                                }
+                                            } catch (e) {
+                                                console.error("[Battery Qty Override] Error parsing battery specs:", e);
+                                            }
+                                        }
+
+                                        // 3. Solar Module Safety Override (AI often confuses roof dimensions with quantity!)
+                                        if (product.category.slug === 'solarmodule' && preCalculatedRequirements?.solarModules?.requiredWp) {
+                                            try {
+                                                const specs: any = typeof product.specs === 'string' ? JSON.parse(product.specs) : product.specs;
+                                                const moduleWp = specs?.maxPowerWp || specs?.powerWp || specs?.peakPowerWp;
+                                                if (moduleWp && moduleWp > 0) {
+                                                    const needed = Math.ceil(preCalculatedRequirements.solarModules.requiredWp / moduleWp);
+
+                                                    // Sanity check: If AI suggests absurd quantity (>50), definitely override
+                                                    // If AI suggests reasonable quantity but different from calculated, log and validate
+                                                    if (qty > 50) {
+                                                        console.warn(`[Solar Qty Override - CRITICAL] Product: ${product.name}`);
+                                                        console.warn(`  - AI suggested ABSURD quantity: ${qty}x (likely confused with roof dimensions!)`);
+                                                        console.warn(`  - Calculated: ${needed}x (${preCalculatedRequirements.solarModules.requiredWp}Wp ÷ ${moduleWp}Wp)`);
+                                                        console.warn(`  - FORCING calculated value: ${needed}x`);
+                                                        qty = needed;
+                                                    } else if (needed > 0 && needed !== qty) {
+                                                        console.log(`[Solar Qty Override] Product: ${product.name}`);
+                                                        console.log(`  - AI suggested: ${qty}x`);
+                                                        console.log(`  - Calculated: ${needed}x (${preCalculatedRequirements.solarModules.requiredWp}Wp ÷ ${moduleWp}Wp)`);
+                                                        console.log(`  - Using calculated value: ${needed}x`);
+                                                        qty = needed;
+                                                    } else if (needed === qty) {
+                                                        console.log(`[Solar Qty Check] Product: ${product.name} - AI and calculated agree: ${qty}x`);
+                                                    }
+                                                }
+                                            } catch (e) {
+                                                console.error("[Solar Qty Override] Error parsing solar module specs:", e);
+                                            }
+                                        }
+
+                                        return qty;
+                                    })(),
                                     reason: pItem.reason || "Basierend auf deinen Anforderungen ausgewählt.",
                                     isRecommended: !!pItem.isRecommended, // Catch the flag
                                     name: product.name,
                                     affiliateUrl: appendAmazonTag(product.affiliateUrl || "", amazonPartnerTag),
                                     imageUrl: product.imageUrl,
                                     price: product.price,
-                                    category: product.category.slug
+                                    category: product.category.slug,
+                                    groupKey: categorySlug // Store the AI-provided group key (e.g. "Solar-Laderegler (Dach)")
                                 });
                             }
                         }
@@ -199,12 +284,66 @@ export async function POST(
             }
         }
 
-        // --- 4. Check for Missing Categories ---
+        // --- 4. Inject Alternative Products from Preselection ---
+        // For each category in our preselection, add top candidates that are NOT already recommended
+        if (preCalculatedRequirements && preCalculatedRequirements.systemVoltage) {
+            const preselection = preselectProducts(
+                compatibleProducts,
+                preCalculatedRequirements,
+                formData,
+                minScoreThreshold
+            );
+
+            const alreadySelectedIds = new Set(selectedProductsEnriched.map((p: any) => p.productId));
+
+            for (const category of preselection.categories) {
+                // Get the AI groupKey that was used for this category (fallback to categoryName)
+                const aiGroupKey = categorySlugToAIGroupKey.get(category.categorySlug) || category.categoryName;
+
+                // Check if there are already recommended products in this category
+                const hasRecommendedInCategory = selectedProductsEnriched.some(
+                    (p: any) => p.category === category.categorySlug && p.isRecommended
+                );
+
+                // Find candidates that are not already selected
+                const alternatives = category.candidates
+                    .filter(c => !alreadySelectedIds.has(c.product.id))
+                    .slice(0, 1); // Max 1 alternative per category
+
+                for (const alt of alternatives) {
+                    const product = allProducts.find(p => p.id === alt.product.id);
+                    if (product) {
+                        // If no recommended product exists in this category, mark this as recommended
+                        const isRecommended = !hasRecommendedInCategory;
+
+                        // Use calculated quantity from preselection, default to 1 if not available
+                        const quantity = alt.quantity || 1;
+
+                        selectedProductsEnriched.push({
+                            productId: product.id,
+                            quantity: quantity,
+                            reason: alt.matchReason, // Use matchReason directly without score prefix
+                            isRecommended: isRecommended,
+                            isOptional: false, // NOT optional, should appear in main group
+                            name: product.name,
+                            affiliateUrl: appendAmazonTag(product.affiliateUrl || "", amazonPartnerTag),
+                            imageUrl: product.imageUrl,
+                            price: product.price,
+                            category: product.category.slug,
+                            groupKey: aiGroupKey // Use the same groupKey as AI recommendations
+                        });
+                        alreadySelectedIds.add(product.id); // Prevent duplicates
+                    }
+                }
+            }
+        }
+
+        // --- 5. Check for Missing Categories ---
         const warnings: string[] = [];
         const requiredCategories = new Map<string, string>(); // slug -> display name
 
         // Always require Battery (core component)
-        requiredCategories.set("batterie", "Batterie");
+        requiredCategories.set("batterien", "Batterie");
 
         // Solar
         if (formData.energySources?.includes("solar")) {
@@ -219,7 +358,7 @@ export async function POST(
 
         // Shore Power / Charger
         if (formData.energySources?.includes("shore_power")) {
-            requiredCategories.set("ladegeraet", "Ladegerät (Landstrom)");
+            requiredCategories.set("batterieladegeraete", "Ladegerät (Landstrom)");
         }
 
         // Inverter (if 230V consumers exist)

@@ -27,6 +27,13 @@ interface SolarDimensions {
     width: number;
 }
 
+interface RoofArea {
+    id: string;
+    name: string;
+    length: number;
+    width: number;
+}
+
 interface SolarBag {
     id: string;
     power: number;
@@ -55,6 +62,7 @@ interface FormData {
     autarchyDays: number;
     solarSetupType: string;
     solarDimensions: SolarDimensions | null;
+    roofAreas?: RoofArea[];
     roofModuleType: string;
     solarModulePreference: string | null;
     solarBags: SolarBag[];
@@ -70,6 +78,10 @@ interface FormData {
     // Brand Preferences
     brandPreferenceCharger?: string | null;
     brandPreferenceBattery?: string | null;
+    // Custom User Overrides
+    customBatteryCapacity?: number | null;
+    // Algorithm calculated values
+    recommendedCapacityAh?: number | null;
 }
 
 // Translation maps for German text output
@@ -184,12 +196,32 @@ export function formatFormDataForAI(data: FormData): string {
 
     // --- Section 1: Vehicle & Basic Setup ---
     sections.push('## FAHRZEUG & GRUNDEINSTELLUNG');
-    sections.push(`Fahrzeugtyp: ${VEHICLE_TYPES[data.vehicleType || ''] || 'Nicht angegeben'}`);
+    // Only show vehicle type if explicitly set (wizard no longer asks for it)
+    if (data.vehicleType) {
+        sections.push(`Fahrzeugtyp: ${VEHICLE_TYPES[data.vehicleType] || data.vehicleType}`);
+    }
     sections.push(`Fahrzeugspannung (Starterbatterie): ${data.vehicleVoltage || '12V'}`);
     sections.push(`Systemspannung (Aufbau): ${data.systemVoltage}`);
     sections.push(`Batterietyp-Präferenz: ${BATTERY_TYPES[data.batteryPreference] || 'Keine Angabe'}`);
+
+    // Recommended battery capacity from algorithm
+    if (data.recommendedCapacityAh) {
+        sections.push(`Empfohlene Batteriekapazität: ${data.recommendedCapacityAh} Ah`);
+    }
+
     if (data.batterySpaceSize) {
         sections.push(`Batterie-Einbauraum: ${BATTERY_SPACE_SIZES[data.batterySpaceSize] || data.batterySpaceSize}`);
+    }
+    // Custom User Override: Battery Capacity
+    if (data.customBatteryCapacity) {
+        sections.push(`\n**⚠️ NUTZER-VORGABE Batteriekapazität:** ${data.customBatteryCapacity} Ah`);
+        sections.push(`→ Der Nutzer hat EXPLIZIT ${data.customBatteryCapacity}Ah als gewünschte Kapazität angegeben!`);
+        sections.push(`→ Wähle eine Batterie mit MINDESTENS dieser Kapazität!`);
+        sections.push(`→ **FALLS KEINE EINZELNE BATTERIE MIT DIESER KAPAZITÄT VERFÜGBAR IST:**`);
+        sections.push(`  - Wähle die größte verfügbare Batterie und empfehle MEHRERE STÜCK (Parallelschaltung)`);
+        sections.push(`  - Beispiel: Benötigt ${data.customBatteryCapacity}Ah, größte verfügbar 200Ah → empfehle "2x 200Ah Batterie"`);
+        sections.push(`  - Setze quantity entsprechend (z.B. quantity: 2 für zwei parallele Batterien)`);
+        sections.push(`  - Erkläre im reason-Feld, warum mehrere Batterien empfohlen werden`);
     }
 
     // --- Section 2: Energy Sources ---
@@ -270,9 +302,48 @@ export function formatFormDataForAI(data: FormData): string {
         sections.push('\n## SOLAR-KONFIGURATION');
         sections.push(`Setup-Typ: ${SOLAR_SETUP_TYPES[data.solarSetupType] || data.solarSetupType}`);
 
-        if (data.solarDimensions) {
-            const area = (data.solarDimensions.length * data.solarDimensions.width) / 10000;
-            sections.push(`Verfügbare Dachfläche: ${data.solarDimensions.length}cm × ${data.solarDimensions.width}cm (${area.toFixed(2)}m²)`);
+        // Use roofAreas if available, otherwise fallback to legacy solarDimensions
+        if (data.roofAreas && data.roofAreas.length > 0) {
+            let totalAreaM2 = 0;
+            const dimensionsList: string[] = [];
+
+            data.roofAreas.forEach(area => {
+                const areaM2 = (area.length * area.width) / 10000;
+                totalAreaM2 += areaM2;
+                sections.push(`Verfügbare Dachfläche (${area.name}): ${area.length}cm × ${area.width}cm (${areaM2.toFixed(2)}m²)`);
+                dimensionsList.push(`${area.length}cm × ${area.width}cm`);
+            });
+
+            // Add explicit dimension constraints for AI
+            sections.push(`\n**⚠️ SOLARMODUL-AUSWAHL (KRITISCH - DIMENSIONSPRÜFUNG):**`);
+            sections.push(`→ Die **maximalen Modulabmessungen** sind definiert durch die einzelnen Flächen:`);
+            data.roofAreas.forEach((area) => {
+                sections.push(`  - Fläche "${area.name}": max. ${area.length}cm × ${area.width}cm`);
+            });
+            sections.push(`→ BEVOR du ein Solarmodul empfiehlst, prüfe IMMER, ob es auf MINDESTENS EINE der Flächen passt.`);
+            sections.push(`→ Nur Module empfehlen, die PHYSISCH auf die jeweilige Fläche passen.`);
+            sections.push(`→ **MEHRERE MODULE:** Du kannst mehrere Module auf verschiedene Flächen verteilen.`);
+            sections.push(`→ **KRITISCH - IDENTISCHE MODULE:** An einem Solar-Laderegler dürfen NUR identische Module angeschlossen werden!`);
+            sections.push(`   - Wenn du 2 verschiedene Modultypen empfiehlst, brauchst du auch 2 separate Laderegler!`);
+            sections.push(`   - Beispiel: 2x 200Wp gleiche Module → 1 Laderegler OK`);
+            sections.push(`   - Beispiel: 1x 400Wp + 1x 200Wp verschiedene → 2 separate Laderegler nötig!`);
+        } else if (data.solarDimensions) {
+            const roofLength = data.solarDimensions.length;
+            const roofWidth = data.solarDimensions.width;
+            const area = (roofLength * roofWidth) / 10000;
+            sections.push(`Verfügbare Dachfläche: ${roofLength}cm × ${roofWidth}cm (${area.toFixed(2)}m²)`);
+
+            // Add explicit dimension constraints for AI
+            sections.push(`\n**⚠️ SOLARMODUL-AUSWAHL (KRITISCH - DIMENSIONSPRÜFUNG):**`);
+            sections.push(`→ Die **maximalen Modulabmessungen** sind: ${roofLength}cm × ${roofWidth}cm`);
+            sections.push(`→ BEVOR du ein Solarmodul empfiehlst, prüfe IMMER dessen Abmessungen!`);
+            sections.push(`→ Nur Module empfehlen, die PHYSISCH auf das Dach passen.`);
+            sections.push(`→ Wähle das Modul, das die Dachfläche OPTIMAL ausnutzt (höchste Wp bei passenden Maßen).`);
+            sections.push(`→ **MEHRERE MODULE:** Nur wenn sie ZUSAMMEN auf die Fläche passen.`);
+            sections.push(`   Beispiel: 2x Module (je 100cm × 50cm) = 100cm × 100cm → passt auf 200cm × 100cm`);
+            sections.push(`   Beispiel: 2x Module (je 160cm × 80cm) = 160cm × 160cm → passt NICHT auf 200cm × 100cm!`);
+            sections.push(`→ **KRITISCH - IDENTISCHE MODULE:** An einem Solar-Laderegler dürfen NUR identische Module angeschlossen werden!`);
+            sections.push(`   - Wenn du 2 verschiedene Modultypen empfiehlst, brauchst du auch 2 separate Laderegler!`);
         }
 
         sections.push(`Modultyp Präferenz: ${ROOF_MODULE_TYPES[data.roofModuleType] || data.roofModuleType}`);
@@ -346,7 +417,7 @@ export function formatFormDataForAI(data: FormData): string {
         }
 
         if (type === 'portable' || type === 'mixed') {
-            mustHave.push('Faltbare Solartaschen (category: faltbare_solartaschen)');
+            mustHave.push('Faltbare Solartaschen (category: solartaschen)');
             // Usually portable panels have integrated controllers, but if separate:
             if (type === 'portable') {
                 mustHave.push('Solar-Laderegler (category: solar_controller)');
@@ -458,6 +529,20 @@ export function formatFormDataForAI(data: FormData): string {
         sections.push('  - Setze für BEIDE `isRecommended: true`.');
     }
 
+    // SOLARMODUL-REGELN (Neu)
+    if (data.energySources.includes('solar') && (data.solarSetupType === 'roof' || data.solarSetupType === 'mixed')) {
+        sections.push('- **SOLARMODUL-AUSWAHL (KRITISCH):**');
+        sections.push('  - **STRATEGIE:** Wähle IMMER identische Module wenn möglich! (z.B. 2x das gleiche Modul).');
+        sections.push('  - **VERMEIDE:** Mische NIEMALS verschiedene Modultypen an einem Regler!');
+        sections.push('  - **ANZAHL-LOGIK:**');
+        sections.push('    - **BEST PRACTICE:** Nimm 2x (oder mehr) vom SELBEN Modul, um auf die Leistung zu kommen.');
+        sections.push('      → Dann reicht **1** passender großer Laderegler.');
+        sections.push('    - **NOTLÖSUNG:** Wenn du verschiedene Module mischst (z.B. 1x groß, 1x klein), MUSST du für JEDES Modul einen EIGENEN Laderegler empfehlen!');
+        sections.push('  - **BEISPIEL PERFEKT:** 2x 500W (identisch) + 1x Solarregler (passend für 1000W)');
+        sections.push('  - **BEISPIEL PERFEKT:** 2x 460W (identisch) + 1x Solarregler (passend für 920W)');
+        sections.push('  - **BEISPIEL KOMPLEX (VERMEIDEN):** 1x 500W + 1x 460W → Braucht 2 separate Regler! (Teuer & Kompliziert)');
+    }
+
     // 2. SPANNUNGS-REGELN
     sections.push(`\n**2. SPANNUNGS-REGELN (${data.systemVoltage} System):**`);
     sections.push(`- Das Bordnetz ist strikt **${data.systemVoltage}**.`);
@@ -518,7 +603,12 @@ export function formatFormDataForAI(data: FormData): string {
 export function formatFormDataCompact(data: FormData): string {
     const parts: string[] = [];
 
-    parts.push(`Fahrzeug: ${VEHICLE_TYPES[data.vehicleType || ''] || 'Unbekannt'}, ${data.systemVoltage}`);
+    // Only include vehicle type in compact summary if explicitly set
+    if (data.vehicleType && VEHICLE_TYPES[data.vehicleType]) {
+        parts.push(`Fahrzeug: ${VEHICLE_TYPES[data.vehicleType]}, ${data.systemVoltage}V`);
+    } else {
+        parts.push(`System: ${data.systemVoltage}V`);
+    }
     parts.push(`Batterie: ${BATTERY_TYPES[data.batteryPreference] || 'Keine Präferenz'}`);
     parts.push(`Energiequellen: ${data.energySources.map(s => ENERGY_SOURCES[s] || s).join(', ') || 'Keine'}`);
 
@@ -596,6 +686,7 @@ export interface SystemRequirementsForAI {
     dailyWh: number;
     battery: {
         minCapacityAh: number;
+        recommendedCapacityAh?: number; // New field
         maxCapacityAh: number;
         type: string;
         voltage: number;
@@ -605,6 +696,8 @@ export interface SystemRequirementsForAI {
         needed: boolean;
     } | null;
     booster?: {
+        inputCurrentA: number;
+        outputCurrentA: number;
         currentA: number;
         inputVoltage: number;
         outputVoltage: number;
@@ -650,11 +743,43 @@ export function formatSystemRequirementsForAI(requirements: SystemRequirementsFo
 
     // Battery
     sections.push('### Batterie');
-    sections.push(`- **Minimale Kapazität:** ${requirements.battery.minCapacityAh} Ah`);
-    sections.push(`- **Maximale Kapazität (Platz):** ${requirements.battery.maxCapacityAh} Ah`);
-    sections.push(`- **Typ:** ${requirements.battery.type.toUpperCase()}`);
-    sections.push(`- **Systemspannung:** ${requirements.battery.voltage}V`);
-    sections.push(`→ Wähle eine ${requirements.battery.type.toUpperCase()}-Batterie mit mindestens ${requirements.battery.minCapacityAh}Ah!`);
+    sections.push(`- **Minimale Kapazität (Schlechtwetter):** ${requirements.battery.minCapacityAh} Ah`);
+
+    // Add recommended capacity visual
+    if (requirements.battery.recommendedCapacityAh) {
+        sections.push(`- **Empfohlene Kapazität (Optimal):** ${requirements.battery.recommendedCapacityAh} Ah`);
+        sections.push(`- **Maximale Kapazität (Platzlimit):** ${requirements.battery.maxCapacityAh} Ah`);
+        sections.push(`- **Typ:** ${requirements.battery.type.toUpperCase()}`);
+        sections.push(`- **Systemspannung:** ${requirements.battery.voltage}V`);
+
+        sections.push(`→ **ZIEL:** Wähle eine ${requirements.battery.type.toUpperCase()}-Batterie mit **${requirements.battery.recommendedCapacityAh}Ah**!`);
+        sections.push(``);
+        sections.push(`→ **🚨 KRITISCHE PRÄFERENZ - EINZELBATTERIE VORRANG 🚨**`);
+        sections.push(`   **IMMER wenn verfügbar: Wähle EINE große Batterie statt mehrerer kleiner!**`);
+        sections.push(`   ✅ RICHTIG: 1x 200Ah Batterie für ${requirements.battery.recommendedCapacityAh}Ah-Bedarf`);
+        sections.push(`   ❌ FALSCH: 2x 100Ah Batterien (nur als NOTLÖSUNG wenn keine große verfügbar!)`);
+        sections.push(``);
+        sections.push(`→ **WARUM EINZELBATTERIE?**`);
+        sections.push(`   - Weniger Verkabelung & Platz`);
+        sections.push(`   - Geringere Fehleranfälligkeit`);
+        sections.push(`   - Einfachere Installation`);
+        sections.push(`   - Besseres Preis-Leistungs-Verhältnis`);
+        sections.push(``);
+        sections.push(`→ **AUSWAHLSTRATEGIE:**`);
+        sections.push(`   1. ERSTE WAHL: Einzelbatterie mit ≥ ${requirements.battery.recommendedCapacityAh}Ah (z.B. 200Ah, 280Ah)`);
+        sections.push(`   2. ZWEITE WAHL: Nächstgrößere Einzelbatterie (auch wenn 50-100% größer)`);
+        sections.push(`   3. LETZTE WAHL: Mehrere Batterien NUR wenn absolut keine passende Einzelbatterie ≥ ${requirements.battery.minCapacityAh}Ah existiert`);
+        sections.push(``);
+        sections.push(`→ **WICHTIG:** Prüfe die Produktliste GRÜNDLICH nach großen Einzelbatterien bevor du mehrere empfiehlst!`);
+    } else {
+        // Fallback (legacy)
+        sections.push(`- **Maximale Kapazität (Platz):** ${requirements.battery.maxCapacityAh} Ah`);
+        sections.push(`- **Typ:** ${requirements.battery.type.toUpperCase()}`);
+        sections.push(`- **Systemspannung:** ${requirements.battery.voltage}V`);
+        sections.push(`→ Wähle eine ${requirements.battery.type.toUpperCase()}-Batterie mit mindestens ${requirements.battery.minCapacityAh}Ah!`);
+        sections.push(`→ **FALLS keine Batterie ≥ ${requirements.battery.minCapacityAh}Ah verfügbar:** Empfehle MEHRERE kleinere Batterien in Parallelschaltung!`);
+    }
+
     sections.push('');
 
     // Inverter
@@ -669,13 +794,13 @@ export function formatSystemRequirementsForAI(requirements: SystemRequirementsFo
     // Booster
     if (requirements.booster) {
         sections.push('### Ladebooster (B2B)');
-        sections.push(`- **Ladestrom:** ${requirements.booster.currentA}A`);
-        sections.push(`- **Eingang:** ${requirements.booster.inputVoltage}V (Fahrzeugbordnetz)`);
-        sections.push(`- **Ausgang:** ${requirements.booster.outputVoltage}V (Versorgerbatterie)`);
+        sections.push(`- **Eingang (von Lichtmaschine):** ${requirements.booster.inputVoltage}V / ${Math.round(requirements.booster.inputCurrentA)}A`);
+        sections.push(`- **Ausgang (zu Batterie):** ${requirements.booster.outputVoltage}V / ${Math.round(requirements.booster.outputCurrentA)}A`);
         if (requirements.booster.needsConversion) {
             sections.push(`→ **ACHTUNG:** Spannungswandlung erforderlich (${requirements.booster.inputVoltage}V → ${requirements.booster.outputVoltage}V)!`);
         }
-        sections.push(`→ Wähle einen Ladebooster mit ${requirements.booster.currentA}A!`);
+        sections.push(`→ Wähle einen Ladebooster mit **${Math.round(requirements.booster.outputCurrentA)}A Ausgangsstrom** bei ${requirements.booster.inputVoltage}V→${requirements.booster.outputVoltage}V!`);
+        sections.push(`→ **PRODUKTBEZEICHNUNG:** Achte auf die Output-Angabe, z.B. "Orion-Tr Smart ${requirements.booster.inputVoltage}/${requirements.booster.outputVoltage}-${Math.round(requirements.booster.outputCurrentA)}A"`);
         sections.push('');
     }
 

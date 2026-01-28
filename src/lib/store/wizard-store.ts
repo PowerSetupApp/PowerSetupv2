@@ -222,7 +222,7 @@ export const useWizardStore = create<WizardState>()(
             // Solar Defaults
             solarSetupType: 'roof',
             solarDimensions: { length: 200, width: 100 }, // Legacy
-            roofAreas: [{ id: 'default', name: 'main', length: 200, width: 100 }],
+            roofAreas: [{ id: 'main', name: 'main', length: 200, width: 100 }],
             roofModuleType: 'rigid',
             solarModulePreference: null,
             solarBags: [],
@@ -366,7 +366,11 @@ export const useWizardStore = create<WizardState>()(
                 }),
 
             setSolarSetupType: (type) => set({ solarSetupType: type }),
-            setSolarDimensions: (dim) => set({ solarDimensions: dim }),
+            setSolarDimensions: (dim) => set({
+                solarDimensions: dim,
+                // Sync roofAreas mit solarDimensions für Debug-Ansicht und Berechnung
+                roofAreas: [{ id: 'main', name: 'main', length: dim.length, width: dim.width }]
+            }),
             setRoofModuleType: (type) => set({ roofModuleType: type }),
             setSolarModulePreference: (pref) => set({ solarModulePreference: pref }),
 
@@ -379,11 +383,22 @@ export const useWizardStore = create<WizardState>()(
                     width: 80
                 }]
             })),
-            updateRoofArea: (id, updates) => set((state) => ({
-                roofAreas: state.roofAreas.map((area) =>
+            updateRoofArea: (id, updates) => set((state) => {
+                const newRoofAreas = state.roofAreas.map((area) =>
                     area.id === id ? { ...area, ...updates } : area
-                )
-            })),
+                );
+
+                // Also sync solarDimensions with the first/main roof area for backward compatibility
+                const mainArea = newRoofAreas.find(a => a.id === id) || newRoofAreas[0];
+                const newSolarDimensions = mainArea
+                    ? { length: mainArea.length, width: mainArea.width }
+                    : state.solarDimensions;
+
+                return {
+                    roofAreas: newRoofAreas,
+                    solarDimensions: newSolarDimensions
+                };
+            }),
             removeRoofArea: (id) => set((state) => ({
                 roofAreas: state.roofAreas.filter((area) => area.id !== id)
             })),
@@ -467,10 +482,10 @@ export const useWizardStore = create<WizardState>()(
         }),
         {
             name: 'wizard-storage',
-            version: 1,
+            version: 2,
             migrate: (persistedState: any, version: number) => {
+                // Migration v0 → v2: Remove legacy consumers
                 if (version === 0 || version === undefined) {
-                    // Migration: Remove legacy consumers causing issues
                     const legacyNames = [
                         "Kühlbox (Kompressor)",
                         "Kühlschrank (Absorber)",
@@ -483,6 +498,35 @@ export const useWizardStore = create<WizardState>()(
                         );
                     }
                 }
+
+                // Migration v1 → v2: Sync roofAreas with solarDimensions
+                // This fixes the issue where roofAreas was stuck at default 200x100
+                // while solarDimensions had the user's actual values
+                if (version <= 1) {
+                    if (persistedState) {
+                        const solarDim = persistedState.solarDimensions;
+                        const roofAreas = persistedState.roofAreas;
+
+                        // If solarDimensions exists and is different from default
+                        if (solarDim && (solarDim.length !== 200 || solarDim.width !== 100)) {
+                            // Update roofAreas to match solarDimensions
+                            persistedState.roofAreas = [{
+                                id: 'main',
+                                name: 'main',
+                                length: solarDim.length,
+                                width: solarDim.width
+                            }];
+                        }
+                        // Also fix if roofAreas has old 'default' id
+                        else if (roofAreas && roofAreas.length > 0 && roofAreas[0].id === 'default') {
+                            persistedState.roofAreas = roofAreas.map((area: any) => ({
+                                ...area,
+                                id: area.id === 'default' ? 'main' : area.id
+                            }));
+                        }
+                    }
+                }
+
                 return persistedState;
             },
         }

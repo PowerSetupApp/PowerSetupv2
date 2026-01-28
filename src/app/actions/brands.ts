@@ -49,7 +49,7 @@ export async function getActiveBrands(requestType: 'CHARGER' | 'BATTERY' | 'SOLA
     }
 }
 
-export async function createBrand(name: string, types: string[], showInPreferences: boolean = true) {
+export async function createBrand(name: string, types: string[], showInPreferences: boolean = false) {
     try {
         // For legacy compatibility, set 'type' to the first type or 'BOTH' if multiple
         let legacyType: BrandType = 'BOTH';

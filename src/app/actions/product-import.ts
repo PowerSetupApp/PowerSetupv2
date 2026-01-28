@@ -174,6 +174,38 @@ export async function importProductFromAmazon(
             }
         }
 
+        // Map extracted data to dynamic filterValues
+        const filterValues: Record<string, any> = {};
+
+        // Brand
+        if (brandId) filterValues['brand'] = brandId;
+
+        // Common mappings
+        if (extractedData.voltageV) filterValues['voltageV'] = extractedData.voltageV;
+        if (extractedData.capacityAh) filterValues['capacityAh'] = extractedData.capacityAh;
+        if (extractedData.batteryType) filterValues['batteryType'] = extractedData.batteryType;
+        if (extractedData.powerW) {
+            // Check category slug for power mapping ambiguity
+            if (category.slug.includes('solar')) filterValues['maxPowerWp'] = extractedData.powerW; // Usually solarWp, but fallback
+            else filterValues['maxPowerWp'] = extractedData.powerW; // Inverters
+        }
+        if (extractedData.solarWp) filterValues['maxPowerWp'] = extractedData.solarWp;
+
+        // Ladebooster & Chargers
+        if (extractedData.currentA) filterValues['maxChargeCurrent'] = extractedData.currentA; // "Ladestrom"
+
+        // Specific Ladebooster/DC-DC fields (extracted by product-extractor but not in PRODUCT schema cols)
+        // We need to cast extractedData to any or extend the interface to access these if they exist in the extractor return
+        const extendedData = extractedData as any;
+        if (extendedData.inputVolts) filterValues['inputVoltage'] = extendedData.inputVolts; // Array or value
+        if (extendedData.outputVolts) filterValues['outputVoltage'] = extendedData.outputVolts; // Array or value
+
+        // Dimensions/Weight if available
+        if (extendedData.dimensions?.length) filterValues['length'] = extendedData.dimensions.length;
+        if (extendedData.dimensions?.width) filterValues['width'] = extendedData.dimensions.width;
+        if (extendedData.dimensions?.height) filterValues['height'] = extendedData.dimensions.height;
+        if (extendedData.weight) filterValues['weight'] = extendedData.weight;
+
         // 7. Create product (active by default)
         const newProduct = await prisma.product.create({
             data: {
@@ -199,6 +231,8 @@ export async function importProductFromAmazon(
                 waveform: extractedData.waveform,
                 fuseType: extractedData.fuseType,
                 brandId: brandId,
+                // NEW: Save dynamic filters
+                filterValues: filterValues,
             },
         });
 

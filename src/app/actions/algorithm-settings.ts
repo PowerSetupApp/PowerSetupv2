@@ -87,6 +87,9 @@ export interface AlgorithmSettingsData {
 
     // Copper
     copperResistivity: number;
+
+    // Product Preselection (0-100)
+    minPreselectionScore: number;
 }
 
 // ==========================================

@@ -131,9 +131,25 @@ export const FormDataSchema = z.object({
     // Step 6: Solar
     solarSetupType: SolarSetupTypeSchema.default('roof'),
     solarDimensions: SolarDimensionsSchema.nullable().default(null),
+    // New: Multiple roof areas support
+    roofAreas: z.array(z.object({
+        id: z.string(),
+        name: z.string(),
+        length: z.number(),
+        width: z.number(),
+    })).optional().default([]),
     roofModuleType: RoofModuleTypeSchema.default('rigid'),
     solarModulePreference: SolarModulePreferenceSchema.default(null),
     solarBags: z.array(SolarBagSchema).default([]),
+
+    // Vehicle voltage (starter battery)
+    vehicleVoltage: z.union([z.literal(12), z.literal(24)]).default(12),
+
+    // Simultaneous load factor
+    simultaneousLoad: z.enum(['low', 'moderate', 'high']).default('moderate'),
+
+    // Shore charging speed
+    shoreChargingSpeed: z.enum(['slow', 'normal', 'fast']).default('normal'),
 
     // Step 7: Cabling
     cableLengths: CableLengthsSchema.default({

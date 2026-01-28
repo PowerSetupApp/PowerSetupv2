@@ -44,6 +44,11 @@ export interface InverterRequirement {
 
 export interface BoosterRequirement {
     needed: boolean;
+    /** Input current from alternator (A) */
+    inputCurrentA: number;
+    /** Output current to service battery (A) */
+    outputCurrentA: number;
+    /** @deprecated Use outputCurrentA instead */
     currentA: number;
     originalCurrentA?: number;
     inputVoltage: number;
@@ -170,6 +175,8 @@ export function convertToSystemRequirements(
 
         booster: output.booster.needed ? {
             needed: output.booster.needed,
+            inputCurrentA: output.booster.inputCurrentA,
+            outputCurrentA: output.booster.outputCurrentA,
             currentA: output.booster.currentA,
             originalCurrentA: output.booster.originalCurrentA,
             inputVoltage: output.booster.inputVoltage,

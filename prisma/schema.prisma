@@ -288,14 +288,14 @@ model AlgorithmSettings {
   id                    String   @id @default("default")
   
   // Depth of Discharge (DoD) - Entladetiefe
-  dodLifepo4            Float    @default(0.9)
+  dodLifepo4            Float    @default(0.95)
   dodAgm                Float    @default(0.5)
   dodGel                Float    @default(0.5)
   
   // Gleichzeitigkeitsfaktor
   simultaneousLow       Float    @default(0.3)
   simultaneousModerate  Float    @default(0.5)
-  simultaneousHigh      Float    @default(0.7)
+  simultaneousHigh      Float    @default(0.8)
   
   // Ladebooster-Strom (Ampere) basierend auf Lichtmaschinentyp
   alternatorStandard    Int      @default(30)   // 90-120A LiMa
@@ -309,27 +309,27 @@ model AlgorithmSettings {
   batterySpacious       Int      @default(400)  // oder 2x200Ah
   
   // Batterie-Sicherheitspuffer (Multiplikator auf berechnete Kapazität)
-  batterySafetyFactor   Float    @default(1.3)  // 1.3 = 30% Puffer
+  batterySafetyFactor   Float    @default(1.2)  // 1.2 = 20% Puffer (aus constants.ts)
   
   // Solar-Regler Sicherheitspuffer (Multiplikator auf Wp/V)
   solarSafetyFactor     Float    @default(1.1)  // 1.1 = 10% Puffer (User Request)
   
   // Standzeit-Definitionen (in Tagen)
-  standingDaysShort     Int      @default(3)
-  standingDaysMedium    Int      @default(7)
-  standingDaysLong      Int      @default(14)
+  standingDaysShort     Int      @default(2)   // aus STANDING_DAYS_MAP.short
+  standingDaysMedium    Int      @default(5)   // aus STANDING_DAYS_MAP.medium
+  standingDaysLong      Int      @default(8)   // aus STANDING_DAYS_MAP.long
   
   // Backup-Limit (Max. Autarkie ohne Solar/LiMa)
-  maxBackupDays         Int      @default(4)
+  maxBackupDays         Int      @default(5)   // aus MAX_BACKUP_DAYS
   
   // Solar Wp pro m²
-  wpPerM2Rigid          Int      @default(180)
-  wpPerM2Flexible       Int      @default(160)
-  cloudyYieldFactor     Float    @default(0.2) // Anteil des Ertrags bei Bewölkung (0.0 - 1.0)
+  wpPerM2Rigid          Int      @default(235)  // aus WP_PER_M2_RIGID
+  wpPerM2Flexible       Int      @default(180)  // aus WP_PER_M2_FLEXIBLE
+  cloudyYieldFactor     Float    @default(0.3)  // aus CLOUDY_YIELD_FACTOR
   recommendedSolarYieldFactor Float @default(0.7) // Anteil des Ertrags für die "Empfohlene" Berechnung (0.0 - 1.0)
 
   // Dach-Auslastung (0.0-1.0): Anteil der Dachfläche, der real nutzbar ist
-  roofUtilizationFactor   Float    @default(0.75)
+  roofUtilizationFactor   Float    @default(0.8)   // aus ROOF_UTILIZATION_FACTOR
 
   // Effizienz-Faktor für fest verbaute Module (nicht ausrichtbar)
   roofOrientationFactor   Float    @default(0.85)
@@ -349,8 +349,8 @@ model AlgorithmSettings {
   locationVaries        Float    @default(1.0)
   
   // Kühlgeräte Duty Cycle
-  dutyCycleCompressor   Float    @default(0.3)
-  dutyCycleAbsorber     Float    @default(0.5)
+  dutyCycleCompressor   Float    @default(0.35)  // aus DUTY_CYCLE_COMPRESSOR
+  dutyCycleAbsorber     Float    @default(0.7)   // aus DUTY_CYCLE_ABSORBER
   
   // Inverter-Klassen (W)
   inverterClasses       String   @default("500,800,1000,1500,2000,2500,3000,5000")
@@ -359,9 +359,9 @@ model AlgorithmSettings {
   chargerClasses        String   @default("10,20,30,50,60")
   
   // Landstrom-Ladezeit (Zielzeit in Stunden pro Ladegerät-Kategorie)
-  chargerTimeHoursSlow   Float    @default(8.0)
-  chargerTimeHoursNormal Float    @default(5.0)
-  chargerTimeHoursFast   Float    @default(3.0)
+  chargerTimeHoursSlow   Float    @default(12.0)  // aus CHARGER_TIME_HOURS_SLOW
+  chargerTimeHoursNormal Float    @default(8.0)   // aus CHARGER_TIME_HOURS_NORMAL
+  chargerTimeHoursFast   Float    @default(5.0)   // aus CHARGER_TIME_HOURS_FAST
   
   // Solar-Regler-Klassen (A)
   solarControllerClasses String  @default("10,20,30,40,50,60,80,100")
@@ -376,6 +376,10 @@ model AlgorithmSettings {
   
   // Kupfer-Widerstand
   copperResistivity     Float    @default(0.0178)
+  
+  // Produkt-Vorauswahl Schwellenwert (0-100)
+  // Produkte mit Match-Score unter diesem Wert werden nicht an die KI weitergegeben
+  minPreselectionScore  Int      @default(30)
   
   updatedAt             DateTime @updatedAt
 }

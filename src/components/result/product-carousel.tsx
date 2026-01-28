@@ -13,6 +13,8 @@ interface ProductCarouselProps {
 
 export function ProductCarousel({ products, categoryName }: ProductCarouselProps) {
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [touchStartX, setTouchStartX] = useState<number>(0);
+    const [touchEndX, setTouchEndX] = useState<number>(0);
 
     const nextSlide = () => {
         setCurrentIndex((prev) => (prev + 1) % products.length);
@@ -24,6 +26,27 @@ export function ProductCarousel({ products, categoryName }: ProductCarouselProps
 
     const goToSlide = (index: number) => {
         setCurrentIndex(index);
+    };
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        setTouchStartX(e.touches[0].clientX);
+    };
+
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        setTouchEndX(e.changedTouches[0].clientX);
+
+        const swipeDistance = touchStartX - touchEndX;
+        const minSwipeDistance = 50; // pixels
+
+        if (Math.abs(swipeDistance) > minSwipeDistance) {
+            if (swipeDistance > 0) {
+                // Swiped left - go to next
+                nextSlide();
+            } else {
+                // Swiped right - go to previous
+                prevSlide();
+            }
+        }
     };
 
     // Get current product
@@ -46,7 +69,11 @@ export function ProductCarousel({ products, categoryName }: ProductCarouselProps
     return (
         <div className="relative">
             {/* Carousel Container - Fixed single card view */}
-            <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm relative overflow-hidden">
+            <div
+                className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm relative overflow-hidden"
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+            >
 
                 {/* Single Card Display */}
                 {isMissing ? (
@@ -101,13 +128,32 @@ export function ProductCarousel({ products, categoryName }: ProductCarouselProps
                                         {currentProduct?.name}
                                     </h3>
 
-                                    {/* Amount / Quantity Display */}
-                                    {(currentProduct?.amount || currentProduct?.quantity) && (
-                                        <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-200 text-sm font-bold rounded-md w-fit">
-                                            <span>📦</span>
-                                            <span>{currentProduct.amount || currentProduct.quantity}</span>
-                                        </div>
-                                    )}
+                                    {/* Quantity Display - Enhanced */}
+                                    {(() => {
+                                        const qtyString = currentProduct?.amount || currentProduct?.quantity;
+                                        if (!qtyString) return null;
+
+                                        const match = String(qtyString).match(/(\d+)/);
+                                        const qty = match ? parseInt(match[1]) : 1;
+
+                                        if (qty > 1) {
+                                            // Prominent display for multiple items
+                                            return (
+                                                <div className="mt-3 flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-bold rounded-lg shadow-md w-fit animate-pulse">
+                                                    <span className="text-lg">⚠️</span>
+                                                    <span>Du benötigst {qty} Stück!</span>
+                                                </div>
+                                            );
+                                        }
+
+                                        // Normal display for single item
+                                        return (
+                                            <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-sm rounded-md w-fit">
+                                                <span>📦</span>
+                                                <span>{qtyString}</span>
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
 
 
@@ -165,19 +211,19 @@ export function ProductCarousel({ products, categoryName }: ProductCarouselProps
                     </Card>
                 )}
 
-                {/* Navigation Arrows */}
+                {/* Navigation Arrows - Desktop Only */}
                 {products.length > 1 && (
                     <>
                         <button
                             onClick={prevSlide}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-full p-3 shadow-lg hover:scale-110 transition-transform text-gray-700 dark:text-gray-200"
+                            className="hidden md:block absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-full p-3 shadow-lg hover:scale-110 transition-transform text-gray-700 dark:text-gray-200"
                             aria-label="Vorheriges Produkt"
                         >
                             <ArrowLeft className="w-5 h-5" />
                         </button>
                         <button
                             onClick={nextSlide}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-full p-3 shadow-lg hover:scale-110 transition-transform text-gray-700 dark:text-gray-200"
+                            className="hidden md:block absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-full p-3 shadow-lg hover:scale-110 transition-transform text-gray-700 dark:text-gray-200"
                             aria-label="Nächstes Produkt"
                         >
                             <ArrowRight className="w-5 h-5" />
@@ -186,20 +232,41 @@ export function ProductCarousel({ products, categoryName }: ProductCarouselProps
                 )}
             </div>
 
-            {/* Pagination Dots */}
+            {/* Pagination Dots & Mobile Navigation */}
             {products.length > 1 && (
-                <div className="flex justify-center gap-2 mt-4">
-                    {products.map((_, index) => (
-                        <button
-                            key={index}
-                            onClick={() => goToSlide(index)}
-                            className={`transition-all duration-300 rounded-full ${currentIndex === index
-                                ? 'w-8 h-2 bg-indigo-600 dark:bg-indigo-400'
-                                : 'w-2 h-2 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400'
-                                }`}
-                            aria-label={`Gehe zu Produkt ${index + 1}`}
-                        />
-                    ))}
+                <div className="flex items-center justify-center gap-4 mt-4">
+                    {/* Mobile Previous Button */}
+                    <button
+                        onClick={prevSlide}
+                        className="md:hidden bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-full p-2.5 shadow-md hover:scale-110 transition-transform text-gray-700 dark:text-gray-200"
+                        aria-label="Vorheriges Produkt"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                    </button>
+
+                    {/* Pagination Dots */}
+                    <div className="flex justify-center gap-2">
+                        {products.map((_, index) => (
+                            <button
+                                key={index}
+                                onClick={() => goToSlide(index)}
+                                className={`transition-all duration-300 rounded-full ${currentIndex === index
+                                    ? 'w-8 h-2 bg-indigo-600 dark:bg-indigo-400'
+                                    : 'w-2 h-2 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400'
+                                    }`}
+                                aria-label={`Gehe zu Produkt ${index + 1}`}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Mobile Next Button */}
+                    <button
+                        onClick={nextSlide}
+                        className="md:hidden bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-full p-2.5 shadow-md hover:scale-110 transition-transform text-gray-700 dark:text-gray-200"
+                        aria-label="Nächstes Produkt"
+                    >
+                        <ArrowRight className="w-4 h-4" />
+                    </button>
                 </div>
             )}
 

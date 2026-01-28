@@ -101,8 +101,11 @@ export const SOLAR_CONTROLLER_SAFETY = 1.10;
 // ALTERNATOR / BOOSTER CONSTANTS
 // =============================================================================
 
-/** Default B2B booster current (A) */
+/** Default B2B booster current (A) - Input current from alternator */
 export const DEFAULT_BOOSTER_AMPS = 30;
+
+/** B2B booster efficiency (typically 95%) */
+export const BOOSTER_EFFICIENCY = 0.95;
 
 /** Average driving hours when moving spots */
 export const ALTERNATOR_DRIVE_HOURS = 2.0;

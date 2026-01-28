@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Prisma } from "@prisma/client";
-import { formatFormDataForAI, formatFormDataCompact, formatProductsForAI, type AIProductContext } from "@/lib/format-for-ai";
+import { formatFormDataForAI, formatFormDataCompact, formatProductsForAI, formatSystemRequirementsForAI, type AIProductContext } from "@/lib/format-for-ai";
 
 interface ResultJsonViewerProps {
     resultId: string;
@@ -62,7 +62,39 @@ export default function ResultJsonViewer({
     const formattedText = useMemo(() => {
         if (!formData || typeof formData !== 'object') return 'Keine Daten vorhanden';
         try {
-            return formatFormDataForAI(formData as unknown as Parameters<typeof formatFormDataForAI>[0]);
+            const formDataStr = formatFormDataForAI(formData as unknown as Parameters<typeof formatFormDataForAI>[0]);
+
+            // Append calculated system requirements if available
+            let requirementsStr = '';
+            // We need to check if calculations is valid and has the right shape. 
+            // Since it's Prisma.JsonValue, we treat it carefully.
+            if (calculations && typeof calculations === 'object' && !Array.isArray(calculations)) {
+                // For safety, we can cast it, assuming it matches the SystemRequirementsForAI structure partially or fully.
+                // The adapter outputs 'legacy' SystemRequirements which is different from SystemRequirementsForAI (which seems to be intended for this?)
+
+                // Wait, format-for-ai.ts expects `SystemRequirementsForAI` interface which has `battery.minCapacityAh` etc.
+                // But `calculations` prop in ResultJsonViewer comes from `adapter.ts` -> `SystemRequirements` interface.
+                // We need to map `SystemRequirements` (adapter) to `SystemRequirementsForAI` (format-for-ai).
+                // OR we can just pass it if the keys match enough.
+
+                // Let's look at `SystemRequirementsForAI` in `format-for-ai.ts`:
+                // - dailyWh
+                // - battery: { minCapacityAh, maxCapacityAh, type, voltage }
+
+                // `SystemRequirements` from `adapter.ts`:
+                // - dailyWh
+                // - battery: { minCapacityAh, maxCapacityAh, type, voltage, ... }
+
+                // The keys match! So we can pass `calculations` directly (casted).
+                try {
+                    requirementsStr = formatSystemRequirementsForAI(calculations as any);
+                } catch (reqErr) {
+                    console.error('Error formatting requirements:', reqErr);
+                    requirementsStr = '\n\n(Fehler bei der Systemanforderungs-Formatierung)';
+                }
+            }
+
+            return formDataStr + '\n\n' + requirementsStr;
         } catch (e) {
             console.error('Error formatting for AI:', e);
             return 'Fehler beim Formatieren der Daten';
@@ -177,11 +209,9 @@ export default function ResultJsonViewer({
                         📦 Alle Produkte (Kontext)
                     </Button>
                 )}
-                {fullPrompt && (
-                    <Button variant={viewMode === "full_prompt" ? "default" : "outline"} onClick={() => setViewMode("full_prompt")}>
-                        🔮 Kompletter Prompt
-                    </Button>
-                )}
+                <Button variant={viewMode === "full_prompt" ? "default" : "outline"} onClick={() => setViewMode("full_prompt")}>
+                    🔮 Kompletter Prompt
+                </Button>
                 {selectedProductsContext && (
                     <Button variant={viewMode === "selected_products_context" ? "default" : "outline"} onClick={() => setViewMode("selected_products_context")}>
                         ✨ Vorgeschlagene Produkte
@@ -257,16 +287,22 @@ export default function ResultJsonViewer({
                 </div>
             )}
 
-            {viewMode === "full_prompt" && fullPrompt && (
+            {viewMode === "full_prompt" && (
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
                     <h2 className="text-lg font-semibold p-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
                         🔮 Kompletter Prompt (Vorschau)
                         <span className="text-sm font-normal text-muted-foreground">
-                            (So wird er an die API geschickt)
+                            (KI-Format + Vorgeschlagene Produkte)
                         </span>
                     </h2>
                     <pre className="p-4 overflow-x-auto text-sm font-mono whitespace-pre-wrap bg-gray-50 dark:bg-gray-900 rounded-b-lg">
-                        {fullPrompt}
+                        {`${formattedText}
+
+${"=".repeat(80)}
+VORGESCHLAGENE PRODUKTE (KI-Auswahl):
+${"=".repeat(80)}
+
+${selectedProductsContext || "Keine Produkte vorgeschlagen."}`}
                     </pre>
                 </div>
             )}

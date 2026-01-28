@@ -6,8 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
-import { Trash2, Edit2 } from "lucide-react";
-import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Trash2, Edit2, Search } from "lucide-react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { EditBrandDialog } from "./edit-brand-dialog";
 
@@ -18,6 +19,13 @@ interface BrandListProps {
 export function BrandList({ initialBrands }: BrandListProps) {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
+
+    const filteredBrands = useMemo(() => {
+        if (!searchQuery) return initialBrands;
+        const lower = searchQuery.toLowerCase();
+        return initialBrands.filter(b => b.name.toLowerCase().includes(lower));
+    }, [initialBrands, searchQuery]);
 
     const handleDelete = async (id: string) => {
         if (!confirm("Wirklich löschen?")) return;
@@ -28,52 +36,61 @@ export function BrandList({ initialBrands }: BrandListProps) {
     };
 
     const handleToggleActive = async (brand: Brand) => {
+        // Optimistic update could be done here, but router.refresh is safer for now
         await updateBrand(brand.id, { isActive: !brand.isActive });
+        router.refresh();
+    };
+
+    const handleTogglePreferences = async (brand: Brand) => {
+        await updateBrand(brand.id, { showInPreferences: !brand.showInPreferences });
         router.refresh();
     };
 
     return (
         <Card>
-            <CardHeader>
-                <CardTitle>Alle Marken</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-xl font-bold">Alle Marken</CardTitle>
+                <div className="relative w-64 max-w-sm">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Suchen..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-8"
+                    />
+                </div>
             </CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Im Wizard</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Aktionen</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {initialBrands.length === 0 && (
+            <CardContent className="mt-4">
+                <div className="rounded-md border">
+                    <Table>
+                        <TableHeader>
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                                    Keine Marken definiert.
-                                </TableCell>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Im Wizard</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead className="text-right">Aktionen</TableHead>
                             </TableRow>
-                        )}
-                        {initialBrands.map((brand) => {
-                            // Helper to check types (supporting both new 'types' and legacy 'type')
-                            const hasType = (t: string) =>
-                                brand.types?.includes(t) || brand.type === t || brand.type === 'BOTH';
-
-                            return (
+                        </TableHeader>
+                        <TableBody>
+                            {filteredBrands.length === 0 && (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                                        Keine Marken gefunden.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                            {filteredBrands.map((brand) => (
                                 <TableRow key={brand.id}>
                                     <TableCell className="font-medium">{brand.name}</TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
-                                            {brand.showInPreferences ? (
-                                                <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300">
-                                                    Ja
-                                                </span>
-                                            ) : (
-                                                <span className="text-xs text-muted-foreground">
-                                                    Nein
-                                                </span>
-                                            )}
+                                            <Switch
+                                                checked={brand.showInPreferences}
+                                                onCheckedChange={() => handleTogglePreferences(brand)}
+                                            />
+                                            <span className="text-xs text-muted-foreground">
+                                                {brand.showInPreferences ? 'Ja' : 'Nein'}
+                                            </span>
                                         </div>
                                     </TableCell>
                                     <TableCell>
@@ -102,10 +119,10 @@ export function BrandList({ initialBrands }: BrandListProps) {
                                         </div>
                                     </TableCell>
                                 </TableRow>
-                            );
-                        })}
-                    </TableBody>
-                </Table>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
             </CardContent>
         </Card>
     );

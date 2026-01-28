@@ -23,7 +23,7 @@ export function AddBrandDialog() {
     const [open, setOpen] = useState(false);
     const [name, setName] = useState("");
     const [types, setTypes] = useState<string[]>(["CHARGER", "BATTERY", "SOLAR"]);
-    const [showInPreferences, setShowInPreferences] = useState(true);
+    const [showInPreferences, setShowInPreferences] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const router = useRouter();
 
@@ -35,7 +35,7 @@ export function AddBrandDialog() {
             setOpen(false);
             setName("");
             setTypes(["CHARGER", "BATTERY", "SOLAR"]);
-            setShowInPreferences(true);
+            setShowInPreferences(false);
             router.refresh();
         } catch (error) {
             console.error(error);

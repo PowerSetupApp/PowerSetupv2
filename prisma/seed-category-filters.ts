@@ -1,6 +1,6 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+import 'dotenv/config';
+import { prisma } from '../src/lib/db';
 
 /**
  * Seed Category Filters
@@ -85,6 +85,13 @@ const CATEGORY_FILTERS: Record<string, FilterDef[]> = {
                 "Leitungsschutzschalter (LS)"
             ]
         },
+    ],
+
+    "ladebooster": [
+        { name: "Marke", key: "brand", type: "brand" },
+        { name: "Ladestrom", key: "maxChargeCurrent", type: "number", unit: "A" },
+        { name: "Eingangsspannung", key: "inputVoltage", type: "multiselect", unit: "V", options: ["12V", "24V"] },
+        { name: "Ausgangsspannung", key: "outputVoltage", type: "multiselect", unit: "V", options: ["12V", "24V"] },
     ],
 };
 

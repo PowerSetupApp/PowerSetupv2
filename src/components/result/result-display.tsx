@@ -36,6 +36,21 @@ interface ResultDisplayProps {
     // onGenerate is now internal or optional if we want to override
 }
 
+const CATEGORY_SLUG_MAP: Record<string, string> = {
+    'ladegeraet': 'Ladegerät',
+    'ladebooster': 'Ladebooster',
+    'solartaschen': 'Solartaschen',
+    'solar_controller': 'Solar-Laderegler',
+    'solar_module': 'Solarmodule',
+    'inverter': 'Wechselrichter',
+    'battery': 'Batterie',
+    'charger': 'Ladegerät',
+    'cable': 'Kabel & Montagematerial',
+    'kabel': 'Kabel & Montagematerial',
+    'shore_power': 'Landstrom',
+    'alternator': 'Lichtmaschine'
+};
+
 export default function ResultDisplay({
     resultId,
     expiresAt,
@@ -115,7 +130,7 @@ export default function ResultDisplay({
                 }
 
                 if (solarType === 'portable' || solarType === 'mixed') {
-                    mandatoryCategories.add('faltbare_solartaschen');
+                    mandatoryCategories.add('solartaschen');
                     if (solarType === 'portable') {
                         mandatoryCategories.add('solar_controller');
                     }
@@ -158,9 +173,25 @@ export default function ResultDisplay({
             // seenIds.add(id); // REMOVED check
 
             const product = products.find((p) => p.id === id);
-            if (!product) return null;
 
-            const categorySlug = product.category?.slug || (typeof rec.category === 'string' ? rec.category : product.category?.name?.toLowerCase()) || '';
+            // IF PRODUCT NOT FOUND IN DB: Treat as "Missing" instead of filtering out
+            if (!product) {
+                return {
+                    ...rec,
+                    isMissing: true,
+                    name: rec.name || "Produkt nicht verfügbar",
+                    category: rec.category || rec.groupKey || "Unbekannt",
+                    // Ensure we have minimal fields to prevent crashes
+                    id: `missing-${id || Math.random()}`,
+                    description: null,
+                    imageUrl: null,
+                    affiliateUrl: null,
+                    price: null,
+                    categorySlug: rec.groupKey || (typeof rec.category === 'string' ? rec.category : undefined)
+                };
+            }
+
+            const categorySlug = rec.groupKey || product.category?.slug || (typeof rec.category === 'string' ? rec.category : product.category?.name?.toLowerCase()) || '';
 
             // ROBUSTNESS: Extract Amount from Reason if default is "1" but text says otherwise
             let finalAmount = rec.amount || rec.quantity;
@@ -172,15 +203,16 @@ export default function ResultDisplay({
 
             const explanationText = rec.reason || rec.explanation || '';
 
-            // If amount is missing or "1" (or "1 Stück"), check if reason implies more
+            // If amount is missing or "1", check if reason implies more with ROBUST REGEX (Wildcard approach)
             if (!finalAmount || String(finalAmount) === '1' || finalAmount === '1 Stück') {
-                // Regex for "2 Stück", "2x", "2 Modi" etc.
-                const quantityMatch = explanationText.match(/(\d+)\s*(?:Stück|Stk|x(?!\d)|Modul)/i);
-                // x(?!\d) prevents matching dimensions like 100x200
+                // Regex for "2 ... Stück", "2 ... Module" allowing ANY chars in between (up to 80 chars)
+                // Added (?:^|\s) to ensure we match a whole number, not "LiFePO4" -> 4
+                const quantityMatch = explanationText.match(/(?:^|\s)(\d+)\s+.{0,80}(?:Stück|Stk|x(?!\d)|Modul)/i);
 
                 // Specific text numbers
                 const textNumbers: Record<string, string> = {
-                    'zwei': '2', 'drei': '3', 'vier': '4', 'fünf': '5', 'sechs': '6'
+                    'zwei': '2', 'drei': '3', 'vier': '4', 'fünf': '5', 'sechs': '6',
+                    'eine': '1', 'ein': '1'
                 };
 
                 let foundQty = null;
@@ -188,9 +220,11 @@ export default function ResultDisplay({
                 if (quantityMatch && parseInt(quantityMatch[1]) > 1) {
                     foundQty = quantityMatch[1];
                 } else {
-                    // Check text words
+                    // Check text words with WILDCARD regex
                     for (const [word, digit] of Object.entries(textNumbers)) {
-                        if (explanationText.toLowerCase().includes(`${word} stück`) || explanationText.toLowerCase().includes(`${word} module`)) {
+                        // Match "zwei" + anything (max 80 chars) + "module"
+                        const regex = new RegExp(`${word}\\s+.{0,80}(?:stück|module|modul)`, 'i');
+                        if (regex.test(explanationText)) {
                             foundQty = digit;
                             break;
                         }
@@ -200,6 +234,11 @@ export default function ResultDisplay({
                 if (foundQty) {
                     finalAmount = `${foundQty} Stück`;
                 }
+            }
+
+            // Ensure we have "Stück" if it's just a number
+            if (finalAmount && /^\d+$/.test(String(finalAmount))) {
+                finalAmount = `${finalAmount} Stück`;
             }
 
             return {
@@ -212,7 +251,7 @@ export default function ResultDisplay({
                 quantity: finalAmount, // Sync both
                 originalIsRecommended: rec.isRecommended, // Store original AI decision
                 isOptional: rec.isOptional,
-                categoryLabel: product.category?.name
+                categoryLabel: rec.groupKey || product.category?.name
             };
         }).filter((item): item is NonNullable<typeof item> => item !== null);
 
@@ -222,6 +261,46 @@ export default function ResultDisplay({
             const key = item.categorySlug || 'other';
             if (!groupedBySlug[key]) groupedBySlug[key] = [];
             groupedBySlug[key].push(item);
+        });
+
+        // 2.5 Ensure Mandatory Categories are Present
+        const presentDisplayNames = new Set<string>();
+        Object.keys(groupedBySlug).forEach(slug => {
+            const mapped = CATEGORY_SLUG_MAP[slug.toLowerCase()] || slug;
+            presentDisplayNames.add(mapped.toLowerCase()); // Normalize for comparison
+        });
+
+        mandatoryCategories.forEach(slug => {
+            const mappedName = CATEGORY_SLUG_MAP[slug.toLowerCase()] || slug;
+
+            // Check if this logical category is already present
+            // We check against the display name map to handle aliases (charger vs ladegeraet)
+            if (!presentDisplayNames.has(mappedName.toLowerCase())) {
+
+                // Create Synthetic Missing Item
+                if (!groupedBySlug[slug]) {
+                    groupedBySlug[slug] = [];
+                }
+
+                groupedBySlug[slug].push({
+                    id: `missing-mandatory-${slug}`,
+                    name: "Kein Produkt gefunden",
+                    categorySlug: slug,
+                    categoryLabel: mappedName,
+                    isMissing: true,
+                    isRecommended: true, // Force it to appear
+                    reason: "Für diese notwendige Kategorie konnte kein passendes Produkt gefunden werden.",
+                    // Add minimal fields
+                    description: null,
+                    imageUrl: null,
+                    affiliateUrl: null,
+                    price: null,
+                    category: { name: mappedName, slug: slug }
+                });
+
+                // Mark as present so we don't add alias again
+                presentDisplayNames.add(mappedName.toLowerCase());
+            }
         });
 
         // 3. Process Groups
@@ -463,53 +542,7 @@ export default function ResultDisplay({
                     Basierend auf deinen Angaben haben wir die perfekt aufeinander abgestimmten Komponenten für dich ausgewählt.
                 </p>
 
-                {/* System Analysis Summary */}
-                {calculations && (
-                    <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-left max-w-5xl mx-auto">
-                        <Card className="p-4 border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-shadow">
-                            <div className="text-sm text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Tagesverbrauch</div>
-                            <div className="text-3xl font-bold mt-1 text-gray-900 dark:text-gray-100">{Math.ceil(calculations.dailyWh)} Wh</div>
-                            <div className="text-xs text-gray-400 mt-1">Voraussichtlicher Bedarf</div>
-                        </Card>
-                        <Card className="p-4 border-l-4 border-l-green-500 shadow-sm hover:shadow-md transition-shadow">
-                            <div className="text-sm text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Batterie-Empfehlung</div>
-                            <div className="text-3xl font-bold mt-1 text-gray-900 dark:text-gray-100">
-                                {calculations.battery?.recommendedCapacityAh || calculations.battery?.minCapacityAh} Ah
-                            </div>
-                            <div className="text-xs text-gray-400 mt-1">
-                                {calculations.battery?.hasSolar ? 'Inkl. Solar-Puffer' : 'Ohne Solar-Input'}
-                            </div>
-                        </Card>
-                        <Card className="p-4 border-l-4 border-l-yellow-500 shadow-sm hover:shadow-md transition-shadow">
-                            <div className="text-sm text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Solar-Leistung</div>
-                            {calculations.solarModules ? (
-                                <>
-                                    <div className="text-3xl font-bold mt-1 text-gray-900 dark:text-gray-100">{Math.ceil(calculations.solarModules.requiredWp)} Wp</div>
-                                    <div className="text-xs text-gray-400 mt-1">Empfohlenes Minimum</div>
-                                </>
-                            ) : (
-                                <>
-                                    <div className="text-3xl font-bold mt-1 text-gray-400">-</div>
-                                    <div className="text-xs text-gray-400 mt-1">Nicht gewählt</div>
-                                </>
-                            )}
-                        </Card>
-                        <Card className="p-4 border-l-4 border-l-purple-500 shadow-sm hover:shadow-md transition-shadow">
-                            <div className="text-sm text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">Wechselrichter</div>
-                            {calculations.inverter ? (
-                                <>
-                                    <div className="text-3xl font-bold mt-1 text-gray-900 dark:text-gray-100">{calculations.inverter.recommendedW} W</div>
-                                    <div className="text-xs text-gray-400 mt-1">Für 230V Geräte</div>
-                                </>
-                            ) : (
-                                <>
-                                    <div className="text-3xl font-bold mt-1 text-gray-400">-</div>
-                                    <div className="text-xs text-gray-400 mt-1">Nicht benötigt</div>
-                                </>
-                            )}
-                        </Card>
-                    </div>
-                )}
+
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
                     <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-2 text-sm text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
@@ -535,7 +568,17 @@ export default function ResultDisplay({
                 {(() => {
                     // 1. Group Products
                     const grouped = selectedProducts.reduce((acc: Record<string, any[]>, product: any) => {
-                        let key = product.categorySlug || product.category?.name || 'Andere';
+                        let key = product.categorySlug;
+
+                        if (!key) {
+                            if (typeof product.category === 'object' && product.category?.name) {
+                                key = product.category.name;
+                            } else if (typeof product.category === 'string') {
+                                key = product.category;
+                            }
+                        }
+
+                        key = key || 'Sonstiges';
 
                         // User Request: Merge all cable types (Solar cables, etc.) into one "Cable" group
                         const lowerKey = String(key).toLowerCase();
@@ -588,12 +631,24 @@ export default function ResultDisplay({
 
                     // 3. Render Helper
                     const renderGroup = ([groupKey, products]: [string, any[]]) => {
-                        const categoryName = products[0]?.categoryLabel ||
+                        // FILTER: If we have valid products, hide the "missing" placeholder
+                        const hasValidProducts = products.some(p => !p.isMissing);
+                        const displayProducts = hasValidProducts
+                            ? products.filter(p => !p.isMissing)
+                            : products;
+
+                        // Safety check
+                        if (displayProducts.length === 0) return null;
+
+                        // Resolve Display Name
+                        const predefinedName = CATEGORY_SLUG_MAP[groupKey.toLowerCase()];
+
+                        const categoryName = predefinedName || products[0]?.categoryLabel ||
                             (products[0]?.category?.name) ||
                             groupKey.charAt(0).toUpperCase() + groupKey.slice(1);
 
                         // Sort: Recommended first
-                        const sortedProducts = [...products].sort((a, b) => (b.isRecommended ? 1 : 0) - (a.isRecommended ? 1 : 0));
+                        const sortedProducts = [...displayProducts].sort((a, b) => (b.isRecommended ? 1 : 0) - (a.isRecommended ? 1 : 0));
 
                         // Check if group is optional to add specific header/notice
                         const isOptionalGroup = products[0]?.isOptional;
