@@ -2,6 +2,7 @@
 
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { labelClassName } from "@/components/wizard/field-styles";
+import { WizardStepHeader } from "@/components/wizard/wizard-step-header";
 import type { BatteryPreference, SystemVoltage, VehicleVoltage } from "@/lib/algorithm/types";
 import { useWizardStore } from "@/store/wizard";
 
@@ -10,13 +11,11 @@ export function Step1Basics() {
   const patchInput = useWizardStore((s) => s.patchInput);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">System-Basis</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Bordnetz, Starterbatterie und bevorzugte Haus-Batterie-Chemie.
-        </p>
-      </div>
+    <div className="flex flex-col gap-8">
+      <WizardStepHeader
+        title="System-Basis"
+        description="Bordnetz, Starterbatterie und bevorzugte Haus-Batterie-Chemie — die Grundlage für alle weiteren Schritte."
+      />
       <div>
         <span className={labelClassName()}>Bordspannung</span>
         <SegmentedControl<SystemVoltage>

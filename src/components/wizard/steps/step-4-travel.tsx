@@ -2,6 +2,7 @@
 
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { labelClassName } from "@/components/wizard/field-styles";
+import { WizardStepHeader } from "@/components/wizard/wizard-step-header";
 import type { Season, StandingDuration, TripDuration, WinterLocation } from "@/lib/algorithm/types";
 import { useWizardStore } from "@/store/wizard";
 
@@ -10,11 +11,11 @@ export function Step4Travel() {
   const setTravelBehavior = useWizardStore((s) => s.setTravelBehavior);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Reiseverhalten</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Saison, Trip-Dauer und typische Standzeiten.</p>
-      </div>
+    <div className="flex flex-col gap-8">
+      <WizardStepHeader
+        title="Reiseverhalten"
+        description="Saison, typische Trip-Dauer und Standzeiten — der Algorithmus nutzt das für Ertrag und Reserve."
+      />
       <div>
         <span className={labelClassName()}>Hauptsaison</span>
         <SegmentedControl<Season>

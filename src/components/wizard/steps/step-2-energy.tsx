@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { NumberStepper } from "@/components/ui/number-stepper";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { inputClassName, labelClassName } from "@/components/wizard/field-styles";
+import { WizardStepHeader } from "@/components/wizard/wizard-step-header";
 import type { ChargerSpeed, EnergySource, RoofModuleType } from "@/lib/algorithm/types";
 import { useWizardStore } from "@/store/wizard";
 
@@ -14,9 +15,7 @@ const SOURCES: { id: EnergySource; label: string }[] = [
 ];
 
 function newRoofId() {
-  return typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : `roof-${Date.now()}`;
+  return typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `roof-${Date.now()}`;
 }
 
 export function Step2Energy() {
@@ -55,11 +54,11 @@ export function Step2Energy() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Energiequellen</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Mindestens eine Quelle auswählen.</p>
-      </div>
+    <div className="flex flex-col gap-8">
+      <WizardStepHeader
+        title="Energiequellen"
+        description="Wähle mindestens eine Quelle. Mit Solar legen wir eine erste Dachfläche an — Details kannst du anpassen."
+      />
       <div className="flex flex-wrap gap-2">
         {SOURCES.map((s) => {
           const active = input.energySources.includes(s.id);
@@ -69,7 +68,7 @@ export function Step2Energy() {
               type="button"
               variant={active ? "default" : "outline"}
               size="sm"
-              className="rounded-full"
+              className="min-h-10 rounded-full px-4 transition duration-200 ease-out"
               onClick={() => toggleSource(s.id)}
             >
               {s.label}
@@ -78,7 +77,7 @@ export function Step2Energy() {
         })}
       </div>
       {hasSolar ? (
-        <div className="flex flex-col gap-4 rounded-lg border border-border bg-card/50 p-4">
+        <div className="flex flex-col gap-5 rounded-2xl border border-border/70 bg-muted/25 p-4 sm:p-5">
           <div>
             <span className={labelClassName()}>Modul-Typ (Dach)</span>
             <SegmentedControl<RoofModuleType>
@@ -103,7 +102,7 @@ export function Step2Energy() {
                   onChange={(e) => patchRoof({ name: e.target.value })}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <div>
                   <span className={labelClassName()}>Länge (cm)</span>
                   <NumberStepper

@@ -2,14 +2,16 @@
 
 import { useRouter } from "next/navigation";
 
+import type { WizardConsumerTemplate } from "@/lib/db/wizard-consumer-templates";
 import { WizardShell } from "@/components/wizard/wizard-shell";
 import { WizardStepBody } from "@/components/wizard/wizard-step-body";
 
 export interface WizardClientProps {
   step: number;
+  consumerTemplates: WizardConsumerTemplate[];
 }
 
-export function WizardClient({ step }: WizardClientProps) {
+export function WizardClient({ step, consumerTemplates }: WizardClientProps) {
   const router = useRouter();
 
   const go = (next: number) => {
@@ -18,7 +20,7 @@ export function WizardClient({ step }: WizardClientProps) {
 
   return (
     <WizardShell step={step} onStepChange={go}>
-      <WizardStepBody step={step} />
+      <WizardStepBody step={step} consumerTemplates={consumerTemplates} />
     </WizardShell>
   );
 }

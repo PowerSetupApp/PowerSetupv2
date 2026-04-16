@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 
+import { listWizardConsumerTemplates } from "@/lib/db/wizard-consumer-templates";
+
 import { WizardClient } from "./wizard-client";
 
 type PageProps = {
@@ -27,5 +29,7 @@ export default async function WizardPage({ params }: PageProps) {
     redirect(`/wizard/${normalized}`);
   }
 
-  return <WizardClient step={step} />;
+  const consumerTemplates = await listWizardConsumerTemplates();
+
+  return <WizardClient step={step} consumerTemplates={consumerTemplates} />;
 }

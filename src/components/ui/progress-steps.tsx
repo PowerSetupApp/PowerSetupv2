@@ -38,19 +38,20 @@ export function ProgressSteps({
               type="button"
               onClick={() => isClickable(step.id) && onStepClick?.(step.id)}
               disabled={!isClickable(step.id)}
+              aria-current={isCurrent(step.id) ? "step" : undefined}
               className={cn(
-                "flex flex-col items-center gap-2 transition-all",
+                "flex flex-col items-center gap-2 transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none",
                 isClickable(step.id) ? "cursor-pointer" : "cursor-not-allowed",
               )}
             >
               <div
                 className={cn(
-                  "flex h-10 w-10 items-center justify-center rounded-full border-2 text-sm font-medium transition-all duration-300",
+                  "flex h-11 w-11 items-center justify-center rounded-full border-2 text-sm font-medium transition-[border-color,background-color,color] duration-200 ease-out motion-reduce:transition-none",
                   isCompleted(step.id)
-                    ? "border-primary bg-primary text-primary-foreground"
+                    ? "border-primary bg-primary text-primary-foreground shadow-sm"
                     : isCurrent(step.id)
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-muted-foreground/20 bg-muted text-muted-foreground",
+                      ? "border-primary bg-primary/12 text-primary shadow-sm"
+                      : "border-muted-foreground/25 bg-muted text-muted-foreground",
                 )}
               >
                 {isCompleted(step.id) ? (
@@ -80,7 +81,7 @@ export function ProgressSteps({
             {index < steps.length - 1 ? (
               <div
                 className={cn(
-                  "mx-2 h-0.5 flex-1 transition-all duration-300",
+                  "mx-2 h-0.5 flex-1 transition-colors duration-200 ease-out motion-reduce:transition-none",
                   isCompleted(step.id) ? "bg-primary" : "bg-muted-foreground/20",
                 )}
               />
@@ -98,17 +99,18 @@ export function ProgressSteps({
             – {steps.find((s) => s.id === currentStep)?.label}
           </span>
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-1.5" role="list" aria-label="Schritte">
           {steps.map((step) => (
             <div
               key={step.id}
+              role="listitem"
               className={cn(
-                "h-1.5 flex-1 rounded-full transition-all duration-300",
+                "h-2 min-h-2 flex-1 rounded-full transition-colors duration-200 ease-out motion-reduce:transition-none",
                 isCompleted(step.id)
                   ? "bg-primary"
                   : isCurrent(step.id)
-                    ? "bg-primary/50"
-                    : "bg-muted-foreground/20",
+                    ? "bg-primary/55"
+                    : "bg-muted-foreground/25",
               )}
             />
           ))}

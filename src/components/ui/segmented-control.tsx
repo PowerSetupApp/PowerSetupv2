@@ -38,9 +38,9 @@ export function SegmentedControl<T extends string | number = string>({
           key={String(option.value)}
           type="button"
           onClick={() => onChange(option.value)}
-          className={cn(
-            "flex min-w-[80px] items-center justify-center gap-2 rounded-lg px-6 transition-all duration-200",
-            "cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
+            className={cn(
+            "flex min-w-[80px] items-center justify-center gap-2 rounded-lg px-6 transition-[color,background-color,box-shadow,transform] duration-200 ease-out motion-reduce:transition-none",
+            "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             sizeClasses[size],
             value === option.value
               ? "bg-background font-medium text-foreground shadow-sm"

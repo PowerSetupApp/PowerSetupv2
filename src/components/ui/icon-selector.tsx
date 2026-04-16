@@ -39,11 +39,11 @@ export function IconSelector<T extends string = string>({
             aria-selected={selected}
             onClick={() => onChange(option.value)}
             className={cn(
-              "flex flex-col items-center gap-2 rounded-xl border p-4 text-center transition-colors",
+              "flex flex-col items-center gap-2 rounded-2xl border p-4 text-center transition-[border-color,background-color,color,box-shadow] duration-200 ease-out motion-reduce:transition-none",
               "min-h-[104px] touch-manipulation",
               selected
-                ? "border-primary bg-primary/10 text-foreground"
-                : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                ? "border-primary bg-primary/10 text-foreground shadow-sm"
+                : "border-border/80 bg-card/60 text-muted-foreground hover:border-primary/45 hover:text-foreground",
             )}
           >
             <span className="text-foreground [&_svg]:size-8">{option.icon}</span>

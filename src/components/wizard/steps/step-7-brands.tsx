@@ -1,6 +1,7 @@
 "use client";
 
 import { inputClassName, labelClassName } from "@/components/wizard/field-styles";
+import { WizardStepHeader } from "@/components/wizard/wizard-step-header";
 import { useWizardStore } from "@/store/wizard";
 
 export function Step7Brands() {
@@ -8,13 +9,11 @@ export function Step7Brands() {
   const setBrandPreferences = useWizardStore((s) => s.setBrandPreferences);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Marken (optional)</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Später mit Produkt-DB verknüpft — hier nur Platzhalter-IDs oder leer lassen.
-        </p>
-      </div>
+    <div className="flex flex-col gap-8">
+      <WizardStepHeader
+        title="Marken (optional)"
+        description="Wenn du Marken bevorzugst, trage später die IDs aus der Produkt-Datenbank ein — oder frei lassen."
+      />
       <div>
         <label className={labelClassName()} htmlFor="brand-solar">
           Solar (Brand-ID)

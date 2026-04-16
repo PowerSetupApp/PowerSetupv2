@@ -9,7 +9,7 @@
 ```
 src/
 ├── app/           Next.js App Router (Pages, API Routes, Layouts)
-├── components/  geteilte UI (`ui/` primitives, `marketing/`, später `wizard/`)
+├── components/  geteilte UI (`ui/` primitives, `marketing/` z. B. `marketing-hero.tsx`, `wizard/`)
 ├── generated/   Prisma Client (generator `prisma-client`, nicht manuell editieren)
 ├── lib/           algorithm/, recommendation/, ai/, db/, amazon/, pdf/, payments/
 ├── store/         `wizard.ts` — Zustand + Persist (`AlgorithmInput`-Formular)

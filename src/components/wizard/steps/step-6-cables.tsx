@@ -2,6 +2,7 @@
 
 import { NumberStepper } from "@/components/ui/number-stepper";
 import { labelClassName } from "@/components/wizard/field-styles";
+import { WizardStepHeader } from "@/components/wizard/wizard-step-header";
 import { useWizardStore } from "@/store/wizard";
 
 export function Step6Cables() {
@@ -9,12 +10,12 @@ export function Step6Cables() {
   const setCableLengths = useWizardStore((s) => s.setCableLengths);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Kabellängen</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Schätzung in Metern — Standardwerte sind ein guter Start.</p>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">
+    <div className="flex flex-col gap-8">
+      <WizardStepHeader
+        title="Kabellängen"
+        description="Schätzung in Metern — mit den Standardwerten kannst du starten und später verfeinern."
+      />
+      <div className="grid gap-6 sm:grid-cols-2">
         <div>
           <span className={labelClassName()}>Solar → Regler</span>
           <NumberStepper
