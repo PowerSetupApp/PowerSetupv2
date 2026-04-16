@@ -1,0 +1,12 @@
+---
+description: Frontend — verweist auf die kanonische Skill-Datei unter .agents
+globs: ["**/*.tsx", "**/*.ts", "**/*.css"]
+---
+
+# Frontend
+
+**Kanonische Anweisungen:** `.agents/skills/frontend/SKILL.md` (dort pflegen, nicht hier duplizieren).
+
+Kurz: shadcn/ui zuerst, Tailwind only, max. 150 Zeilen pro Datei, Wizard-State nur `src/store/wizard.ts`.
+
+Vor der Arbeit die Skill-Datei lesen und deren Ablauf + Checkliste befolgen.

@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh repo *)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:cursor.com)",
+      "WebFetch(domain:aider.chat)",
+      "Bash(wc -l /c/Users/renem/Desktop/DevContext/alt/src/components/wizard/steps/*.tsx)",
+      "Bash(ls -la /c/Users/renem/Desktop/DevContext/alt/src/lib/db*)",
+      "Read(//c/Users/renem/.agents/**)",
+      "Read(//c/Users/renem/**)",
+      "Bash(mkdir -p \"C:/Users/renem/Desktop/PowerSetup/docs/reference/algorithm\")",
+      "Bash(mkdir -p \"C:/Users/renem/Desktop/PowerSetup/docs/reference/schemas\")",
+      "Bash(mkdir -p \"C:/Users/renem/Desktop/PowerSetup/docs/reference/amazon\")",
+      "Bash(cp \"C:/Users/renem/Desktop/DevContext/alt/src/lib/algorithm/algorithm.ts\" \"C:/Users/renem/Desktop/PowerSetup/docs/reference/algorithm/algorithm.ts\")",
+      "Bash(cp \"C:/Users/renem/Desktop/DevContext/alt/src/lib/algorithm/constants.ts\" \"C:/Users/renem/Desktop/PowerSetup/docs/reference/algorithm/constants.ts\")",
+      "Bash(cp \"C:/Users/renem/Desktop/DevContext/alt/src/lib/algorithm/types.ts\" \"C:/Users/renem/Desktop/PowerSetup/docs/reference/algorithm/types.ts\")",
+      "Bash(cp \"C:/Users/renem/Desktop/DevContext/alt/src/lib/algorithm/adapter.ts\" \"C:/Users/renem/Desktop/PowerSetup/docs/reference/algorithm/adapter.ts\")",
+      "Bash(cp \"C:/Users/renem/Desktop/DevContext/alt/src/lib/algorithm/product-preselection.ts\" \"C:/Users/renem/Desktop/PowerSetup/docs/reference/algorithm/product-preselection.ts\")"
+    ]
+  }
+}

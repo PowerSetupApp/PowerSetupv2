@@ -1,0 +1,12 @@
+---
+description: Backend — verweist auf die kanonische Skill-Datei unter .agents
+globs: ["src/app/api/**", "src/lib/**", "prisma/**"]
+---
+
+# Backend
+
+**Kanonische Anweisungen:** `.agents/skills/backend/SKILL.md` (dort pflegen, nicht hier duplizieren).
+
+Kurz: Prisma nur in `src/lib/db/queries/`, Zod auf alle API-Inputs, KI über `src/lib/ai/client.ts`, Amazon über `src/lib/amazon/index.ts`.
+
+Vor der Arbeit die Skill-Datei lesen und deren Ablauf + Checkliste befolgen.

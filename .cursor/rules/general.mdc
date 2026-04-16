@@ -1,0 +1,50 @@
+---
+description: Allgemeine Projektregeln für PowerSetup. Gilt für alle Dateien.
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# PowerSetup — Allgemeine Regeln
+
+## Projektkontext
+
+Lies vor jeder Aufgabe:
+- `AGENTS.md` — Überblick, Skills, kritische Regeln
+- `.context/architecture.md` — aktuelle Dateistruktur
+- `.context/domain.md` — Fachbegriffe
+
+**Kanonisch für Arbeitsabläufe:** `.agents/skills/<bereich>/SKILL.md` (requirements, architecture, frontend, backend, qa, deploy). Inhalt dort pflegen; `.cursor/rules/*.mdc` sind nur kurze Verweise + Globs für Cursor.
+
+## Feature-Tracking
+
+- Alle Features in `features/INDEX.md` mit Status tracken
+- Feature-Specs unter `features/PS-X-name.md`
+- Neue Features immer zuerst via `/requirements` spezifizieren — nie direkt coden
+- Status: `Planned` → `In Progress` → `In Review` → `Done`
+
+## Git Conventions
+
+Format: `type(PS-X): kurze Beschreibung`
+
+Types: `feat`, `fix`, `refactor`, `test`, `docs`, `deploy`, `chore`
+
+Beispiele:
+- `feat(PS-1): Wizard Step 1 Fahrzeugtyp-Auswahl`
+- `fix(PS-3): Konsumenten-State nach Browser-Refresh`
+
+## Human-in-the-Loop
+
+- Nie eine Phase voranschreiten ohne explizite Bestätigung
+- Nach Fertigstellung: Ergebnis präsentieren + nächsten Schritt vorschlagen
+- Bei Architektur-Entscheidungen: immer erst fragen, dann umsetzen
+
+## Status-Updates (Write-Then-Verify)
+
+1. Datei lesen
+2. Änderung schreiben
+3. Datei erneut lesen zur Verifikation
+4. Nie behaupten eine Änderung sei gemacht ohne sie tatsächlich zu schreiben
+
+## Referenz-Material
+
+`docs/reference/` enthält den Alt-Code — **niemals bearbeiten**, nur lesen.

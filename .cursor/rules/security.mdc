@@ -1,0 +1,11 @@
+---
+description: Security — verweist auf QA-Skill unter .agents
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Security
+
+**Kanonische Checklisten und Review-Regeln:** `.agents/skills/qa/SKILL.md` → Abschnitt *Security-Checkliste* (dort pflegen).
+
+Kurz: keine Secrets im Repo, server-seitig Zod auf alle API-Inputs, sensible Änderungen (Middleware, ENV, Auth, Prisma) nur nach expliziter Freigabe.

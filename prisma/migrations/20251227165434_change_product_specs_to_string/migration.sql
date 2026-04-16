@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE "Product" ALTER COLUMN "specs" SET DEFAULT '',
-ALTER COLUMN "specs" SET DATA TYPE TEXT;

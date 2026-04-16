@@ -1,0 +1,428 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// Result (Ergebnis)
+// ==========================================
+model Result {
+  id              String   @id @default(uuid())
+  version         Int      @default(1)
+  
+  // Formular-Eingaben (JSONB)
+  formData        Json
+  
+  // Berechnete Werte
+  calculations    Json?
+  
+  // Produktempfehlungen (IDs + Snapshot)
+  recommendations Json?
+  
+  // Schaltplan-Daten
+  schematicData      Json?
+  schematicImageUrl  String?
+  
+  // KI-Metriken
+  aiModel         String?  // z.B. "gpt-4o", "gemini-1.5-pro"
+  inputTokens     Int?
+  outputTokens    Int?
+  
+  // Credits
+  creditsUsed     Int      @default(0)
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  expiresAt       DateTime // 90 Tage nach Erstellung
+  
+  // Relations
+  creditBalance   CreditBalance?
+  creditUsages    CreditUsage[]
+}
+
+// ==========================================
+// Product (Produkt)
+// ==========================================
+model Product {
+  id              String   @id @default(uuid())
+  name            String
+  description     String?
+  icon            String?
+  imageUrl        String?
+  affiliateUrl    String?
+  asin            String?   // Amazon Standard Identification Number (für API-Abfragen)
+  price           Float?
+  
+  // Kategorie
+  categoryId      String
+  category        Category @relation(fields: [categoryId], references: [id])
+  
+  // Technische Daten (JSONB) - Zod-validiert
+  specVersion     Int      @default(1)
+  specs           String   @default("")
+  
+  // Filter-Felder (für Vorfilterung vor KI-Auswahl)
+  powerW          Int?      // Wechselrichter: Dauerleistung in Watt
+  capacityAh      Int?      // Batterie: Kapazität in Ah
+  voltageV        Int?      // Batterie: Spannung (12/24/48)
+  batteryType     String?   // Batterie: Typ (lifepo4/agm/gel)
+  currentA        Int?      // Ladestrom zur Batterie in Ampere
+  crossSectionMm2 Float?    // Kabel: Querschnitt in mm²
+  solarWp         Int?      // Solarpanel: Leistung in Wp
+  supportedVoltages Json?   // Laderegler/Booster/Charger: Unterstützte Spannungen [12, 24, 48]
+  maxDischargeA   Int?      // Batterie: Max. Entladestrom (BMS-Limit)
+  waveform        String?   // Wechselrichter: Sinus-Typ (pure_sine/modified_sine)
+  fuseType        String?   // Sicherung: Typ (thermal/magnetic)
+  
+  // Dynamische Filter-Werte (JSONB) - basierend auf CategoryFilter
+  filterValues    Json?     // { "brand": "Victron", "maxPowerWp": 200, ... }
+  
+  // Status
+  isActive        Boolean  @default(true)
+  
+  // Marke & Typ (Filter)
+  brandId         String?
+  brand           Brand?   @relation(fields: [brandId], references: [id])
+
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([categoryId])
+  @@index([isActive])
+}
+
+// ==========================================
+// Category (Kategorie)
+// ==========================================
+model Category {
+  id          String    @id @default(uuid())
+  name        String
+  slug        String    @unique
+  icon        String?
+  sortOrder   Int       @default(0)
+  
+  products    Product[]
+  filters     CategoryFilter[]
+}
+
+// ==========================================
+// CategoryFilter (Filter-Definition pro Kategorie)
+// ==========================================
+model CategoryFilter {
+  id          String   @id @default(uuid())
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  
+  name        String   // z.B. "Marke", "Max. Leistung (Wp)"
+  key         String   // z.B. "brand", "maxPowerWp"
+  type        String   // "text" | "number" | "select" | "multiselect" | "brand"
+  unit        String?  // z.B. "W", "A", "V", "Ah", "mm²"
+  options     String[] @default([]) // Bei select/multiselect
+  sortOrder   Int      @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([categoryId, key])
+  @@index([categoryId])
+}
+
+// ==========================================
+// CreditPurchase (Kauf)
+// ==========================================
+model CreditPurchase {
+  id              String   @id @default(uuid())
+  resultId        String
+  
+  // PayPal
+  paypalOrderId   String   @unique
+  paypalStatus    String
+  
+  // Paket
+  packageType     String   // "single", "starter", "pro"
+  credits         Int
+  amount          Float
+  currency        String   @default("EUR")
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([resultId])
+}
+
+// ==========================================
+// CreditBalance (Guthaben pro Result)
+// ==========================================
+model CreditBalance {
+  id              String   @id @default(uuid())
+  resultId        String   @unique
+  result          Result   @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  
+  balance         Int      @default(0)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ==========================================
+// CreditUsage (Verwendung)
+// ==========================================
+model CreditUsage {
+  id              String   @id @default(uuid())
+  resultId        String
+  result          Result   @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  
+  amount          Int
+  action          String   // "pdf_generation", "regeneration"
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([resultId])
+}
+
+// ==========================================
+// PromptVersion (KI-Prompt-Versionen)
+// ==========================================
+model PromptVersion {
+  id              String   @id @default(uuid())
+  version         Int      @unique
+  
+  systemPrompt    String
+  userPromptTemplate String
+  
+  isActive        Boolean  @default(false)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ==========================================
+// ConsumerCategory (Verbraucher-Kategorien im Wizard)
+// ==========================================
+model ConsumerCategory {
+  id        String    @id @default(uuid())
+  name      String    // "Multimedia & Arbeit", "Küche", etc.
+  slug      String    @unique
+  icon      String?
+  sortOrder Int       @default(0)
+  
+  devices   ConsumerDevice[]
+}
+
+// ==========================================
+// ConsumerDevice (Verbraucher-Geräte im Wizard)
+// ==========================================
+model ConsumerDevice {
+  id                  String    @id @default(uuid())
+  name                String    // "Laptop", "LED Beleuchtung"
+  i18nKey             String?   // Optional: Für Hardcoded Translations
+  icon                String?
+  
+  // Default-Werte für den Wizard
+  defaultPower        Int       @default(50)
+  defaultVoltage      String    @default("12V") // "12V" | "24V" | "48V" | "230V"
+  defaultHoursPerDay  Float     @default(2)
+  stepHours           Float     @default(0.5)
+  
+  // UI-Optionen
+  showHoursField      Boolean   @default(true)
+  showFixedOption     Boolean   @default(false)
+  isCooling           Boolean   @default(false)
+  
+  // Suche
+  keywords            String[]  @default([])
+  
+  // Sortierung
+  sortOrder           Int       @default(0)
+  isActive            Boolean   @default(true)
+  isFeatured          Boolean   @default(false)
+  
+  // Relation
+  categoryId          String
+  category            ConsumerCategory @relation(fields: [categoryId], references: [id])
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  @@index([categoryId])
+  @@index([isActive])
+}
+
+
+// ==========================================
+// System Settings (Globale Einstellungen)
+// ==========================================
+model SystemSetting {
+  key       String   @id
+  value     String
+  
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================================
+// Model Pricing (KI-Modell Preise)
+// ==========================================
+model ModelPricing {
+  id            String   @id @default(uuid())
+  modelId       String   @unique  // z.B. "gpt-5.1", "gemini-2.0-flash"
+  displayName   String?
+  provider      String            // "openai" | "google"
+  inputPrice    Float    @default(0)  // USD pro 1M Tokens
+  outputPrice   Float    @default(0)  // USD pro 1M Tokens
+  
+  updatedAt     DateTime @updatedAt
+}
+
+// ==========================================
+// Algorithm Settings (Berechnungsparameter)
+// ==========================================
+model AlgorithmSettings {
+  id                    String   @id @default("default")
+  
+  // Depth of Discharge (DoD) - Entladetiefe
+  dodLifepo4            Float    @default(0.95)
+  dodAgm                Float    @default(0.50)
+  dodGel                Float    @default(0.50)
+
+  // Gleichzeitigkeitsfaktor
+  simultaneousLow       Float    @default(0.30)
+  simultaneousModerate  Float    @default(0.50)
+  simultaneousHigh      Float    @default(0.80)
+
+  // Lichtmaschine (A)
+  alternatorStandard    Float    @default(30.0)
+  alternatorEnhanced    Float    @default(90.0)
+  alternatorEuro6dSmart Float    @default(30.0)
+  alternatorUnknown     Float    @default(30.0)
+
+  // Batterie-Kapazitätszuweisung (Ah) nach Fahrzeuggröße
+  batteryCompact        Float    @default(80.0)
+  batteryMedium         Float    @default(150.0)
+  batterySpacious       Float    @default(200.0)
+
+  // Sicherheitspuffer
+  batterySafetyFactor   Float    @default(1.20)
+  solarSafetyFactor     Float    @default(1.10)
+
+  // Stehzeit (Tage)
+  standingDaysShort     Float    @default(2.0)
+  standingDaysMedium    Float    @default(5.0)
+  standingDaysLong      Float    @default(8.0)
+
+  // Max Backup Days
+  maxBackupDays         Float    @default(5.0)
+
+  // Solar (Wp/m²) – must match constants.ts: WP_PER_M2_RIGID=235, WP_PER_M2_FLEXIBLE=180
+  wpPerM2Rigid          Float    @default(235.0)
+  wpPerM2Flexible       Float    @default(180.0)
+
+  // Solar Ertragfaktoren
+  cloudyYieldFactor           Float    @default(0.30)
+  recommendedSolarYieldFactor Float    @default(1.20) // solarDimensioningFactor in logic
+  
+  // Solar Efficiency
+  roofUtilizationFactor       Float    @default(0.80)
+  // Effizienz-Faktor für fest verbaute Module (nicht ausrichtbar)
+  roofOrientationFactor   Float    @default(0.85)
+
+  // Effizienz-Faktor für mobile Solartaschen (ausrichtbar)
+  portableOrientationFactor Float  @default(1.0)
+  
+  // Sonnenstunden pro Tag (Durchschnitt D-A-CH)
+  sunHoursSummer        Float    @default(5.0)
+  sunHoursAllYear       Float    @default(3.5)
+  sunHoursWinter        Float    @default(2.0)
+  
+  // Winterstandort-Modifikatoren
+  locationGermanyAlps   Float    @default(0.8)
+  locationSouthernEurope Float   @default(1.2)
+  locationScandinavia   Float    @default(0.6)
+  locationVaries        Float    @default(1.0)
+  
+  // Kühlgeräte Duty Cycle
+  dutyCycleCompressor   Float    @default(0.35)  // aus DUTY_CYCLE_COMPRESSOR
+  dutyCycleAbsorber     Float    @default(0.7)   // aus DUTY_CYCLE_ABSORBER
+  
+  // Inverter-Klassen (W)
+  inverterClasses       String   @default("500,800,1000,1500,2000,2500,3000,5000")
+  
+  // Ladegerät-Klassen (A)
+  chargerClasses        String   @default("10,20,30,50,60")
+  
+  // Landstrom-Ladezeit (Zielzeit in Stunden pro Ladegerät-Kategorie)
+  chargerTimeHoursSlow   Float    @default(12.0)  // aus CHARGER_TIME_HOURS_SLOW
+  chargerTimeHoursNormal Float    @default(8.0)   // aus CHARGER_TIME_HOURS_NORMAL
+  chargerTimeHoursFast   Float    @default(5.0)   // aus CHARGER_TIME_HOURS_FAST
+  
+  // Solar-Regler-Klassen (A)
+  solarControllerClasses String  @default("10,20,30,40,50,60,80,100")
+  
+  // Kabel-Standardquerschnitte (mm²)
+  cableSizes            String   @default("6,10,16,25,35,50,70,95,120")
+  
+  // Spannungsabfall-Grenzwerte (%)
+  voltageDropCritical   Float    @default(2.0)   // Inverter, Lader
+  voltageDropNormal     Float    @default(3.0)   // Normale Verbraucher
+  voltageDropSolar      Float    @default(3.0)   // Solar-Strecken
+  
+  // Kupfer-Widerstand
+  copperResistivity     Float    @default(0.0178)
+  
+  // Produkt-Vorauswahl Schwellenwert (0-100)
+  // Produkte mit Match-Score unter diesem Wert werden nicht an die KI weitergegeben
+  minPreselectionScore  Int      @default(30)
+  
+  // ==========================================
+  // Recommendation Engine Konfiguration
+  // ==========================================
+  
+  // Produktauswahl-Modus: "algorithm" = rein algorithmisch, "hybrid" = KI + Algorithmus
+  productSelectionMode  String   @default("algorithm")
+  
+  // Begründungstext-Modus: "algorithm" = Template-basiert, "ai" = KI-generiert, "none" = keine
+  reasonGenerationMode  String   @default("algorithm")
+  
+  updatedAt             DateTime @updatedAt
+}
+
+
+// ==========================================
+// Brand (Marken-Präferenzen)
+// ==========================================
+model Brand {
+  id        String   @id @default(uuid())
+  name      String
+  
+  showInPreferences Boolean @default(true)
+  types     String[] @default([]) // "CHARGER", "BATTERY", "SOLAR"
+
+  isActive  Boolean  @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products  Product[]
+}
+
+
+// ==========================================
+// BrandFilterCategory (Kategorien-Zuordnung für Wizard)
+// ==========================================
+model BrandFilterCategory {
+  id              String   @id @default(uuid())
+  key             String   @unique  // "CHARGER", "BATTERY", "SOLAR"
+  label           String            // "Ladeelektronik (Ladegeräte, Booster, etc.)"
+  categorySlugs   String[]          // ["wechselrichter", "solar-laderegler", "ladebooster", "batterieladegeraete"]
+  sortOrder       Int      @default(0)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
