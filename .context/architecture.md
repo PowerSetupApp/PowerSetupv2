@@ -1,9 +1,24 @@
-# PowerSetup — Architektur
+# PowerSetup — Kontext-Atlas (Architektur)
 
-> Diese Datei wird nach jeder strukturellen Änderung aktualisiert.
-> Stand: Projekt-Setup (vor erstem Commit)
+**Zweck:** Kompakte Navigation für Agenten — Ordnerüberblick, Zuständigkeiten, Kopplungen. Keine Coding-Regeln (→ `.context/conventions.md`), kein Fachlexikon (→ `.context/domain.md`).
 
-## Kernmodule
+**Pflege:** Nach strukturellen Änderungen im **selben Arbeitsgang** aktualisieren. **Zielgröße:** ≤ ~180 Zeilen; bei Wachstum Zeilen **zusammenführen oder streichen**, nicht blind anhängen.
+
+## Top-Level (Tiefe 2)
+
+```
+src/
+├── app/           Next.js App Router (Pages, API Routes, Layouts)
+├── components/  geteilte UI (`ui/` primitives, `marketing/`, später `wizard/`)
+├── generated/   Prisma Client (generator `prisma-client`, nicht manuell editieren)
+├── lib/           algorithm/, recommendation/, ai/, db/, amazon/, pdf/, payments/
+├── store/         Client-State (Wizard) — noch anzulegen (Phase 3)
+├── middleware.ts  Basic Auth: `/admin/*`, `/api/admin/*`
+docs/reference/   Legacy + Specs (kein produktiver Code): `ADMIN-AGENT-BRIEF.md`, `admin/*`, `old/src`
+prisma/            `schema.prisma`, `migrations/`, Root: `prisma.config.ts` (Prisma ORM 7, `DATABASE_URL`)
+```
+
+## Kernmodule (Ownership)
 
 | Modul | Pfad | Beschreibung |
 |-------|------|--------------|
@@ -12,10 +27,26 @@
 | Recommendation | `src/lib/recommendation/` | Prefilter → KI → Anreicherung |
 | AI Client | `src/lib/ai/` | Gemini primary, OpenAI fallback, Retry-Logik |
 | DB Queries | `src/lib/db/queries/` | Alle Prisma-Zugriffe zentralisiert |
+| DB Client | `src/lib/db/client.ts` | `PrismaClient` mit `@prisma/adapter-pg` + `pg` (`DATABASE_URL`) |
 | Amazon | `src/lib/amazon/` | Creators API + Scraper-Fallback |
 | PDF | `src/lib/pdf/` | Puppeteer HTML→PDF |
 | Payments | `src/lib/payments/` | PayPal SDK |
-| Admin | `src/app/admin/` | Produkte, Kategorien, Settings, Ergebnisse |
+| Admin | `src/app/admin/` | Dashboard, Produkte, Marken, Kategorien, Mediathek, Verbraucher + -Kategorien, Ergebnisse, Einstellungen — Spec [docs/reference/ADMIN-AGENT-BRIEF.md](../docs/reference/ADMIN-AGENT-BRIEF.md) |
+
+## Kopplung / Blast-Radius (bei Änderungen prüfen)
+
+| Wenn du änderst … | … zusätzlich prüfen |
+|-------------------|---------------------|
+| `src/app/api/generate/[id]/route.ts` | `src/lib/algorithm/calculate.ts`, `src/lib/recommendation/`, DB-Queries, AI-Client |
+| `src/lib/algorithm/**` | `POST /api/generate/[id]`, betroffene Phasen-Eingaben aus dem Wizard |
+| `src/lib/recommendation/**` | `generate`-Route, `src/lib/ai/`, `src/lib/db/queries/products` (o.ä.) |
+| `src/lib/db/queries/**` | alle Aufrufer in API Routes und `src/lib/recommendation` (kein Prisma außerhalb dieser Queries) |
+| `src/components/wizard/**` | `src/store/wizard.ts`, betroffene Steps in `src/app/wizard/` |
+| `src/store/wizard.ts` | Wizard-Komponenten, Persistenz/URLs der Steps |
+| `src/middleware.ts` | `src/app/admin/**`, `src/app/api/admin/**` |
+| `src/lib/pdf/**` | Ergebnis-Flows / API, die PDF auslösen |
+| `src/lib/amazon/**` | Admin-Produktimport (`src/app/admin/products/`, zugehörige API Routes) |
+| `prisma/schema.prisma` (falls vorhanden) | `src/lib/db/queries/`, Migrationen, betroffene Types |
 
 ## Datei-Flow: Berechnung
 
@@ -47,16 +78,10 @@ src/app/admin/products/new/page.tsx
 ## Auth-Schutz
 
 `src/middleware.ts` schützt:
+
 - `/admin/*` — Web-UI
 - `/api/admin/*` — API Routes
 
 ## Zustand Store
 
-`src/store/wizard.ts` — Slice-Struktur:
-- `step1` — Fahrzeugtyp, Spannung, Batterietyp
-- `step2` — Energiequellen
-- `step3` — Verbraucher
-- `step4` — Reiseverhalten
-- `step5` — Autarkie-Ziel
-- `step6` — Kabellängen
-- `step7` — Markenpräferenzen
+`src/store/wizard.ts` — Wizard-Slices step1–step7 (Fahrzeug/Energie/Verbraucher/Reise/Autarkie/Kabel/Marken); bei Step-Änderungen Wizard-UI und ggf. Algorithmus-Eingaben abstimmen.

@@ -1,0 +1,52 @@
+# Runs lint + unit tests when a Node app exists at the repository root.
+# This DevContext repo is often context-only (no package.json) — then all
+# install/test steps are skipped and the workflow still succeeds.
+
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect root package.json
+        id: app
+        shell: bash
+        run: |
+          if [ -f package.json ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.app.outputs.present == 'true'
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        if: steps.app.outputs.present == 'true'
+        run: npm ci || npm install
+
+      - name: Lint
+        if: steps.app.outputs.present == 'true'
+        run: npm run lint --if-present
+
+      - name: Test
+        if: steps.app.outputs.present == 'true'
+        run: npm run test --if-present
+
+      - name: Build
+        if: steps.app.outputs.present == 'true'
+        run: npm run build --if-present
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres?schema=public
+          ADMIN_PASSWORD: ci-placeholder

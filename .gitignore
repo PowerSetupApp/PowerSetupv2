@@ -1,0 +1,15 @@
+# Python bytecode (e.g. frontend skill scripts)
+**/__pycache__/
+*.py[cod]
+
+# Node / Next.js / Prisma
+node_modules/
+.next/
+out/
+.env
+.env*.local
+src/generated/
+
+# Prisma local SQLite (falls genutzt)
+*.db
+*.db-journal
