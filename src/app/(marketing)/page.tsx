@@ -8,7 +8,7 @@ export default function HomePage() {
       <SiteHeader>
         <span className="text-lg font-semibold tracking-tight text-foreground">PowerSetup</span>
         <nav className="flex flex-wrap gap-3 text-sm font-medium text-muted-foreground">
-          <Link className="hover:text-foreground" href="/wizard">
+          <Link className="hover:text-foreground" href="/wizard/1">
             Wizard
           </Link>
           <Link className="hover:text-foreground" href="/admin">

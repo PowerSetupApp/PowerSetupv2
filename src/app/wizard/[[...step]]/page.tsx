@@ -1,26 +1,31 @@
-import Link from "next/link";
+import { redirect } from "next/navigation";
 
-import { SiteHeader } from "@/components/layout/site-header";
+import { WizardClient } from "./wizard-client";
 
-export default function WizardPage() {
-  return (
-    <div className="flex min-h-full flex-1 flex-col">
-      <SiteHeader>
-        <span className="text-base font-semibold text-foreground">Wizard</span>
-        <Link className="text-sm text-muted-foreground hover:text-foreground" href="/">
-          Zurück
-        </Link>
-      </SiteHeader>
-      <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-4 py-10">
-        <h1 className="text-2xl font-semibold tracking-tight">Wizard</h1>
-        <p className="text-muted-foreground">
-          Acht Schritte, Zustand und Validierung folgen in Phase 3 (PS-1). Die UI-Bausteine sind auf der{" "}
-          <Link className="font-medium text-primary underline-offset-4 hover:underline" href="/">
-            Startseite
-          </Link>{" "}
-          demonstriert.
-        </p>
-      </div>
-    </div>
-  );
+type PageProps = {
+  params: Promise<{ step?: string[] }>;
+};
+
+function parseStep(segments: string[] | undefined): number {
+  if (!segments?.length) return 1;
+  const raw = segments[0];
+  const n = raw ? Number.parseInt(raw, 10) : NaN;
+  if (!Number.isFinite(n) || n < 1 || n > 8) return 1;
+  return n;
+}
+
+export default async function WizardPage({ params }: PageProps) {
+  const { step: segments } = await params;
+
+  if (!segments?.length) {
+    redirect("/wizard/1");
+  }
+
+  const step = parseStep(segments);
+  const normalized = String(step);
+  if (segments[0] !== normalized) {
+    redirect(`/wizard/${normalized}`);
+  }
+
+  return <WizardClient step={step} />;
 }

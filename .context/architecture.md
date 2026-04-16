@@ -12,7 +12,7 @@ src/
 ├── components/  geteilte UI (`ui/` primitives, `marketing/`, später `wizard/`)
 ├── generated/   Prisma Client (generator `prisma-client`, nicht manuell editieren)
 ├── lib/           algorithm/, recommendation/, ai/, db/, amazon/, pdf/, payments/
-├── store/         Client-State (Wizard) — noch anzulegen (Phase 3)
+├── store/         `wizard.ts` — Zustand + Persist (`AlgorithmInput`-Formular)
 ├── proxy.ts       Basic Auth: `/admin/*`, `/api/admin/*` (Next.js `proxy` convention)
 docs/reference/   Legacy + Specs (kein produktiver Code): `ADMIN-AGENT-BRIEF.md`, `admin/*`, `old/src`
 prisma/            `schema.prisma`, `migrations/`, Root: `prisma.config.ts` (Prisma ORM 7, `DATABASE_URL`)
@@ -84,4 +84,4 @@ src/app/admin/products/new/page.tsx
 
 ## Zustand Store
 
-`src/store/wizard.ts` — Wizard-Slices step1–step7 (Fahrzeug/Energie/Verbraucher/Reise/Autarkie/Kabel/Marken); bei Step-Änderungen Wizard-UI und ggf. Algorithmus-Eingaben abstimmen.
+`src/store/wizard.ts` — persistierter Wizard-Formularzustand als `AlgorithmInput` (8 URL-Schritte: Basis → Energie → Verbraucher → Reise → Autarkie → Kabel → Marken → Review); bei Step-Änderungen UI und später `POST /api/generate/[id]` abstimmen.
