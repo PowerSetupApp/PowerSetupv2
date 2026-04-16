@@ -29,7 +29,7 @@ export function FoundationShowcase() {
   }, [step]);
 
   return (
-    <section className="flex flex-col gap-10 rounded-2xl border border-border bg-muted/30 p-4 sm:p-6">
+    <section className="flex flex-col gap-10 rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-6">
       <div>
         <h2 className="text-lg font-semibold">Phase-1 UI-Bausteine</h2>
         <p className="mt-1 text-sm text-muted-foreground">
