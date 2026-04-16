@@ -6,7 +6,7 @@
 |----|---------|--------|------|
 | PS-1 | 8-Schritt Wizard Form | In Arbeit | [PS-1](PS-1-wizard-form.md) |
 | PS-2 | Berechnungsalgorithmus (9 Phasen) | In Arbeit | [PS-2](PS-2-algorithm.md) |
-| PS-3 | KI-Empfehlungen (Gemini + OpenAI) | Planned | [PS-3](PS-3-ai-recommendations.md) |
+| PS-3 | KI-Empfehlungen (Gemini + OpenAI) | In Arbeit | [PS-3](PS-3-ai-recommendations.md) |
 | PS-4 | Ergebnis-Seite + Persistente URLs | Planned | [PS-4](PS-4-result-page.md) |
 | PS-5 | PDF-Schaltplan Export (Puppeteer) | Planned | [PS-5](PS-5-pdf-export.md) |
 | PS-6 | PayPal Credit-System | Planned | [PS-6](PS-6-payments.md) |

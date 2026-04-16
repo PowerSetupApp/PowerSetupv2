@@ -24,8 +24,8 @@ prisma/            `schema.prisma`, `migrations/`, Root: `prisma.config.ts` (Pri
 |-------|------|--------------|
 | Wizard | `src/components/wizard/` | 8-Schritt Formular, Zustand-State |
 | Algorithm | `src/lib/algorithm/` | `calculate.ts` (Orchestrator), `types.ts`, `constants.ts`, `phases/*.ts` (PS-2) |
-| Recommendation | `src/lib/recommendation/` | Prefilter → KI → Anreicherung |
-| AI Client | `src/lib/ai/` | Gemini primary, OpenAI fallback, Retry-Logik |
+| Recommendation | `src/lib/recommendation/` | `prefilter.ts`, `ai-selector.ts`, `index.ts` (`runRecommendationPipeline`) |
+| AI Client | `src/lib/ai/` | `client.ts` (Retry, Mock `USE_MOCK_AI`), `gemini.ts`, `openai.ts`, `prompts/*` |
 | DB Queries | `src/lib/db/queries/` | Alle Prisma-Zugriffe zentralisiert |
 | DB Client | `src/lib/db/client.ts` | `PrismaClient` mit `@prisma/adapter-pg` + `pg` (`DATABASE_URL`) |
 | Amazon | `src/lib/amazon/` | Creators API + Scraper-Fallback |
