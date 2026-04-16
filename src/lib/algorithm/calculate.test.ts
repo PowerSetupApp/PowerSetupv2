@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getDoD } from "./calculate-requirements";
+import { getDoD } from "./phases";
 
 describe("algorithm (ported reference)", () => {
   it("getDoD matches chemistry defaults", () => {

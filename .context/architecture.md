@@ -23,7 +23,7 @@ prisma/            `schema.prisma`, `migrations/`, Root: `prisma.config.ts` (Pri
 | Modul | Pfad | Beschreibung |
 |-------|------|--------------|
 | Wizard | `src/components/wizard/` | 8-Schritt Formular, Zustand-State |
-| Algorithm | `src/lib/algorithm/` | `calculate.ts` + portiertes Referenzpaket (`types`, `constants`, `calculate-requirements.ts`); später Aufteilung in `phases/` (PS-2) |
+| Algorithm | `src/lib/algorithm/` | `calculate.ts` (Orchestrator), `types.ts`, `constants.ts`, `phases/*.ts` (PS-2) |
 | Recommendation | `src/lib/recommendation/` | Prefilter → KI → Anreicherung |
 | AI Client | `src/lib/ai/` | Gemini primary, OpenAI fallback, Retry-Logik |
 | DB Queries | `src/lib/db/queries/` | Alle Prisma-Zugriffe zentralisiert |
