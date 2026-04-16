@@ -29,10 +29,10 @@ export async function POST(request: Request) {
 
 ## Checkliste
 
-- [ ] Prisma nur in `lib/db/queries/` — nie direkt in Route
+- [ ] Prisma nur in `src/lib/db/queries/` — nie direkt in Route
 - [ ] Zod-Schema auf alle Inputs
-- [ ] KI-Calls nur über `lib/ai/client.ts`
-- [ ] Amazon-Calls nur über `lib/amazon/index.ts`
+- [ ] KI-Calls nur über `src/lib/ai/client.ts`
+- [ ] Amazon-Calls nur über `src/lib/amazon/index.ts`
 - [ ] Kein `any` Type
 - [ ] Route max. 80 Zeilen
 - [ ] Fehler werden geworfen (nicht silent fail)
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
 
 ## Auth
 
-- `/admin/*` und `/api/admin/*` über `src/middleware.ts`
+- `/admin/*` und `/api/admin/*` über `src/proxy.ts` (Next.js `proxy`, ehem. Middleware)
 - Kein manueller Auth-Check in normalen Routes nötig
 - `process.env.ADMIN_PASSWORD` — niemals hardcoden
 
@@ -71,3 +71,13 @@ Lokal: `USE_MOCK_AMAZON=true` möglich (ohne echte API-Calls)
 Original-Algorithmus: `docs/reference/algorithm/`  
 Neue saubere Version: `src/lib/algorithm/` (portieren, nicht copy-pasten)  
 Einziger Aufruf-Punkt: `POST /api/generate/[id]`
+
+## PDF (Schaltplan, Dokumente)
+
+Merge/Split/OCR, Formulare, reportlab/pypdf etc.: Skill **[pdf](../pdf/SKILL.md)** — nicht mit diesem Skill duplizieren. Katalog: [skills.sh/anthropics/skills/pdf](https://skills.sh/anthropics/skills/pdf).
+
+## Zahlungen
+
+**Produkt (PowerSetup):** Credits / PDF-Freischaltung über **PayPal** — siehe Feature-Spec `features/PS-6-payments.md` und [REWRITE_PLAN.md](../../../REWRITE_PLAN.md) (Phase 6, Tech Stack).
+
+**Stripe-Skill:** Skill **[stripe-best-practices](../stripe-best-practices/SKILL.md)** nur bei Stripe-spezifischer Arbeit oder Migration nötig (Webhooks, Checkout, Billing). Katalog: [skills.sh/…/stripe-best-practices](https://skills.sh/stripe/agent-toolkit/stripe-best-practices).

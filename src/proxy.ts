@@ -16,12 +16,7 @@ function parseBasicAuth(header: string | null): { username: string; password: st
   }
 }
 
-export function middleware(request: NextRequest) {
-  const path = request.nextUrl.pathname;
-  if (!path.startsWith("/admin") && !path.startsWith("/api/admin")) {
-    return NextResponse.next();
-  }
-
+export function proxy(request: NextRequest) {
   const expectedPassword = process.env.ADMIN_PASSWORD;
   if (!expectedPassword) {
     return new NextResponse(

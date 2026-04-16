@@ -13,7 +13,7 @@ src/
 ├── generated/   Prisma Client (generator `prisma-client`, nicht manuell editieren)
 ├── lib/           algorithm/, recommendation/, ai/, db/, amazon/, pdf/, payments/
 ├── store/         Client-State (Wizard) — noch anzulegen (Phase 3)
-├── middleware.ts  Basic Auth: `/admin/*`, `/api/admin/*`
+├── proxy.ts       Basic Auth: `/admin/*`, `/api/admin/*` (Next.js `proxy` convention)
 docs/reference/   Legacy + Specs (kein produktiver Code): `ADMIN-AGENT-BRIEF.md`, `admin/*`, `old/src`
 prisma/            `schema.prisma`, `migrations/`, Root: `prisma.config.ts` (Prisma ORM 7, `DATABASE_URL`)
 ```
@@ -23,7 +23,7 @@ prisma/            `schema.prisma`, `migrations/`, Root: `prisma.config.ts` (Pri
 | Modul | Pfad | Beschreibung |
 |-------|------|--------------|
 | Wizard | `src/components/wizard/` | 8-Schritt Formular, Zustand-State |
-| Algorithm | `src/lib/algorithm/` | 9-Phasen Berechnung, pure functions, keine DB |
+| Algorithm | `src/lib/algorithm/` | `calculate.ts` + portiertes Referenzpaket (`types`, `constants`, `calculate-requirements.ts`); später Aufteilung in `phases/` (PS-2) |
 | Recommendation | `src/lib/recommendation/` | Prefilter → KI → Anreicherung |
 | AI Client | `src/lib/ai/` | Gemini primary, OpenAI fallback, Retry-Logik |
 | DB Queries | `src/lib/db/queries/` | Alle Prisma-Zugriffe zentralisiert |
@@ -43,7 +43,7 @@ prisma/            `schema.prisma`, `migrations/`, Root: `prisma.config.ts` (Pri
 | `src/lib/db/queries/**` | alle Aufrufer in API Routes und `src/lib/recommendation` (kein Prisma außerhalb dieser Queries) |
 | `src/components/wizard/**` | `src/store/wizard.ts`, betroffene Steps in `src/app/wizard/` |
 | `src/store/wizard.ts` | Wizard-Komponenten, Persistenz/URLs der Steps |
-| `src/middleware.ts` | `src/app/admin/**`, `src/app/api/admin/**` |
+| `src/proxy.ts` | `src/app/admin/**`, `src/app/api/admin/**` |
 | `src/lib/pdf/**` | Ergebnis-Flows / API, die PDF auslösen |
 | `src/lib/amazon/**` | Admin-Produktimport (`src/app/admin/products/`, zugehörige API Routes) |
 | `prisma/schema.prisma` (falls vorhanden) | `src/lib/db/queries/`, Migrationen, betroffene Types |
@@ -77,7 +77,7 @@ src/app/admin/products/new/page.tsx
 
 ## Auth-Schutz
 
-`src/middleware.ts` schützt:
+`src/proxy.ts` schützt:
 
 - `/admin/*` — Web-UI
 - `/api/admin/*` — API Routes
