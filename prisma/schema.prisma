@@ -11,12 +11,38 @@ datasource db {
 }
 
 // ==========================================
+// Enums
+// ==========================================
+
+/**
+ * Lebenszyklus der AI-Generation für einen Result.
+ * `idle`      — initial; noch nie gestartet.
+ * `pending`   — atomar reserviert, Berechnung läuft.
+ * `succeeded` — Berechnung + Empfehlungen persistiert.
+ * `failed`    — Letzter Versuch fehlgeschlagen; Retry möglich (resettet auf `pending`).
+ */
+enum GenerationStatus {
+  idle
+  pending
+  succeeded
+  failed
+}
+
+/**
+ * Schaltplan-Darstellung: Einsteiger vs. Profi (Roadmap; MVP nutzt professional).
+ */
+enum SchematicVariant {
+  beginner
+  professional
+}
+
+// ==========================================
 // Result (Ergebnis)
 // ==========================================
 model Result {
-  id        String @id @default(uuid())
-  version   Int    @default(1)
-  formData  Json
+  id       String @id @default(uuid())
+  version  Int    @default(1)
+  formData Json
 
   calculations    Json?
   recommendations Json?
@@ -25,32 +51,44 @@ model Result {
   schematicImageUrl String?
   schematicPdfUrl   String?
 
-  aiModel     String?
-  inputTokens Int?
+  aiModel      String?
+  inputTokens  Int?
   outputTokens Int?
 
   creditsUsed Int @default(0)
+
+  // Idempotenter Generation-Lock. Atomarer Übergang `idle|failed → pending`
+  // via `updateMany` verhindert doppelte AI-Kosten bei Parallelzugriff.
+  generationStatus    GenerationStatus @default(idle)
+  generationStartedAt DateTime?
+  generationError     String?
+
+  schematicVariant SchematicVariant @default(professional)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   expiresAt DateTime
 
-  creditBalance CreditBalance?
-  creditUsages  CreditUsage[]
+  creditBalance   CreditBalance?
+  creditUsages    CreditUsage[]
+  creditPurchases CreditPurchase[]
+
+  @@index([createdAt])
+  @@index([generationStatus])
 }
 
 // ==========================================
 // Product (Produkt)
 // ==========================================
 model Product {
-  id          String  @id @default(uuid())
-  name        String
-  description String?
-  icon        String?
-  imageUrl    String?
+  id           String   @id @default(uuid())
+  name         String
+  description  String?
+  icon         String?
+  imageUrl     String?
   affiliateUrl String?
-  asin        String?
-  price       Float?
+  asin         String?
+  price        Decimal? @db.Decimal(12, 2)
 
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id])
@@ -75,24 +113,29 @@ model Product {
   isActive Boolean @default(true)
 
   brandId String?
-  brand   Brand? @relation(fields: [brandId], references: [id])
+  brand   Brand?  @relation(fields: [brandId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([asin])
   @@index([categoryId])
   @@index([isActive])
+  @@index([isActive, categoryId])
 }
 
 // ==========================================
 // Category (Kategorie)
 // ==========================================
 model Category {
-  id        String @id @default(uuid())
+  id        String  @id @default(uuid())
   name      String
-  slug      String @unique
+  slug      String  @unique
   icon      String?
-  sortOrder Int    @default(0)
+  sortOrder Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   products Product[]
   filters  CategoryFilter[]
@@ -102,7 +145,7 @@ model Category {
 // CategoryFilter (Filter-Definition pro Kategorie)
 // ==========================================
 model CategoryFilter {
-  id         String @id @default(uuid())
+  id         String   @id @default(uuid())
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
@@ -126,16 +169,18 @@ model CategoryFilter {
 model CreditPurchase {
   id       String @id @default(uuid())
   resultId String
+  result   Result @relation(fields: [resultId], references: [id], onDelete: Restrict)
 
   paypalOrderId String @unique
-  paypalStatus   String
+  paypalStatus  String
 
   packageType String
   credits     Int
-  amount      Float
-  currency    String @default("EUR")
+  amount      Decimal @db.Decimal(12, 2)
+  currency    String  @default("EUR")
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([resultId])
 }
@@ -183,17 +228,22 @@ model PromptVersion {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([isActive, createdAt])
 }
 
 // ==========================================
 // ConsumerCategory (Verbraucher-Kategorien im Wizard)
 // ==========================================
 model ConsumerCategory {
-  id        String @id @default(uuid())
+  id        String  @id @default(uuid())
   name      String
-  slug      String @unique
+  slug      String  @unique
   icon      String?
-  sortOrder Int    @default(0)
+  sortOrder Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   devices ConsumerDevice[]
 }
@@ -207,10 +257,16 @@ model ConsumerDevice {
   i18nKey String?
   icon    String?
 
-  defaultPower       Int   @default(50)
+  defaultPower       Int    @default(50)
   defaultVoltage     String @default("12V")
-  defaultHoursPerDay Float @default(2)
-  stepHours          Float @default(0.5)
+  defaultHoursPerDay Float  @default(2)
+  stepHours          Float  @default(0.5)
+
+  /// Durchschnittliche Leistung in % der Nominalleistung (`defaultPower`).
+  /// Wird im Wizard/Algorithmus als Faktor für den Tagesverbrauch verwendet,
+  /// während die volle Leistung für Wechselrichter-Peak-Dimensionierung gilt.
+  /// `null` oder `100` ⇒ kein Rabatt.
+  averageLoadPercent Int?
 
   showHoursField  Boolean @default(true)
   showFixedOption Boolean @default(false)
@@ -239,6 +295,7 @@ model SystemSetting {
   key   String @id
   value String
 
+  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
@@ -246,14 +303,15 @@ model SystemSetting {
 // Model Pricing (KI-Modell Preise)
 // ==========================================
 model ModelPricing {
-  id          String @id @default(uuid())
-  modelId     String @unique
+  id          String  @id @default(uuid())
+  modelId     String  @unique
   displayName String?
   provider    String
 
-  inputPrice  Float @default(0)
-  outputPrice Float @default(0)
+  inputPrice  Decimal @default(0) @db.Decimal(12, 6)
+  outputPrice Decimal @default(0) @db.Decimal(12, 6)
 
+  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
@@ -271,14 +329,10 @@ model AlgorithmSettings {
   simultaneousModerate Float @default(0.50)
   simultaneousHigh     Float @default(0.80)
 
-  alternatorStandard    Float @default(30.0)
-  alternatorEnhanced    Float @default(90.0)
-  alternatorEuro6dSmart Float @default(30.0)
-  alternatorUnknown     Float @default(30.0)
-
-  batteryCompact  Float @default(80.0)
-  batteryMedium   Float @default(150.0)
-  batterySpacious Float @default(200.0)
+  alternatorStandard   Float @default(30.0)
+  alternatorEnhanced   Float @default(90.0)
+  alternatorDriveHours Float @default(2.0)
+  boosterEfficiency    Float @default(0.95)
 
   batterySafetyFactor Float @default(1.20)
   solarSafetyFactor   Float @default(1.10)
@@ -293,7 +347,11 @@ model AlgorithmSettings {
   wpPerM2Flexible Float @default(180.0)
 
   cloudyYieldFactor           Float @default(0.30)
+  cloudyYieldFactorSummer     Float @default(0.50)
+  cloudyYieldFactorWinter     Float @default(0.20)
   recommendedSolarYieldFactor Float @default(1.20)
+  solarSystemEfficiency       Float @default(0.85)
+  maxPortableWp               Int   @default(400)
 
   roofUtilizationFactor     Float @default(0.80)
   roofOrientationFactor     Float @default(0.85)
@@ -306,6 +364,7 @@ model AlgorithmSettings {
   locationGermanyAlps    Float @default(0.8)
   locationSouthernEurope Float @default(1.2)
   locationScandinavia    Float @default(0.6)
+  locationEastern        Float @default(0.9)
   locationVaries         Float @default(1.0)
 
   dutyCycleCompressor Float @default(0.35)
@@ -317,6 +376,8 @@ model AlgorithmSettings {
   chargerTimeHoursSlow   Float @default(12.0)
   chargerTimeHoursNormal Float @default(8.0)
   chargerTimeHoursFast   Float @default(5.0)
+
+  chargerAbsorptionOverhead Float @default(0.15)
 
   solarControllerClasses String @default("10,20,30,40,50,60,80,100")
   cableSizes             String @default("6,10,16,25,35,50,70,95,120")
@@ -332,6 +393,7 @@ model AlgorithmSettings {
   productSelectionMode String @default("algorithm")
   reasonGenerationMode String @default("algorithm")
 
+  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
@@ -342,7 +404,7 @@ model Brand {
   id   String @id @default(uuid())
   name String
 
-  showInPreferences Boolean @default(true)
+  showInPreferences Boolean  @default(true)
   types             String[] @default([])
 
   isActive Boolean @default(true)
@@ -351,6 +413,9 @@ model Brand {
   updatedAt DateTime @updatedAt
 
   products Product[]
+
+  @@unique([name])
+  @@index([isActive, name])
 }
 
 // ==========================================
@@ -366,4 +431,22 @@ model BrandFilterCategory {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ==========================================
+// Algorithm test — gespeicherte Nutzer-Szenarien (Admin „Algorithmus testen“)
+// ==========================================
+model AlgorithmTestUserPreset {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  /// Vollständiger Wizard-/Algorithmus-Input (`AlgorithmInput`), validiert beim Speichern.
+  formData    Json
+  sortOrder   Int     @default(0)
+  isActive    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
 }

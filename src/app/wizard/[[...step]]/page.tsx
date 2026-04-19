@@ -1,6 +1,9 @@
+import { Suspense } from "react";
+import { connection } from "next/server";
 import { redirect } from "next/navigation";
 
-import { listWizardConsumerTemplates } from "@/lib/db/wizard-consumer-templates";
+import { StreamingFallback } from "@/components/streaming-fallback";
+import { listWizardConsumerTemplates } from "@/lib/db/queries/wizard-consumer-templates";
 
 import { WizardClient } from "./wizard-client";
 
@@ -16,7 +19,17 @@ function parseStep(segments: string[] | undefined): number {
   return n;
 }
 
-export default async function WizardPage({ params }: PageProps) {
+export default function WizardPage(props: PageProps) {
+  return (
+    <Suspense fallback={<StreamingFallback />}>
+      <WizardPageBody {...props} />
+    </Suspense>
+  );
+}
+
+async function WizardPageBody({ params }: PageProps) {
+  await connection();
+
   const { step: segments } = await params;
 
   if (!segments?.length) {
@@ -29,7 +42,15 @@ export default async function WizardPage({ params }: PageProps) {
     redirect(`/wizard/${normalized}`);
   }
 
-  const consumerTemplates = await listWizardConsumerTemplates();
+  const result = await listWizardConsumerTemplates();
+  const consumerTemplates = result.ok ? result.data : [];
+  const consumerCatalogError = result.ok ? null : result.message;
 
-  return <WizardClient step={step} consumerTemplates={consumerTemplates} />;
+  return (
+    <WizardClient
+      step={step}
+      consumerTemplates={consumerTemplates}
+      consumerCatalogError={consumerCatalogError}
+    />
+  );
 }

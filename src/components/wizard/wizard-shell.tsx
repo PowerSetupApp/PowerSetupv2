@@ -41,7 +41,7 @@ export function WizardShell({ step, children, onStepChange }: WizardShellProps) 
           Zurück zur Startseite
         </Link>
       </SiteHeader>
-      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-6 pb-32 sm:px-6 sm:pb-12">
+      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-6 pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:px-6">
         <ProgressSteps
           steps={WIZARD_STEPS}
           currentStep={step}
@@ -53,17 +53,17 @@ export function WizardShell({ step, children, onStepChange }: WizardShellProps) 
         />
         <main
           id="wizard-step-content"
-          className="flex min-h-0 flex-1 flex-col rounded-3xl border border-border/70 bg-card/85 p-5 shadow-[0_18px_50px_-30px_color-mix(in_oklch,var(--foreground)_12%,transparent)] backdrop-blur-sm sm:p-8"
+          className="flex min-h-0 flex-1 flex-col rounded-3xl border border-border/70 bg-card/85 p-4 shadow-[0_18px_50px_-30px_color-mix(in_oklch,var(--foreground)_12%,transparent)] backdrop-blur-sm sm:p-8"
         >
           <div className="flex min-h-0 flex-1 flex-col gap-6">{children}</div>
-          <WizardNavBar
-            canBack={step > 1}
-            canNext={step < 8 && validateWizardStep(step, input)}
-            onBack={() => onStepChange(step - 1)}
-            onNext={() => onStepChange(step + 1)}
-            nextLabel={step === 7 ? "Zur Übersicht" : "Weiter"}
-          />
         </main>
+        <WizardNavBar
+          canBack={step > 1}
+          canNext={step < 8 && validateWizardStep(step, input)}
+          onBack={() => onStepChange(step - 1)}
+          onNext={() => onStepChange(step + 1)}
+          nextLabel={step === 7 ? "Zur Übersicht" : "Weiter"}
+        />
       </div>
     </div>
   );

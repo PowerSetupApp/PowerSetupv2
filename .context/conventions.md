@@ -9,7 +9,7 @@
 
 ## Komponenten
 
-- Max. **150 Zeilen** pro Datei — danach Sub-Komponenten auslagern
+- Max. **150 Zeilen** pro **UI-Datei** (Komponenten) — danach Sub-Komponenten auslagern (API-Routen: siehe unten **~80 Zeilen**)
 - shadcn/ui zuerst prüfen, dann Custom bauen
 - Tailwind CSS only — kein CSS Module, kein Inline-Style
 - Standard: Server Component — `"use client"` nur wenn nötig
@@ -31,8 +31,8 @@ src/components/wizard/steps/StepXName/
 
 ## API Routes
 
-- Max. **80 Zeilen** pro Route-Datei
-- Logik gehört in `lib/` — nicht in die Route selbst
+- Max. **80 Zeilen** pro `route.ts` — nicht mit dem **150-Zeilen-Budget** für UI-Komponenten verwechseln
+- Logik gehört in `src/lib/` (Queries, Schemas, Helfer) — nicht in die Route selbst
 - Pflicht-Pattern:
   ```typescript
   const body = Schema.parse(await request.json())  // validate

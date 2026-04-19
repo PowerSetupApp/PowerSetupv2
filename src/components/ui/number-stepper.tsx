@@ -41,13 +41,13 @@ export function NumberStepper({
   }, [value, min, formatValue]);
 
   return (
-    <div className={cn("flex items-center gap-1", className)}>
+    <div className={cn("flex items-center gap-1.5", className)}>
       <button
         type="button"
         onClick={decrease}
         disabled={value <= min}
         className={cn(
-          "flex h-10 w-10 cursor-pointer items-center justify-center rounded-md border transition-colors",
+          "flex h-11 min-h-11 w-11 min-w-11 cursor-pointer items-center justify-center rounded-md border transition-colors",
           "bg-muted hover:bg-muted/80 active:bg-muted/60",
           "touch-manipulation disabled:cursor-not-allowed disabled:opacity-50",
         )}
@@ -55,7 +55,7 @@ export function NumberStepper({
       >
         <Minus className="h-5 w-5" />
       </button>
-      <div className="flex h-10 min-w-[4rem] items-center justify-center rounded-md border bg-background px-2 text-center font-medium">
+      <div className="flex h-11 min-h-11 min-w-[4.5rem] items-center justify-center rounded-md border bg-background px-2 text-center font-medium">
         <span>{displayValue}</span>
         {suffix ? (
           <span className="ml-1 text-sm text-muted-foreground">{suffix}</span>
@@ -66,7 +66,7 @@ export function NumberStepper({
         onClick={increase}
         disabled={value >= max}
         className={cn(
-          "flex h-10 w-10 cursor-pointer items-center justify-center rounded-md border transition-colors",
+          "flex h-11 min-h-11 w-11 min-w-11 cursor-pointer items-center justify-center rounded-md border transition-colors",
           "bg-muted hover:bg-muted/80 active:bg-muted/60",
           "touch-manipulation disabled:cursor-not-allowed disabled:opacity-50",
         )}

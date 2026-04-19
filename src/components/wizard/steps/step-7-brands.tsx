@@ -9,7 +9,7 @@ export function Step7Brands() {
   const setBrandPreferences = useWizardStore((s) => s.setBrandPreferences);
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <WizardStepHeader
         title="Marken (optional)"
         description="Wenn du Marken bevorzugst, trage später die IDs aus der Produkt-Datenbank ein — oder frei lassen."

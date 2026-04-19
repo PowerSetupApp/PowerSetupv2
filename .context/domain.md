@@ -44,7 +44,7 @@ Kabeldurchmesser (mm²) = (Strom × 2 × Länge × Kupferwiderstand) / zulässig
 
 | Regel | Detail |
 |-------|--------|
-| **Result-UUID** | 90 Tage gültig, dann Hard Delete |
+| **Result-UUID** | 30 Tage gültig, dann Hard Delete |
 | **Kein User-Account** | Zugang nur über Result-UUID |
 | **Credit-System** | 1 Schaltplan = 1 Credit. Inputs ändern = kostenlos. Neue PDF = kostet erneut. |
 | **Credit-Pakete** | Einzel 4,99€ / Starter 3×9,99€ / Pro 10×24,99€ |

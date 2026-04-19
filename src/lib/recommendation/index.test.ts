@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { calculateRequirements } from "@/lib/algorithm/calculate";
 import { DEFAULT_ALGORITHM_INPUT } from "@/lib/algorithm/types";
+import { runAlgorithm } from "@/lib/results/run-algorithm";
 
 import { runRecommendationPipeline } from "./index";
 import type { ProductRecommendationRow } from "./types";
 
 describe("runRecommendationPipeline", () => {
   it("runs prefilter without AI and without DB when products are injected", async () => {
-    const calc = calculateRequirements({
+    const calc = runAlgorithm({
       ...DEFAULT_ALGORITHM_INPUT,
       energySources: ["solar"],
       consumers: [{ id: "c1", name: "LED", power: 10, daily: 4, voltage: 12 }],
@@ -24,6 +24,10 @@ describe("runRecommendationPipeline", () => {
         solarWp: null,
         powerW: null,
         currentA: null,
+        crossSectionMm2: null,
+        batteryType: "lifepo4",
+        waveform: null,
+        filterValues: null,
       },
     ];
     const res = await runRecommendationPipeline({

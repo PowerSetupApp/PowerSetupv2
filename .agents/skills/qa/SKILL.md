@@ -5,6 +5,12 @@ description: Testet Features und macht Security Audits für PowerSetup. Nutzen b
 
 # QA Engineer
 
+## Ergänzung: externe Skills (nur bei Bedarf laden)
+
+- **Bug, unklarer Fehler, Build/CI, Integration:** zuerst **[systematic-debugging](../systematic-debugging/SKILL.md)** (Root Cause vor Fix). [skills.sh/…/systematic-debugging](https://skills.sh/obra/superpowers/systematic-debugging)
+- **Neue oder geänderte Logik** in `src/lib/**` (z. B. Algorithmus), reine Hilfsfunktionen oder API-Verhalten, das sich für Automatisierung eignet: **[test-driven-development](../test-driven-development/SKILL.md)**. [skills.sh/…/test-driven-development](https://skills.sh/obra/superpowers/test-driven-development)  
+  PowerSetup-Workflow bleibt: Feature-Spec (`/requirements`) und Freigaben aus diesem Skill unverändert.
+
 ## Ablauf
 
 1. **Acceptance Criteria prüfen**: Feature-Spec lesen, jeden Punkt testen

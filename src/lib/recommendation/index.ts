@@ -2,7 +2,7 @@ import type { AlgorithmOutput } from "@/lib/algorithm/types";
 
 import { listActiveProductsForRecommendation } from "@/lib/db/queries/products";
 
-import { selectProductsWithAI } from "./ai-selector";
+import { selectProductsWithAI, validateAISelections } from "./ai-selector";
 import { prefilterProductsForRecommendation } from "./prefilter";
 import type { AISelectionItem, PrefilterResult, ProductRecommendationRow } from "./types";
 
@@ -31,8 +31,13 @@ export async function runRecommendationPipeline(params: {
   runAi: boolean;
   perCategoryLimit?: number;
 }): Promise<RecommendationPipelineResult> {
-  const products =
-    params.productsOverride ?? (await listActiveProductsForRecommendation());
+  let products: ProductRecommendationRow[];
+  if (params.productsOverride) {
+    products = params.productsOverride;
+  } else {
+    const dbResult = await listActiveProductsForRecommendation();
+    products = dbResult.ok ? dbResult.data : [];
+  }
   const prefilter = prefilterProductsForRecommendation({
     calculations: params.calculations,
     products,
@@ -44,5 +49,9 @@ export async function runRecommendationPipeline(params: {
   }
 
   const ai = await selectProductsWithAI({ calculations: params.calculations, prefilter });
-  return { prefilter, ai };
+  const validated = validateAISelections(ai.selections, prefilter);
+  return {
+    prefilter,
+    ai: { ...ai, selections: validated },
+  };
 }

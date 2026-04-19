@@ -2,6 +2,7 @@ import type { AICompletionRequest, AICompletionResult } from "./types";
 import { AIInvocationError } from "./types";
 
 const GEMINI_MODEL = "gemini-2.0-flash";
+const REQUEST_TIMEOUT_MS = 30_000;
 
 function geminiApiKey(): string | undefined {
   return process.env.GEMINI_API_KEY ?? process.env.GOOGLE_GENERATIVE_AI_API_KEY;
@@ -13,7 +14,7 @@ export async function completeWithGemini(request: AICompletionRequest): Promise<
     throw new AIInvocationError("GEMINI_API_KEY (oder GOOGLE_GENERATIVE_AI_API_KEY) fehlt");
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(key)}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
   const body: Record<string, unknown> = {
     contents: [{ parts: [{ text: request.userPrompt }] }],
@@ -29,11 +30,28 @@ export async function completeWithGemini(request: AICompletionRequest): Promise<
     body.systemInstruction = { parts: [{ text: request.systemInstruction.trim() }] };
   }
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: "POST",
+      // API-Key gehört in den Header, nicht in die URL (Leak in Logs/Referrer).
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": key,
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+  } catch (e) {
+    if (e instanceof Error && e.name === "AbortError") {
+      throw new AIInvocationError(`Gemini Timeout nach ${REQUEST_TIMEOUT_MS}ms`, e);
+    }
+    throw new AIInvocationError("Gemini Netzwerk-Fehler", e);
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (!res.ok) {
     const errText = await res.text().catch(() => "");

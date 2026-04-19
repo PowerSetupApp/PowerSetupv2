@@ -15,12 +15,18 @@ const minimalOutput = {
     autarchyDays: 6,
     hasSolar: true,
     hasAlternator: false,
+    solarTopUpWh: 0,
+    alternatorTopUpWh: 0,
+    dailyTopUpWh: 0,
+    netDailyDeficitWh: 100,
+    bindingBranch: "soft",
   },
   solar: {
     needed: true,
     requiredWp: 400,
     maxRoofWp: 600,
     portableWp: 0,
+    portableEffectiveWp: 0,
     totalAvailableWp: 500,
     dailySolarYieldWh: 1200,
     solarShortfallWh: 0,
@@ -49,6 +55,14 @@ const minimalOutput = {
     currentA: 40,
     originalCurrentA: 40,
     maxInputWp: 600,
+    scope: "roof",
+  },
+  portableController: {
+    needed: false,
+    type: "mppt",
+    currentA: 0,
+    maxInputWp: 0,
+    scope: "portable",
   },
   cables: [],
 } satisfies AlgorithmOutput;
@@ -66,6 +80,10 @@ describe("prefilterProductsForRecommendation", () => {
         solarWp: null,
         powerW: null,
         currentA: null,
+        crossSectionMm2: null,
+        batteryType: "lifepo4",
+        waveform: null,
+        filterValues: null,
       },
       {
         id: "b",
@@ -77,6 +95,10 @@ describe("prefilterProductsForRecommendation", () => {
         solarWp: null,
         powerW: null,
         currentA: null,
+        crossSectionMm2: null,
+        batteryType: "lifepo4",
+        waveform: null,
+        filterValues: null,
       },
     ];
     const out = prefilterProductsForRecommendation({
@@ -100,6 +122,10 @@ describe("prefilterProductsForRecommendation", () => {
         solarWp: null,
         powerW: null,
         currentA: null,
+        crossSectionMm2: null,
+        batteryType: null,
+        waveform: null,
+        filterValues: null,
       },
     ];
     const out = prefilterProductsForRecommendation({
@@ -110,5 +136,46 @@ describe("prefilterProductsForRecommendation", () => {
     expect(out.battery).toHaveLength(0);
     expect(out.solar).toHaveLength(0);
     expect(out.other.length).toBeGreaterThan(0);
+  });
+
+  it("prefers matching battery chemistry from filterValues over mismatched type", () => {
+    const products: ProductRecommendationRow[] = [
+      {
+        id: "agm-close",
+        name: "AGM 195Ah",
+        categorySlug: "battery",
+        categoryName: "Batterie",
+        capacityAh: 195,
+        voltageV: 12,
+        solarWp: null,
+        powerW: null,
+        currentA: null,
+        crossSectionMm2: null,
+        batteryType: "agm",
+        waveform: null,
+        filterValues: null,
+      },
+      {
+        id: "lfp-far",
+        name: "LiFePO4 160Ah",
+        categorySlug: "battery",
+        categoryName: "Batterie",
+        capacityAh: 160,
+        voltageV: 12,
+        solarWp: null,
+        powerW: null,
+        currentA: null,
+        crossSectionMm2: null,
+        batteryType: null,
+        waveform: null,
+        filterValues: { chemistry: "LiFePO4" },
+      },
+    ];
+    const out = prefilterProductsForRecommendation({
+      calculations: minimalOutput,
+      products,
+      perCategoryLimit: 2,
+    });
+    expect(out.battery[0]?.productId).toBe("lfp-far");
   });
 });

@@ -2,6 +2,7 @@ import type { AICompletionRequest, AICompletionResult } from "./types";
 import { AIInvocationError } from "./types";
 
 const OPENAI_MODEL = "gpt-4o-mini";
+const REQUEST_TIMEOUT_MS = 30_000;
 
 export async function completeWithOpenAI(request: AICompletionRequest): Promise<AICompletionResult> {
   const key = process.env.OPENAI_API_KEY;
@@ -15,21 +16,34 @@ export async function completeWithOpenAI(request: AICompletionRequest): Promise<
   }
   messages.push({ role: "user", content: request.userPrompt });
 
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${key}`,
-    },
-    body: JSON.stringify({
-      model: OPENAI_MODEL,
-      messages,
-      temperature: 0.2,
-      ...(request.responseMimeType === "application/json"
-        ? { response_format: { type: "json_object" as const } }
-        : {}),
-    }),
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${key}`,
+      },
+      body: JSON.stringify({
+        model: OPENAI_MODEL,
+        messages,
+        temperature: 0.2,
+        ...(request.responseMimeType === "application/json"
+          ? { response_format: { type: "json_object" as const } }
+          : {}),
+      }),
+      signal: controller.signal,
+    });
+  } catch (e) {
+    if (e instanceof Error && e.name === "AbortError") {
+      throw new AIInvocationError(`OpenAI Timeout nach ${REQUEST_TIMEOUT_MS}ms`, e);
+    }
+    throw new AIInvocationError("OpenAI Netzwerk-Fehler", e);
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (!res.ok) {
     const errText = await res.text().catch(() => "");

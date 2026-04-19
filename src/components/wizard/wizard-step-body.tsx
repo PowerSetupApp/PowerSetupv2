@@ -8,14 +8,16 @@ import { Step5Autarky } from "@/components/wizard/steps/step-5-autarky";
 import { Step6Cables } from "@/components/wizard/steps/step-6-cables";
 import { Step7Brands } from "@/components/wizard/steps/step-7-brands";
 import { Step8Review } from "@/components/wizard/steps/step-8-review";
-import type { WizardConsumerTemplate } from "@/lib/db/wizard-consumer-templates";
+import type { WizardConsumerTemplate } from "@/lib/db/queries/wizard-consumer-templates";
 
 export function WizardStepBody({
   step,
   consumerTemplates,
+  consumerCatalogError,
 }: {
   step: number;
   consumerTemplates: WizardConsumerTemplate[];
+  consumerCatalogError: string | null;
 }) {
   switch (step) {
     case 1:
@@ -23,7 +25,9 @@ export function WizardStepBody({
     case 2:
       return <Step2Energy />;
     case 3:
-      return <Step3Consumers templates={consumerTemplates} />;
+      return (
+        <Step3Consumers templates={consumerTemplates} catalogError={consumerCatalogError} />
+      );
     case 4:
       return <Step4Travel />;
     case 5:

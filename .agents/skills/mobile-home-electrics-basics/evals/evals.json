@@ -1,0 +1,53 @@
+{
+  "skill_name": "mobile-home-electrics-basics",
+  "evals": [
+    {
+      "id": 0,
+      "name": "cable-sizing-en",
+      "prompt": "I'm wiring the battery-to-busbar feeder in my Sprinter camper. The run is about 3 m one-way and the biggest continuous load on that bank is 120 A at 12 V. I'd like to stay under a 3 % voltage drop. Which copper cross-section should I use, and what fuse?",
+      "expected_output": "Uses ΔU = 2·L·I·ρ/A with ρ ≈ 0.0178, computes ~35.6 mm² minimum, rounds up to 50 mm², and fuses for the cable (≈ 150–200 A Class T/ANL) not the load. Mentions temperature/derating awareness if the cable is bundled.",
+      "assertions": [],
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "ladebooster-de",
+      "prompt": "Hi, ich baue gerade meinen Kastenwagen um. Ich habe eine 200 Ah LiFePO4-Aufbaubatterie und möchte sie während der Fahrt über einen Ladebooster laden. Die Lichtmaschine ist 12 V (Euro-6, also intelligente LiMa) und die Leitung zur Starterbatterie wäre etwa 4 m lang. Welche Ladebooster-Größe ist sinnvoll und welcher Kabelquerschnitt plus Sicherung zur Starterbatterie?",
+      "expected_output": "Picks a B2B size that respects both the alternator (Euro-6 smart, typically 30–50 A is safe) and the battery's charge C-rate (0.5 C for a LFP drop-in → ≤ 100 A, so not limiting here). Computes starter-side current ≈ B2B_out / 0.9. Sizes cable from I_in at 4 m, ~3 % drop, and recommends fuses at BOTH ends of the long run. Mentions the D+/ignition-sense wiring for smart alternators.",
+      "assertions": [],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "full-system-spain-summer",
+      "prompt": "Plan a full 12 V electrical system for my camper for summer trips in southern Spain. Daily consumption: about 1500 Wh on DC (fridge, lights, pump) plus 400 Wh through a pure-sine inverter (laptop + Nespresso). Flat roof, no shading. LiFePO4. I want a couple of reserve days without driving or hookup. Give me battery Ah, solar Wp, inverter size, main fuse, and the battery-to-inverter cable.",
+      "expected_output": "Battery sized for ~2 days of autonomy using DoD 0.8 and correct efficiency stack (typically ≈ 250 Ah nominal for 2 days of reserve, not one). Solar sized from PSH ≈ 6 summer Spain with η_system 0.70–0.80 → ~400–500 Wp. Inverter ≥ 1500 W pure sine to cover the Nespresso surge. Cable + Class T fuse at the battery terminal. Uses the 'Given / Formula / Result' notation from the skill.",
+      "assertions": [],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "winter-germany-constraint",
+      "prompt": "Same camper, same daily consumption (1500 Wh DC + 400 Wh AC), but now I want to be autonomous in January in central Germany, parked most of the time. How much solar and battery do I need?",
+      "expected_output": "Should surface that winter PSH in central Germany is roughly 1 kWh/m²/day, making a solar-only design require an absurd array (roughly 2.5 kWp or more on a camper roof) and conclude it is unrealistic. Should pivot to combining solar with shore power or B2B / driving energy, not pretend a huge rooftop array is the answer.",
+      "assertions": [],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "safety-anl-vs-class-t",
+      "prompt": "Can I just use a 300 A ANL fuse as the main fuse directly on the + terminal of my 280 Ah LiFePO4 house bank, or do I really need a Class T?",
+      "expected_output": "Explains the difference in breaking capacity (ANL ~6 kA, Class T 20 kA) and the real short-circuit current of a large LFP (well over 5 kA), and recommends Class T for banks of that size. Reasoning is given, not just an authoritative 'no'.",
+      "assertions": [],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "out-of-scope-fridge",
+      "prompt": "Which 12 V compressor fridge should I buy for my camper? I have about 80 L of space and want it quiet.",
+      "expected_output": "Recognises that product / brand recommendations and appliance consumption estimates are out of scope per the skill's own limits, declines politely, and redirects to the advisor-algorithm skill or general consumer research. Does NOT invent brand names or pretend to know market specifics.",
+      "assertions": [],
+      "files": []
+    }
+  ]
+}

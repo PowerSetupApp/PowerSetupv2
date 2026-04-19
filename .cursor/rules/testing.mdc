@@ -1,0 +1,26 @@
+---
+description: Automatisierte Tests — Vitest, optional Playwright; verweist auf Skills
+globs:
+  - "**/*.test.ts"
+  - "**/*.test.tsx"
+  - "**/*.spec.ts"
+  - "**/*.spec.tsx"
+  - "**/vitest.config.*"
+  - "**/playwright.config.*"
+  - "e2e/**/*"
+alwaysApply: false
+---
+
+# Tests
+
+**Kanonisch:** `.agents/skills/test-driven-development/SKILL.md` (neue oder geänderte Logik in `src/lib/` / APIs) und `.agents/skills/qa/SKILL.md` (Review, Security).
+
+## Stack-Empfehlung
+
+- **Unit / Integration:** Vitest (TypeScript, schnell, gut zu Next.js). Testdateien z. B. neben dem Modul oder unter `src/**/__tests__/`.
+- **E2E (optional, später):** Playwright — wiederholbare Szenarien in **CI**, nicht ersetzbar durch den Cursor-internen Browser (der ist fürs manuelle Anschauen, kein Regressionssuite-Ersatz).
+
+## Praxis
+
+- Vor dem Fix: `.agents/skills/systematic-debugging/SKILL.md` bei flaky / rotem CI.
+- Im App-Repo: `npm run test` / `pnpm test` lokal; parallel **GitHub Actions** (`.github/workflows/ci.yml`), sobald `package.json` an der Wurzel liegt.

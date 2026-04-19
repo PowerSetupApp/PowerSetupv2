@@ -17,7 +17,7 @@ function backoffMs(attempt: number): number {
 
 function mockCompletion(): AICompletionResult {
   return {
-    text: JSON.stringify({ ok: true, note: "USE_MOCK_AI" }),
+    text: JSON.stringify({ selections: [] }),
     provider: "mock",
     model: "mock-model",
     inputTokens: 0,
@@ -43,12 +43,17 @@ async function withRetries(
   throw new AIInvocationError(`${label} nach ${MAX_ATTEMPTS} Versuchen fehlgeschlagen`, lastError);
 }
 
+function isMockAi(): boolean {
+  const v = process.env.USE_MOCK_AI?.trim().toLowerCase();
+  return v === "true" || v === "1" || v === "yes";
+}
+
 /**
  * Zentraler KI-Einstieg: Mock (CI), sonst Gemini mit Retries, dann OpenAI mit Retries.
- * Keine Netzwerke in Tests: `USE_MOCK_AI=true`.
+ * Keine Netzwerke in Tests: `USE_MOCK_AI=true` (auch `1`/`yes`).
  */
 export async function callAI(request: AICompletionRequest): Promise<AICompletionResult> {
-  if (process.env.USE_MOCK_AI === "true") {
+  if (isMockAi()) {
     return mockCompletion();
   }
 

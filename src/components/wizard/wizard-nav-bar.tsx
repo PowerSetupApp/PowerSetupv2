@@ -20,28 +20,34 @@ export function WizardNavBar({
   nextLabel = "Weiter",
 }: WizardNavBarProps) {
   return (
-    <div className="mt-8 flex flex-col-reverse gap-3 border-t border-border/70 pt-6 sm:flex-row sm:items-center sm:justify-between">
-      <Button
-        type="button"
-        variant="outline"
-        size="lg"
-        className="h-12 min-h-12 w-full rounded-2xl border-border/80 sm:w-auto sm:min-w-[9rem]"
-        disabled={!canBack}
-        onClick={onBack}
-      >
-        <ChevronLeft className="size-4" aria-hidden />
-        Zurück
-      </Button>
-      <Button
-        type="button"
-        size="lg"
-        className="h-12 min-h-12 w-full rounded-2xl sm:ml-auto sm:w-auto sm:min-w-[9rem]"
-        disabled={!canNext}
-        onClick={onNext}
-      >
-        {nextLabel}
-        <ChevronRight className="size-4" aria-hidden />
-      </Button>
+    <div
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-border/80 bg-background/85 backdrop-blur-md supports-[backdrop-filter]:bg-background/70"
+      role="navigation"
+      aria-label="Wizard-Navigation"
+    >
+      <div className="mx-auto grid w-full max-w-3xl grid-cols-2 gap-3 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 sm:px-6">
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          className="h-12 min-h-12 w-full min-w-0 rounded-2xl border-border/80"
+          disabled={!canBack}
+          onClick={onBack}
+        >
+          <ChevronLeft className="size-4 shrink-0" aria-hidden />
+          <span className="max-[360px]:sr-only">Zurück</span>
+        </Button>
+        <Button
+          type="button"
+          size="lg"
+          className="h-12 min-h-12 w-full min-w-0 rounded-2xl"
+          disabled={!canNext}
+          onClick={onNext}
+        >
+          <span className="max-[360px]:sr-only">{nextLabel}</span>
+          <ChevronRight className="size-4 shrink-0" aria-hidden />
+        </Button>
+      </div>
     </div>
   );
 }

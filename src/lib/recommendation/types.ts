@@ -9,6 +9,13 @@ export type ProductRecommendationRow = {
   solarWp: number | null;
   powerW: number | null;
   currentA: number | null;
+  crossSectionMm2: number | null;
+  /** Chemie/Typ aus Stammdaten (z. B. lifepo4, agm) — Abgleich mit Algorithmus-Empfehlung. */
+  batteryType: string | null;
+  /** Wellenform Wechselrichter (z. B. pure_sine) — optional für Prefilter-Bonus. */
+  waveform: string | null;
+  /** Admin-JSON: CategoryFilter-`key` → ausgewählter Wert (String/Number). */
+  filterValues: Record<string, unknown> | null;
 };
 
 export type RecommendationBucket = "battery" | "solar" | "inverter" | "controller" | "cable" | "other";

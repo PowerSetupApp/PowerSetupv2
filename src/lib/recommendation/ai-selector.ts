@@ -24,6 +24,25 @@ export function parseProductSelectionJson(text: string): AISelectionItem[] {
   return parsed.selections;
 }
 
+/**
+ * AI-Halluzinationen abfangen: Nur Produkt-IDs akzeptieren, die tatsächlich im
+ * Prefilter enthalten waren. Unbekannte IDs werden verworfen — das ist
+ * sicherer, als sie später in der UI mit „unbekannt" darzustellen oder gar
+ * fehlende Produkte zu zeigen.
+ */
+export function validateAISelections(
+  selections: AISelectionItem[],
+  prefilter: PrefilterResult,
+): AISelectionItem[] {
+  const allowed = new Set<string>();
+  for (const bucket of Object.values(prefilter)) {
+    for (const item of bucket) {
+      allowed.add(item.productId);
+    }
+  }
+  return selections.filter((s) => allowed.has(s.productId));
+}
+
 export async function selectProductsWithAI(params: {
   calculations: AlgorithmOutput;
   prefilter: PrefilterResult;

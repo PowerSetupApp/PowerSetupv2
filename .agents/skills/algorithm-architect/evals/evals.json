@@ -1,0 +1,26 @@
+{
+  "skill_name": "algorithm-architect",
+  "evals": [
+    {
+      "id": 1,
+      "name": "camper-power-setup",
+      "prompt": "I need an algorithm for my camper van that takes a list of appliances (watts + hours per day) and tells me what battery capacity, inverter size and cable thickness I need. 12V system, LiFePO4. I'll run a fridge (60W, 24h), a laptop charger (90W, 4h) and a water pump (50W, 0.5h). Cable run from the battery to the fuse box is about 2 meters.",
+      "expected_output": "Clarifying questions where needed (or reasonable defaults stated alongside the assumptions list). A design doc covering inputs/outputs with units, approach, pseudocode, edge cases, named constants with sources. Language choice confirmed with the user. A runnable implementation with named constants, input validation, docstrings. At least a hand-computable sanity test plus edge-case tests. The references/worked-examples/power-setup.md file should be consulted and referenced.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "monthly-kwh-cost",
+      "prompt": "write me something that takes a list of my household appliances i use every month and spits out estimated kWh per month and what it costs me. i'm in germany so roughly 0.35 eur per kwh but let me change it later if i want.",
+      "expected_output": "Small-algorithm scaling applied: short design sketch is acceptable instead of a full doc. Clarifying questions or explicit defaults for ambiguous parts (hours per day vs hours per month, days per month, per-appliance vs total). Code takes appliances + price per kWh (parameterizable, default 0.35 EUR), returns monthly kWh and monthly cost, validates inputs, includes at least one hand-computable example. The skill should trigger even though the word 'algorithm' was not used.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "task-worker-assignment",
+      "prompt": "I want to assign N tasks to M workers minimizing total completion time. Each worker has a skill-match score between 0 and 1 for each task (1 = best fit) and a speed in tasks per hour. Tasks have different base durations in hours. Write the algorithm.",
+      "expected_output": "Full process used since this is a non-trivial algorithm. Clarifying questions where needed: can one worker do multiple tasks sequentially, are tasks preemptible, is one task per worker a hard constraint, how do score and speed combine into effective time. Design doc with an explicit discussion of approach tradeoffs (e.g. greedy vs Hungarian-style assignment vs heuristic) and why the chosen approach fits. Pseudocode, complexity analysis, implementation in the chosen language, tests covering N<M, N>M, zero scores, and a small hand-checkable case. Proves the skill generalizes outside the electrical domain.",
+      "files": []
+    }
+  ]
+}

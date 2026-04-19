@@ -14,7 +14,7 @@ describe("callAI", () => {
     });
     expect(res.provider).toBe("mock");
     expect(res.model).toBe("mock-model");
-    expect(res.text).toContain("{");
+    expect(res.text).toContain("selections");
     expect(res.inputTokens).toBeGreaterThanOrEqual(0);
     expect(res.outputTokens).toBeGreaterThanOrEqual(0);
   });

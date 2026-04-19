@@ -13,3 +13,9 @@ src/generated/
 # Prisma local SQLite (falls genutzt)
 *.db
 *.db-journal
+
+# TypeScript incremental build cache
+*.tsbuildinfo
+
+# Local Cursor IDE settings (machine-specific)
+.cursor/settings.json
