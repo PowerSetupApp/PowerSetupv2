@@ -4,8 +4,13 @@
  * Ausgabe ist die einzige Produktmenge, die die KI im Prompt sieht (`types.RecommendationPipelineResult`).
  */
 
+import type { AlgorithmTuning } from "@/lib/algorithm/algorithm-tuning";
+import { mergeAlgorithmTuning } from "@/lib/algorithm/algorithm-tuning";
 import { roundUpToStandardMm2 } from "@/lib/algorithm/cable-standards";
 import type { AlgorithmOutput, BatteryPreference, CableRecommendation } from "@/lib/algorithm/types";
+
+import { bmsDischargeAFromRow, productNominalSystemVoltageV } from "./battery-product-spec";
+import { requiredInverterDischargeA } from "./bms-inverter";
 
 import type {
   PrefilterResult,
@@ -150,10 +155,15 @@ function scoreProduct(
   bucket: RecommendationBucket,
   calc: AlgorithmOutput,
   fuseTargets: number[],
+  tuning: AlgorithmTuning,
 ): number {
   switch (bucket) {
     case "battery": {
       if (row.capacityAh == null) return -1000;
+      const vNom = productNominalSystemVoltageV(row);
+      if (vNom != null && vNom !== calc.battery.voltage) {
+        return -2000;
+      }
       const cap = row.capacityAh;
       const target = Math.max(calc.battery.recommendedCapacityAh, 1);
       let score: number;
@@ -163,11 +173,20 @@ function scoreProduct(
         const overshoot = cap - target;
         score = 620 - Math.min(overshoot, 120) * 0.8 - Math.max(0, overshoot - 120) * 2.5;
       }
-      if (row.voltageV != null && row.voltageV === calc.battery.voltage) score += 50;
+      if (vNom != null && vNom === calc.battery.voltage) score += 50;
       const chem = batteryChemFromRow(row);
       if (chem != null) {
         if (chem === calc.battery.type) score += 120;
         else score -= 320;
+      }
+      const needA = requiredInverterDischargeA(calc, tuning);
+      if (calc.inverter.needed && needA > 0) {
+        const bmsA = bmsDischargeAFromRow(row);
+        if (bmsA != null) {
+          if (bmsA < needA * 0.98) score -= 550;
+        } else {
+          score -= 20;
+        }
       }
       return score;
     }
@@ -279,8 +298,11 @@ export function prefilterProductsForRecommendation(params: {
   calculations: AlgorithmOutput;
   products: ProductRecommendationRow[];
   perCategoryLimit: number;
+  /** Kabel/WR-η, Peakfaktor steckt in `calculations.inverter.recommendedW`. */
+  tuning?: AlgorithmTuning;
 }): PrefilterResult {
   const { calculations, products, perCategoryLimit } = params;
+  const tuning = params.tuning ?? mergeAlgorithmTuning({});
   const fuseTargets = collectFuseTargets(calculations);
 
   const buckets: Record<RecommendationBucket, ScoredProduct[]> = {
@@ -294,7 +316,7 @@ export function prefilterProductsForRecommendation(params: {
 
   for (const p of products) {
     const bucket = detectBucket(p.categorySlug);
-    const score = scoreProduct(p, bucket, calculations, fuseTargets);
+    const score = scoreProduct(p, bucket, calculations, fuseTargets, tuning);
     const item: ScoredProduct = {
       productId: p.id,
       bucket,
@@ -317,7 +339,7 @@ export function prefilterProductsForRecommendation(params: {
     const portRows: ScoredProduct[] = [];
     for (const p of products) {
       if (detectBucket(p.categorySlug) !== "controller") continue;
-      const score = scoreProduct(p, "controller", portableCalc, fuseTargets);
+      const score = scoreProduct(p, "controller", portableCalc, fuseTargets, tuning);
       portRows.push({
         productId: p.id,
         bucket: "controller",

@@ -1,6 +1,7 @@
 import { callAI } from "@/lib/ai/client";
 import { AIInvocationError } from "@/lib/ai/types";
 import { buildProductSelectionPrompt } from "@/lib/ai/prompts/product-selection";
+import type { AlgorithmTuning } from "@/lib/algorithm/algorithm-tuning";
 import type { AlgorithmOutput } from "@/lib/algorithm/types";
 import { getAISettings } from "@/lib/db/queries/admin-settings-ai";
 
@@ -71,7 +72,7 @@ function flattenProductGroups(productGroups: unknown): unknown[] {
 
 /** Entfernt typische Markdown-Umhüllung („```json … ```“). */
 function stripModelMarkdownFences(text: string): string {
-  let t = text.trim();
+  const t = text.trim();
   const block = /^```(?:json)?\s*\r?\n?([\s\S]*?)\r?\n?```$/im.exec(t);
   if (block) return block[1].trim();
   const inline = /```(?:json)?\s*([\s\S]*?)```/.exec(t);
@@ -202,14 +203,16 @@ export function validateAISelections(
 export async function selectProductsWithAI(params: {
   calculations: AlgorithmOutput;
   prefilter: PrefilterResult;
-  /** Vollständiger Katalog für Admin-Platzhalter `{{PRODUCT_CONTEXT}}`. */
+  /** Vollständiger Katalog für Admin-Platzhalter `{{PRODUCT_CONTEXT}}` und Batterie-Spezzeilen. */
   products?: ProductRecommendationRow[];
+  tuning?: Pick<AlgorithmTuning, "inverterEfficiency">;
 }): Promise<{ selections: AISelectionItem[]; model: string; inputTokens: number; outputTokens: number }> {
   const aiSettings = await getAISettings();
   const { systemInstruction, userPrompt } = buildProductSelectionPrompt({
     calculations: params.calculations,
     prefilter: params.prefilter,
     products: params.products,
+    tuning: params.tuning,
     userPromptTemplate: aiSettings.userPromptTemplate,
     systemPromptOverride: aiSettings.systemPrompt,
   });

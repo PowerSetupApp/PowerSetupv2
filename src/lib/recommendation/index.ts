@@ -65,6 +65,7 @@ export async function runRecommendationPipeline(params: {
     calculations: params.calculations,
     products,
     perCategoryLimit: params.perCategoryLimit ?? 6,
+    tuning,
   });
 
   const wiringFromSelections = (aiSelections: AISelectionItem[] | null) =>
@@ -85,6 +86,7 @@ export async function runRecommendationPipeline(params: {
       calculations: params.calculations,
       prefilter,
       products,
+      tuning,
     });
     const validated = validateAISelections(ai.selections, prefilter);
     const productMap = new Map(products.map((p) => [p.id, p]));
@@ -94,6 +96,7 @@ export async function runRecommendationPipeline(params: {
       batteryRanked: prefilter.battery,
       solarRanked: prefilter.solar,
       productsById: productMap,
+      tuning,
     });
     return {
       prefilter,

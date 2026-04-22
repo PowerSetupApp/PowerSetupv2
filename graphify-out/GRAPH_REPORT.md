@@ -1,12 +1,12 @@
 # Graph Report - PowerSetup2  (2026-04-22)
 
 ## Corpus Check
-- 351 files · ~304,570 words
+- 355 files · ~307,170 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1013 nodes · 1156 edges · 78 communities detected
-- Extraction: 74% EXTRACTED · 26% INFERRED · 0% AMBIGUOUS · INFERRED: 305 edges (avg confidence: 0.8)
+- 1023 nodes · 1178 edges · 77 communities detected
+- Extraction: 73% EXTRACTED · 27% INFERRED · 0% AMBIGUOUS · INFERRED: 319 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -31,19 +31,18 @@
 - [[_COMMUNITY_Community 19|Community 19]]
 - [[_COMMUNITY_Community 20|Community 20]]
 - [[_COMMUNITY_Community 21|Community 21]]
-- [[_COMMUNITY_Community 22|Community 22]]
+- [[_COMMUNITY_Community 23|Community 23]]
 - [[_COMMUNITY_Community 24|Community 24]]
 - [[_COMMUNITY_Community 25|Community 25]]
 - [[_COMMUNITY_Community 26|Community 26]]
 - [[_COMMUNITY_Community 27|Community 27]]
-- [[_COMMUNITY_Community 28|Community 28]]
-- [[_COMMUNITY_Community 30|Community 30]]
-- [[_COMMUNITY_Community 34|Community 34]]
+- [[_COMMUNITY_Community 29|Community 29]]
+- [[_COMMUNITY_Community 33|Community 33]]
+- [[_COMMUNITY_Community 36|Community 36]]
 - [[_COMMUNITY_Community 37|Community 37]]
 - [[_COMMUNITY_Community 38|Community 38]]
-- [[_COMMUNITY_Community 39|Community 39]]
-- [[_COMMUNITY_Community 52|Community 52]]
-- [[_COMMUNITY_Community 54|Community 54]]
+- [[_COMMUNITY_Community 51|Community 51]]
+- [[_COMMUNITY_Community 53|Community 53]]
 - [[_COMMUNITY_Community 245|Community 245]]
 - [[_COMMUNITY_Community 246|Community 246]]
 - [[_COMMUNITY_Community 247|Community 247]]
@@ -98,8 +97,8 @@
 6. `importAdminDomainInner()` - 18 edges
 7. `GET()` - 17 edges
 8. `runGenerateForResultId()` - 14 edges
-9. `callAI()` - 11 edges
-10. `runAlgorithmTestAction()` - 10 edges
+9. `scoreProduct()` - 12 edges
+10. `callAI()` - 11 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `loadAISettingsAction()` --calls--> `getAISettings()`  [INFERRED]
@@ -116,48 +115,48 @@
 ## Communities
 
 ### Community 0 - "Community 0"
-Cohesion: 0.06
-Nodes (35): mergeAlgorithmTuning(), mergeNested2(), mergeRecord(), shoreBatteryBridgeReliefDays(), sizeBattery(), topUpCoverageBaseCapForPsh(), sizeBooster(), sizeCables() (+27 more)
-
-### Community 1 - "Community 1"
 Cohesion: 0.09
 Nodes (49): runAdminCatalogDelete(), buildConsumerDeviceData(), createAdminBrand(), createAdminCategory(), createAdminCategoryFilter(), createAdminConsumerCategory(), createAdminConsumerDevice(), createAdminProduct() (+41 more)
 
-### Community 2 - "Community 2"
+### Community 1 - "Community 1"
 Cohesion: 0.06
 Nodes (31): getAdminBrandById(), getAdminCategoryForEditorById(), getAdminConsumerCategoryForEditorById(), getAdminConsumerDeviceForEditorById(), getAdminProductForEditorById(), getAdminProductPreviewById(), listAdminBrandFilterCategories(), listAdminBrands() (+23 more)
 
-### Community 3 - "Community 3"
+### Community 2 - "Community 2"
 Cohesion: 0.06
 Nodes (28): consumeCreditsAndStoreSchematic(), getCreditBalance(), grantCreditsFromPurchase(), InsufficientCreditsError, htmlToPdfBuffer(), launchArgs(), resolveExecutablePath(), getGenerateLimiter() (+20 more)
 
-### Community 4 - "Community 4"
+### Community 3 - "Community 3"
 Cohesion: 0.06
 Nodes (39): createAlgorithmTestUserPresetAction(), deleteAlgorithmTestUserPresetAction(), getAlgorithmTestPresetByIdAction(), listAlgorithmTestPresetsAction(), loadAISettingsAction(), loadAmazonSettingsAction(), loadGeminiImageModelsAction(), loadGeminiModelsAction() (+31 more)
 
+### Community 4 - "Community 4"
+Cohesion: 0.07
+Nodes (30): shoreBatteryBridgeReliefDays(), sizeBattery(), topUpCoverageBaseCapForPsh(), sizeBooster(), sizeCables(), sizeCharger(), computeAlgorithm(), sizeController() (+22 more)
+
 ### Community 5 - "Community 5"
+Cohesion: 0.08
+Nodes (37): batteryRowFits(), bmsDischargeAFromRow(), effectiveBatteryVoltageV(), nominalSystemVoltageFromCellVoltage(), productNominalSystemVoltageV(), requiredInverterDischargeA(), ambientTempDerateFactor(), continuousAmpacityAForStandardMm2() (+29 more)
+
+### Community 6 - "Community 6"
 Cohesion: 0.06
 Nodes (31): loadAlgorithmSettingsAction(), runAlgorithmTestAction(), saveAlgorithmSettingsAction(), normalizeAlgorithmSettingsImportRow(), backfillCableAmpacityColumnsIfNull(), ensureCableAmpacitySettings(), getAlgorithmSettings(), getAlgorithmSettingsCached() (+23 more)
 
-### Community 6 - "Community 6"
-Cohesion: 0.07
-Nodes (27): getCatalogComponentDimensionStats(), syncComponentClassesFromDB(), generateAIReasons(), cleanReason(), generateAlgorithmReasons(), selectProductsAlgorithmically(), enforceAiSelectionsMinima(), groupConsumerTemplatesByCategory() (+19 more)
-
 ### Community 7 - "Community 7"
-Cohesion: 0.11
-Nodes (29): importCatalogJsonAction(), exportAdminDomain(), importAdminDomain(), importAdminDomainInner(), invalidateCacheForDomain(), mapModelPricingForExport(), mapProductForExport(), buildExportEnvelope() (+21 more)
+Cohesion: 0.08
+Nodes (26): getCatalogComponentDimensionStats(), syncComponentClassesFromDB(), generateAIReasons(), cleanReason(), generateAlgorithmReasons(), selectProductsAlgorithmically(), groupConsumerTemplatesByCategory(), countSystemSettings() (+18 more)
 
 ### Community 8 - "Community 8"
 Cohesion: 0.11
-Nodes (21): getAISettings(), buildPrompt(), generateProductSelection(), generateText(), optimizeSpecsText(), renderPrompt(), backoffMs(), callAI() (+13 more)
+Nodes (29): importCatalogJsonAction(), exportAdminDomain(), importAdminDomain(), importAdminDomainInner(), invalidateCacheForDomain(), mapModelPricingForExport(), mapProductForExport(), buildExportEnvelope() (+21 more)
 
 ### Community 9 - "Community 9"
-Cohesion: 0.17
-Nodes (18): coerceSelectionRow(), extractSelectionsArray(), flattenProductGroups(), mapProductGroupKeyToBucket(), normalizeBucket(), parseJsonLenient(), parseProductSelectionJson(), selectProductsWithAI() (+10 more)
+Cohesion: 0.12
+Nodes (23): coerceSelectionRow(), extractSelectionsArray(), flattenProductGroups(), mapProductGroupKeyToBucket(), normalizeBucket(), parseJsonLenient(), parseProductSelectionJson(), selectProductsWithAI() (+15 more)
 
 ### Community 10 - "Community 10"
-Cohesion: 0.19
-Nodes (18): roundUpToStandardMm2(), batteryChemFromRow(), buildCableByRoute(), canonicalBatteryChem(), collectFuseTargets(), controllerKindFromRow(), detectBucket(), fuseRatingFromRow() (+10 more)
+Cohesion: 0.11
+Nodes (21): getAISettings(), buildPrompt(), generateProductSelection(), generateText(), optimizeSpecsText(), renderPrompt(), backoffMs(), callAI() (+13 more)
 
 ### Community 11 - "Community 11"
 Cohesion: 0.23
@@ -168,86 +167,82 @@ Cohesion: 0.19
 Nodes (9): consumerFromTemplate(), defaultConsumer(), newConsumerId(), templateToConsumerVoltage(), addFromTemplate(), addManualConsumer(), duplicateConsumer(), pruneExpandedIds() (+1 more)
 
 ### Community 14 - "Community 14"
-Cohesion: 0.21
-Nodes (12): ambientTempDerateFactor(), continuousAmpacityAForStandardMm2(), minStandardMm2ForDesignCurrentA(), parseLooseNumber(), readPositiveNumberFilter(), buildSolarWiringRecommendation(), computeSolarWiring(), finalProductId() (+4 more)
-
-### Community 15 - "Community 15"
 Cohesion: 0.2
 Nodes (9): AdminMediaUnavailableError, deleteAdminMedia(), ensureBlobToken(), listAdminMedia(), handleDelete(), sanitizeFilename(), uploadAdminMedia(), adminMediaDeleteAction() (+1 more)
 
-### Community 16 - "Community 16"
+### Community 15 - "Community 15"
 Cohesion: 0.22
 Nodes (9): inputClassName(), labelClassName(), SolarRoofSection(), cn(), wizardCallout(), wizardCatalogScrollRegion(), wizardInsetPanel(), wizardScrollRegion() (+1 more)
+
+### Community 16 - "Community 16"
+Cohesion: 0.29
+Nodes (7): areRequiredCableLengthsValid(), getRequiredCableLengthKeys(), useWizardResultSubmit(), canNavigateToStep(), completedWizardStepIds(), isWizardCompleteForSubmission(), validateWizardStep()
 
 ### Community 17 - "Community 17"
 Cohesion: 0.36
 Nodes (9): filterValuesAsRecord(), isCableCategorySlug(), isDcShoreChargerCategorySlug(), isEmptyFilterValueEntry(), isIncompleteCategoryFilterValues(), isInverterCategorySlug(), isSolarChargerSlug(), isSolarControllerCategorySlug() (+1 more)
 
 ### Community 18 - "Community 18"
-Cohesion: 0.29
-Nodes (7): areRequiredCableLengthsValid(), getRequiredCableLengthKeys(), useWizardResultSubmit(), canNavigateToStep(), completedWizardStepIds(), isWizardCompleteForSubmission(), validateWizardStep()
-
-### Community 19 - "Community 19"
 Cohesion: 0.33
 Nodes (5): pickOne(), randomCableLengths(), randomInt(), randomizeAlgorithmTestFilters(), snapCableLength()
 
-### Community 20 - "Community 20"
+### Community 19 - "Community 19"
 Cohesion: 0.38
 Nodes (2): AmazonService, render()
 
-### Community 21 - "Community 21"
+### Community 20 - "Community 20"
 Cohesion: 0.52
 Nodes (6): asFilterValuesRecord(), buildProductPreviewFilterRows(), formatFilterScalar(), labelForExtraKey(), omitPreviewKeys(), withUnit()
 
-### Community 22 - "Community 22"
+### Community 21 - "Community 21"
 Cohesion: 0.38
 Nodes (5): autarchyPresetFromDays(), autarchyTopUpProfileFromSources(), getAutarchyWizardMaxDays(), presetDaysAdaptive(), handlePreset()
 
-### Community 24 - "Community 24"
+### Community 23 - "Community 23"
 Cohesion: 0.4
 Nodes (2): addBag(), newBagId()
 
-### Community 25 - "Community 25"
+### Community 24 - "Community 24"
 Cohesion: 0.33
 Nodes (2): clampRoofDimension(), parseDimension()
 
-### Community 26 - "Community 26"
+### Community 25 - "Community 25"
 Cohesion: 0.6
 Nodes (3): fmtAh(), fmtWp(), SystemSummaryCard()
 
-### Community 27 - "Community 27"
+### Community 26 - "Community 26"
 Cohesion: 0.7
 Nodes (4): buildSummary(), formatCurrent(), portableControllerFallback(), roofControllerFallback()
 
-### Community 28 - "Community 28"
+### Community 27 - "Community 27"
 Cohesion: 0.5
 Nodes (3): toggleSource(), defaultRoofArea(), newRoofId()
 
-### Community 30 - "Community 30"
+### Community 29 - "Community 29"
 Cohesion: 0.5
 Nodes (2): AdminConsumerDeviceForm(), useAdminConsumerDeviceForm()
 
-### Community 34 - "Community 34"
+### Community 33 - "Community 33"
 Cohesion: 0.83
 Nodes (3): isClickable(), isCompleted(), isCurrent()
 
-### Community 37 - "Community 37"
+### Community 36 - "Community 36"
 Cohesion: 0.83
 Nodes (3): baseBattery(), baseOutput(), baseSolar()
 
-### Community 38 - "Community 38"
+### Community 37 - "Community 37"
 Cohesion: 0.83
 Nodes (3): defaultCableLengths(), defaultTravelBehavior(), minimalInput()
 
-### Community 39 - "Community 39"
+### Community 38 - "Community 38"
 Cohesion: 1.0
 Nodes (2): extractAsin(), scrapeAmazonProduct()
 
-### Community 52 - "Community 52"
+### Community 51 - "Community 51"
 Cohesion: 0.67
 Nodes (1): AIInvocationError
 
-### Community 54 - "Community 54"
+### Community 53 - "Community 53"
 Cohesion: 1.0
 Nodes (2): alignConsumersDcToSystem(), hydrateInput()
 
@@ -430,19 +425,19 @@ Nodes (1): Pretty-print an AlgorithmOutput so the human can eyeball numbers.
 ## Knowledge Gaps
 - **44 isolated node(s):** `algorithm/camper_electrics_sizing.py =====================================  Pure`, `One rectangular roof patch; inputs.md A.2.1.`, `One portable solar bag; inputs.md A.2.2.`, `One electrical consumer; inputs.md A.3.1.      ``voltage == 230`` is the ONLY ma`, `Trip context; inputs.md A.4.` (+39 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **Thin community `Community 20`** (7 nodes): `AmazonService`, `.constructor()`, `.getItem()`, `.initialize()`, `amazon-service.ts`, `render()`, `mermaid-diagram.tsx`
+- **Thin community `Community 19`** (7 nodes): `AmazonService`, `.constructor()`, `.getItem()`, `.initialize()`, `amazon-service.ts`, `render()`, `mermaid-diagram.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 24`** (6 nodes): `step-8-solar-bags.tsx`, `addBag()`, `effectivePortableWp()`, `newBagId()`, `removeAt()`, `setPowerAt()`
+- **Thin community `Community 23`** (6 nodes): `step-8-solar-bags.tsx`, `addBag()`, `effectivePortableWp()`, `newBagId()`, `removeAt()`, `setPowerAt()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 25`** (6 nodes): `clampRoofDimension()`, `isPresetRoofName()`, `parseDimension()`, `RoofAreaRow()`, `constants.ts`, `roof-area-row.tsx`
+- **Thin community `Community 24`** (6 nodes): `clampRoofDimension()`, `isPresetRoofName()`, `parseDimension()`, `RoofAreaRow()`, `constants.ts`, `roof-area-row.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 30`** (4 nodes): `AdminConsumerDeviceForm()`, `admin-consumer-device-form.tsx`, `use-admin-consumer-device-form.ts`, `useAdminConsumerDeviceForm()`
+- **Thin community `Community 29`** (4 nodes): `AdminConsumerDeviceForm()`, `admin-consumer-device-form.tsx`, `use-admin-consumer-device-form.ts`, `useAdminConsumerDeviceForm()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 39`** (3 nodes): `scraper.ts`, `extractAsin()`, `scrapeAmazonProduct()`
+- **Thin community `Community 38`** (3 nodes): `scraper.ts`, `extractAsin()`, `scrapeAmazonProduct()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 52`** (3 nodes): `types.ts`, `AIInvocationError`, `.constructor()`
+- **Thin community `Community 51`** (3 nodes): `types.ts`, `AIInvocationError`, `.constructor()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 54`** (3 nodes): `wizard.ts`, `alignConsumersDcToSystem()`, `hydrateInput()`
+- **Thin community `Community 53`** (3 nodes): `wizard.ts`, `alignConsumersDcToSystem()`, `hydrateInput()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 245`** (1 nodes): `algorithm/camper_electrics_sizing.py =====================================  Pure`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
@@ -536,12 +531,12 @@ Nodes (1): Pretty-print an AlgorithmOutput so the human can eyeball numbers.
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `POST()` connect `Community 3` to `Community 1`, `Community 2`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 11`, `Community 15`?**
-  _High betweenness centrality (0.124) - this node is a cross-community bridge._
-- **Why does `runRecommendationPipeline()` connect `Community 9` to `Community 0`, `Community 2`, `Community 3`, `Community 5`, `Community 6`, `Community 10`?**
-  _High betweenness centrality (0.082) - this node is a cross-community bridge._
-- **Why does `getPrisma()` connect `Community 1` to `Community 2`, `Community 3`, `Community 4`, `Community 5`, `Community 6`, `Community 7`, `Community 8`?**
-  _High betweenness centrality (0.073) - this node is a cross-community bridge._
+- **Why does `POST()` connect `Community 2` to `Community 0`, `Community 1`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 14`?**
+  _High betweenness centrality (0.127) - this node is a cross-community bridge._
+- **Why does `runRecommendationPipeline()` connect `Community 9` to `Community 1`, `Community 2`, `Community 5`, `Community 6`?**
+  _High betweenness centrality (0.076) - this node is a cross-community bridge._
+- **Why does `getPrisma()` connect `Community 0` to `Community 1`, `Community 2`, `Community 3`, `Community 6`, `Community 7`, `Community 8`, `Community 10`?**
+  _High betweenness centrality (0.075) - this node is a cross-community bridge._
 - **Are the 47 inferred relationships involving `getPrisma()` (e.g. with `POST()` and `listAlgorithmTestPresets()`) actually correct?**
   _`getPrisma()` has 47 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 28 inferred relationships involving `POST()` (e.g. with `isAdminExportDomain()` and `importAdminDomain()`) actually correct?**

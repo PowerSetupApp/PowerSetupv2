@@ -235,6 +235,57 @@ describe("prefilterProductsForRecommendation", () => {
     expect(out.solar[0]?.productId).toBe("half-k");
   });
 
+  it("ranks 24V battery above 12V when system is 24V", () => {
+    const calc24 = computeAlgorithm({
+      ...DEFAULT_ALGORITHM_INPUT,
+      systemVoltage: 24,
+      energySources: ["solar"],
+      consumers: [{ id: "c1", name: "LED", power: 10, daily: 4, voltage: 12 }],
+    });
+    const calculations: AlgorithmOutput = {
+      ...calc24,
+      battery: { ...calc24.battery, recommendedCapacityAh: 200 },
+    };
+    const products: ProductRecommendationRow[] = [
+      {
+        id: "v12",
+        name: "12V 300Ah",
+        categorySlug: "battery",
+        categoryName: "Batterie",
+        capacityAh: 300,
+        voltageV: 12,
+        solarWp: null,
+        powerW: null,
+        currentA: null,
+        crossSectionMm2: null,
+        batteryType: "lifepo4",
+        waveform: null,
+        filterValues: null,
+      },
+      {
+        id: "v24",
+        name: "24V 200Ah",
+        categorySlug: "battery",
+        categoryName: "Batterie",
+        capacityAh: 200,
+        voltageV: 24,
+        solarWp: null,
+        powerW: null,
+        currentA: null,
+        crossSectionMm2: null,
+        batteryType: "lifepo4",
+        waveform: null,
+        filterValues: null,
+      },
+    ];
+    const out = prefilterProductsForRecommendation({
+      calculations,
+      products,
+      perCategoryLimit: 2,
+    });
+    expect(out.battery[0]?.productId).toBe("v24");
+  });
+
   it("emits cableByRoute picks for active cable runs", () => {
     const calc = computeAlgorithm({
       ...DEFAULT_ALGORITHM_INPUT,

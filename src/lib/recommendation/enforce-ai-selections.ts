@@ -1,11 +1,13 @@
+import type { AlgorithmTuning } from "@/lib/algorithm/algorithm-tuning";
 import type { AlgorithmOutput } from "@/lib/algorithm/types";
 
-import { batteryChemFromRow } from "./prefilter";
+import { batteryRowFits } from "./battery-candidate-fits";
 import type { AISelectionItem, ProductRecommendationRow } from "./types";
 
 /**
- * Ersetzt offensichtlich unterdimensionierte KI-Wahlen für Batterie/Solar
- * durch den besten Prefilter-Kandidaten, der die Mindestanforderung erfüllt.
+ * Ersetzt offensichtlich unpassende KI-Wahlen für Batterie/Solar
+ * durch den besten Prefilter-Kandidaten, der Mindestanforderung, Nennspannung
+ * und (falls bekannt) BMS vs. I_dc erfüllt.
  */
 export function enforceAiSelectionsMinima(params: {
   selections: AISelectionItem[];
@@ -14,8 +16,9 @@ export function enforceAiSelectionsMinima(params: {
   batteryRanked: { productId: string }[];
   solarRanked: { productId: string }[];
   productsById: Map<string, ProductRecommendationRow>;
+  tuning: Pick<AlgorithmTuning, "inverterEfficiency">;
 }): AISelectionItem[] {
-  const { selections, calculations, batteryRanked, solarRanked, productsById } = params;
+  const { selections, calculations, batteryRanked, solarRanked, productsById, tuning } = params;
   const targetAh = calculations.battery.recommendedCapacityAh;
   const targetWp = Math.max(calculations.solar.requiredWp, 1);
 
@@ -24,16 +27,10 @@ export function enforceAiSelectionsMinima(params: {
   const batIdx = out.findIndex((s) => s.bucket === "battery");
   if (batIdx >= 0) {
     const row = productsById.get(out[batIdx]!.productId);
-    const cap = row?.capacityAh ?? null;
-    const chem = row ? batteryChemFromRow(row) : null;
-    const chemOk = chem === null || chem === calculations.battery.type;
-    if (row && cap != null && cap < targetAh * 0.98 && chemOk) {
+    if (row && !batteryRowFits(row, calculations, tuning, targetAh)) {
       const replacement = batteryRanked.find((c) => {
         const p = productsById.get(c.productId);
-        if (!p || p.capacityAh == null) return false;
-        const pchem = batteryChemFromRow(p);
-        if (pchem != null && pchem !== calculations.battery.type) return false;
-        return p.capacityAh >= targetAh * 0.98;
+        return p ? batteryRowFits(p, calculations, tuning, targetAh) : false;
       });
       if (replacement) {
         out[batIdx] = {
@@ -41,7 +38,7 @@ export function enforceAiSelectionsMinima(params: {
           productId: replacement.productId,
           reasonDe:
             out[batIdx]!.reasonDe.trim() ||
-            "Automatisch auf Mindestkapazität laut Berechnung angepasst.",
+            "Automatisch auf passende Nennspannung, Mindestkapazität und (falls bekannt) BMS-Strom angepasst.",
         };
       }
     }
