@@ -10,21 +10,9 @@ alwaysApply: true
 
 Lies vor jeder Aufgabe:
 - `AGENTS.md` — Überblick, Skills, kritische Regeln
-- `.context/architecture.md` — **Kontext-Atlas** (Navigation, Ownership, Kopplungen — klein halten)
-- `.context/domain.md` — Fachbegriffe
+- Projekt-Kontext / Architektur / Fachbegriffe: über **Graphify** abfragen (Knowledge Graph aus dem Repo)
 
 **Kanonisch für Arbeitsabläufe:** `.agents/skills/<bereich>/SKILL.md` (requirements, architecture, frontend, backend, qa, deploy). Inhalt dort pflegen; `.cursor/rules/*.mdc` sind nur kurze Verweise + Globs für Cursor.
-
-### Kontext-Atlas (`.context/architecture.md`)
-
-- **Lesen:** Vor nicht-trivialen Code-Änderungen den Atlas lesen (Orientierung, betroffene Nachbarn).
-- **Schreiben (Trigger — im selben Agenten-Durchlauf prüfen und ggf. patchen):**
-  - Neue/verschobene/gelöschte **Verzeichnisse** oder zentrale **Entry-Dateien** unter `src/app/**`, `src/proxy.ts`, neue Wurzeln unter `src/lib/**`, `src/store/**`, `src/components/**` (größere Umzüge)
-  - Änderungen an **öffentlichen Oberflächen** (API Route Handlers, Server Actions, geteilte Typen/Contracts zwischen Modulen)
-  - **Kopplungswechsel** (neue Imports zwischen vorher entkoppelten Bereichen; neue „Single Source of Truth“, z.B. Berechnungs-Endpoint)
-  - **Build/Framework/DB-Grenzen:** `package.json`, `next.config.*`, Prisma-Schema/Ort, relevante Env-Beispiele nur wenn sie Struktur dokumentieren
-- **Schreib-Protokoll:** Kurze, präzise Diffs; veraltete Zeilen entfernen; Tabellen/Zeilen **verschmelzen** statt Duplikate. Keine Regeln, keine Skill-Inhalte, kein Domain-Glossar in diese Datei spiegeln — nur Navigation.
-- **Größe:** Ziel **≤ ~180 Zeilen**; wächst der Atlas, Inhalt **konsolidieren** (nicht AGENTS.md oder Skills wiederholen).
 
 ## Feature-Tracking
 

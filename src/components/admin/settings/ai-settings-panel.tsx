@@ -18,7 +18,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, RefreshCw, Save } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
-const PLACEHOLDERS = ["{{PROMPT_FORMAT}}", "{{PRODUCT_CONTEXT}}"];
+const PLACEHOLDERS = [
+  "{{REQUIREMENTS}}",
+  "{{PRESELECTION}}",
+  "{{PRODUCT_CONTEXT}}",
+  "{{PROMPT_FORMAT}}",
+];
 
 function formatLoadError(e: unknown): string {
   const msg = e instanceof Error ? e.message : String(e);
@@ -38,6 +43,7 @@ export function AISettingsPanel() {
   const [openaiKey, setOpenaiKey] = useState("");
   const [model, setModel] = useState("");
   const [imageModel, setImageModel] = useState("");
+  const [systemPrompt, setSystemPrompt] = useState("");
   const [userPrompt, setUserPrompt] = useState("");
   const [imagePrompt, setImagePrompt] = useState("");
   const [specsPrompt, setSpecsPrompt] = useState("");
@@ -71,6 +77,7 @@ export function AISettingsPanel() {
       setOpenaiKey(s.openaiApiKey);
       setModel(s.model);
       setImageModel(s.imageModel);
+      setSystemPrompt(s.systemPrompt);
       setUserPrompt(s.userPromptTemplate);
       setImagePrompt(s.imagePromptTemplate);
       setSpecsPrompt(s.specsOptimizationPrompt);
@@ -201,6 +208,18 @@ export function AISettingsPanel() {
 
       <Card>
         <CardHeader>
+          <CardTitle>System-Prompt (optional)</CardTitle>
+          <CardDescription>
+            Gilt für Text-KI (Produktempfehlungen, Schaltplan-JSON, Specs-Optimierung). Leer lassen = nur die fest eingebauten Systemtexte der jeweiligen Funktion.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Textarea value={systemPrompt} onChange={(e) => setSystemPrompt(e.target.value)} rows={4} className="font-mono text-xs" />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Prompt: Empfehlungen</CardTitle>
           <CardDescription>Aktive Vorlage für Produktempfehlungen (neue Version bei jedem Speichern).</CardDescription>
         </CardHeader>
@@ -254,6 +273,7 @@ export function AISettingsPanel() {
                 imageModel,
                 geminiApiKey: geminiKey,
                 openaiApiKey: openaiKey,
+                systemPrompt,
                 userPromptTemplate: userPrompt,
                 imagePromptTemplate: imagePrompt,
                 specsOptimizationPrompt: specsPrompt,

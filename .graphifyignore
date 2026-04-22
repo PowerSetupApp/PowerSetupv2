@@ -1,0 +1,6 @@
+# Archivierte/duplizierte Referenz: alte Snapshots, OpenAPI-JS, creatorsapi-SDK, package-lock
+# (dominiert sonst Communities mit 1-Node-„Typen“-Clustern)
+docs/reference/old
+
+# graphify Cache-Hashes nicht als Korpus-Dateien
+graphify-out/cache

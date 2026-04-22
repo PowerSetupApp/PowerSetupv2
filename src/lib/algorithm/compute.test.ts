@@ -9,6 +9,7 @@
 
 import { describe, expect, it } from "vitest";
 
+import { mergeAlgorithmTuning } from "./algorithm-tuning";
 import { computeAlgorithm } from "./compute";
 import { validate } from "./validate";
 import {
@@ -407,13 +408,18 @@ describe("booster sizing — 24 V bank fed from 12 V alternator", () => {
       dailyTopUpWh: 0,
       netDailyDeficitWh: 0,
       bindingBranch: "hard",
+      shoreBridgeReliefBaseDays: 0,
+      shoreBridgeReliefEffectiveDays: 0,
+      shoreReliefAlternatorScale: 1,
+      autarchyBridgeDaysRaw: 1,
+      autarchyBridgeDaysForSoft: 1,
     };
     const input = minimalInput({
       systemVoltage: 24,
       vehicleVoltage: 12,
       energySources: ["alternator"],
     });
-    const booster = sizeBooster(battery, 1, input, 500);
+    const booster = sizeBooster(battery, 1, input, 500, mergeAlgorithmTuning({}));
     expect(booster.outputCurrentA).toBeCloseTo(40, 9);
     const expectedIn = (24 * 40) / (12 * 0.9);
     expect(booster.inputCurrentA).toBeCloseTo(expectedIn, 9);
@@ -471,7 +477,7 @@ describe("solar — shortfall is never negative", () => {
 describe("roofWp — cm^2 → m^2 → Wp conversion", () => {
   it("2 m × 1 m rigid = 2 m² ⇒ 2 × 200 × 0.8 = 320 Wp", () => {
     const ra: RoofArea[] = [{ id: "r", name: "Roof", length: 200, width: 100 }];
-    expect(roofWp(ra, "rigid")).toBeCloseTo(320, 9);
+    expect(roofWp(ra, "rigid", mergeAlgorithmTuning({}))).toBeCloseTo(320, 9);
   });
 });
 
@@ -750,14 +756,16 @@ describe("autarchyTopUpProfile / autarchyMaxDays", () => {
 
   it("autarchyMaxDays echoes MAX_AUTARCHY_DAYS[td][profile]", () => {
     const input = minimalInput({ energySources: ["solar", "alternator"] });
-    expect(autarchyMaxDays(input)).toBe(MAX_AUTARCHY_DAYS.week.solar_and_alt);
+    expect(autarchyMaxDays(input, mergeAlgorithmTuning({}))).toBe(
+      MAX_AUTARCHY_DAYS.week.solar_and_alt,
+    );
   });
 });
 
 describe("alternatorTopUpEstimateWh", () => {
   it("returns 0 without alternator in energySources", () => {
     const input = minimalInput({ energySources: ["solar"] });
-    expect(alternatorTopUpEstimateWh(1.0, input, 60)).toBe(0);
+    expect(alternatorTopUpEstimateWh(1.0, input, 60, mergeAlgorithmTuning({}))).toBe(0);
   });
 
   it("uses alternator ceiling (no battery-acceptance clamp)", () => {
@@ -767,7 +775,7 @@ describe("alternatorTopUpEstimateWh", () => {
       energySources: ["alternator"],
     });
     // maxOut = 60 * 12 / 24 = 30 A ; Wh = 1 h * 30 A * 24 V * 0.9 = 648 Wh
-    expect(alternatorTopUpEstimateWh(1.0, input, 60)).toBeCloseTo(648, 6);
+    expect(alternatorTopUpEstimateWh(1.0, input, 60, mergeAlgorithmTuning({}))).toBeCloseTo(648, 6);
   });
 });
 
@@ -1319,5 +1327,103 @@ describe("sizeBattery — monotonicity on autarchyDays", () => {
     expect(c.battery.recommendedCapacityAh).toBeGreaterThanOrEqual(
       b.battery.recommendedCapacityAh,
     );
+  });
+});
+
+describe("shore power — battery soft-bridge relief", () => {
+  const tb: TravelBehavior = {
+    season: "all_year",
+    tripDuration: "permanent",
+    winterLocation: "southern",
+    standingDuration: "long",
+  };
+  const consumers: Consumer[] = [
+    { id: "f", name: "Fridge", power: 60, daily: 24, voltage: 24 },
+  ];
+  const roofAreas: RoofArea[] = [
+    { id: "r", name: "Roof", length: 400, width: 200 },
+  ];
+
+  it("autarchy at threshold leaves shore relief at 0 and matches solar-only Ah", () => {
+    const base = minimalInput({
+      systemVoltage: 24,
+      vehicleVoltage: 24,
+      consumers,
+      energySources: ["solar"],
+      roofAreas,
+      travelBehavior: tb,
+      autarchyDays: 2,
+    });
+    const solarOnly = computeAlgorithm(base);
+    const withShore = computeAlgorithm({
+      ...base,
+      energySources: ["solar", "shore_power"],
+    });
+    expect(withShore.battery.shoreBridgeReliefEffectiveDays).toBe(0);
+    expect(withShore.battery.recommendedCapacityAh).toBeCloseTo(
+      solarOnly.battery.recommendedCapacityAh,
+      6,
+    );
+  });
+
+  it("long autarchy + shore shrinks soft-bridge days vs solar-only", () => {
+    const base = minimalInput({
+      systemVoltage: 24,
+      vehicleVoltage: 24,
+      consumers,
+      energySources: ["solar"],
+      roofAreas,
+      travelBehavior: tb,
+      autarchyDays: 14,
+    });
+    const solarOnly = computeAlgorithm(base);
+    const withShore = computeAlgorithm({
+      ...base,
+      energySources: ["solar", "shore_power"],
+    });
+    expect(withShore.battery.shoreBridgeReliefEffectiveDays).toBeGreaterThan(0);
+    expect(withShore.battery.autarchyBridgeDaysForSoft).toBeLessThan(
+      solarOnly.battery.autarchyBridgeDaysForSoft,
+    );
+    expect(withShore.battery.recommendedCapacityAh).toBeLessThanOrEqual(
+      solarOnly.battery.recommendedCapacityAh,
+    );
+  });
+
+  it("adding shore never increases recommended Ah (monotonicity)", () => {
+    const base = minimalInput({
+      systemVoltage: 24,
+      vehicleVoltage: 24,
+      consumers,
+      energySources: ["solar"],
+      roofAreas,
+      travelBehavior: tb,
+      autarchyDays: 10,
+    });
+    const without = computeAlgorithm(base);
+    const withShore = computeAlgorithm({
+      ...base,
+      energySources: ["solar", "shore_power"],
+    });
+    expect(withShore.battery.recommendedCapacityAh).toBeLessThanOrEqual(
+      without.battery.recommendedCapacityAh,
+    );
+  });
+
+  it("alternator + short standing zeros shore relief despite shore_power", () => {
+    const shortTb: TravelBehavior = { ...tb, standingDuration: "short" };
+    const base = minimalInput({
+      systemVoltage: 24,
+      vehicleVoltage: 24,
+      consumers,
+      energySources: ["solar", "alternator", "shore_power"],
+      roofAreas,
+      travelBehavior: shortTb,
+      autarchyDays: 30,
+    });
+    const out = computeAlgorithm(base);
+    expect(out.battery.hasAlternator).toBe(true);
+    expect(out.battery.shoreReliefAlternatorScale).toBe(0);
+    expect(out.battery.shoreBridgeReliefEffectiveDays).toBe(0);
   });
 });

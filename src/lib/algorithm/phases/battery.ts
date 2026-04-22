@@ -21,8 +21,9 @@
  *   coverageRatio  = min(rawCoverage, min(capStand, ABS_MAX))
  *   bridgeDailyDeficitWh = dailyWh × (1 − coverageRatio)     ← always > 0
  *
- *   bridgeDays     = min(autarchyDays, AUTARCHY_MAX_BRIDGE_DAYS)
- *   softBridgeWh   = bridgeDailyDeficitWh × bridgeDays
+ *   bridgeDaysRaw  = min(autarchyDays, AUTARCHY_MAX_BRIDGE_DAYS)
+ *   bridgeDaysSoft = max(bridgeDaysRaw − shoreReliefDays, 1)   ← Landstrom
+ *   softBridgeWh   = bridgeDailyDeficitWh × bridgeDaysSoft
  *   hardFloorWh    = dailyWh × HARD_BRIDGE_DAYS              ← 1 day
  *   energyWh       = max(softBridgeWh, hardFloorWh)
  *
@@ -44,25 +45,14 @@
  * is the coverage-capped value that actually drives `softBridgeWh`.
  */
 
-import {
-  AUTARCHY_MAX_BRIDGE_DAYS,
-  AUTARCHY_PSH_DERATE,
-  DOD_DEFAULTS,
-  HARD_BRIDGE_DAYS,
-  RESERVE_FACTOR,
-  ROUNDTRIP_DEFAULTS,
-  SOLAR_SYSTEM_EFFICIENCY,
-  TOP_UP_COVERAGE_ABS_MAX,
-  TOP_UP_COVERAGE_CAP,
-  TOP_UP_COVERAGE_CAP_AT_LOW_PSH,
-  TOP_UP_COVERAGE_PORTABLE_CAP_BUMP,
-  TOP_UP_COVERAGE_PORTABLE_WEIGHT,
-  TOP_UP_COVERAGE_PSH_BAND_HIGH,
-  TOP_UP_COVERAGE_PSH_BAND_LOW,
-  ALTERNATOR_BRIDGE_STANDING_CREDIT,
-  TOP_UP_COVERAGE_STANDING_CAP_MULT,
-} from "../constants";
-import type { AlgorithmInput, BatteryRecommendation, TripDuration } from "../types";
+import type { AlgorithmTuning } from "../algorithm-tuning";
+import type {
+  AlgorithmInput,
+  BatteryRecommendation,
+  ShoreAvailability,
+  StandingDuration,
+  TripDuration,
+} from "../types";
 
 /**
  * Base `min(rawCoverage, …)` cap before the portable-solar bump. High PSH
@@ -70,11 +60,11 @@ import type { AlgorithmInput, BatteryRecommendation, TripDuration } from "../typ
  * reduces trusted offset so winter location affects battery Ah even when
  * raw coverage sits just above the nominal 0.75 plateau.
  */
-export function topUpCoverageBaseCapForPsh(psh: number): number {
-  const hi = TOP_UP_COVERAGE_PSH_BAND_HIGH;
-  const lo = TOP_UP_COVERAGE_PSH_BAND_LOW;
-  const capHi = TOP_UP_COVERAGE_CAP;
-  const capLo = TOP_UP_COVERAGE_CAP_AT_LOW_PSH;
+export function topUpCoverageBaseCapForPsh(psh: number, tuning: AlgorithmTuning): number {
+  const hi = tuning.topUpCoveragePshBandHigh;
+  const lo = tuning.topUpCoveragePshBandLow;
+  const capHi = tuning.topUpCoverageCap;
+  const capLo = tuning.topUpCoverageCapAtLowPsh;
   if (psh >= hi) return capHi;
   if (psh <= lo) return capLo;
   const t = (psh - lo) / (hi - lo);
@@ -84,6 +74,8 @@ export function topUpCoverageBaseCapForPsh(psh: number): number {
 export interface BatteryTopUpContext {
   /** Peak sun hours for the chosen season / winter location (already in `compute.ts`). */
   psh: number;
+  /** Derived from `energySources` + travel/charger speed (`derive.shoreAvailability`). */
+  shoreAvailability: ShoreAvailability;
   /** Roof + portable Wp available to the user (from `sizeSolar`). */
   totalAvailableWp: number;
   /**
@@ -101,15 +93,57 @@ export interface BatteryTopUpContext {
   portableBridgeSolarWh?: number;
 }
 
+/**
+ * Landstrom entlastet nur die **mehrtägige weiche Brücke** (nicht den
+ * 1-Tages-Sturm-Puffer): Nach dem Autarkie-Streak kann die Versorgerbatterie
+ * per Board-Lader wieder voll werden — das verkürzt modellierte Brückentage.
+ *
+ * Kurze Autarkie (≤ {@link SHORE_BATTERY_RELIEF_AUTARCHY_THRESHOLD_DAYS}):
+ * kein Relief. Mit Ladebooster wird das Relief über dieselbe Standzeit-Tabelle
+ * skaliert wie die LM-Brücken-Credit (`ALTERNATOR_BRIDGE_STANDING_CREDIT`).
+ */
+export function shoreBatteryBridgeReliefDays(
+  shoreAvailability: ShoreAvailability,
+  effectiveAutarchyDays: number,
+  hasAlternator: boolean,
+  standingDuration: StandingDuration,
+  tuning: AlgorithmTuning,
+): {
+  reliefBaseDays: number;
+  reliefEffectiveDays: number;
+  alternatorReliefScale: number;
+} {
+  const reliefBaseDays = tuning.shoreBridgeReliefDays[shoreAvailability];
+  const alternatorReliefScale = hasAlternator
+    ? 1 - tuning.alternatorBridgeStandingCredit[standingDuration]
+    : 1;
+
+  if (effectiveAutarchyDays <= tuning.shoreBatteryReliefAutarchyThresholdDays) {
+    return {
+      reliefBaseDays,
+      reliefEffectiveDays: 0,
+      alternatorReliefScale,
+    };
+  }
+
+  const reliefEffectiveDays = reliefBaseDays * alternatorReliefScale;
+  return {
+    reliefBaseDays,
+    reliefEffectiveDays,
+    alternatorReliefScale,
+  };
+}
+
 export function sizeBattery(
   dailyWh: number,
   effectiveAutarchyDays: number,
   input: AlgorithmInput,
   context: BatteryTopUpContext,
+  tuning: AlgorithmTuning,
 ): BatteryRecommendation {
   const chem = input.batteryPreference;
-  const dod = DOD_DEFAULTS[chem];
-  const etaRt = ROUNDTRIP_DEFAULTS[chem];
+  const dod = tuning.dodDefaults[chem];
+  const etaRt = tuning.roundtripDefaults[chem];
   const uSys = input.systemVoltage;
 
   const hasSolar = input.energySources.includes("solar");
@@ -118,8 +152,8 @@ export function sizeBattery(
   const solarTopUpWh = hasSolar
     ? context.totalAvailableWp *
       context.psh *
-      AUTARCHY_PSH_DERATE *
-      SOLAR_SYSTEM_EFFICIENCY
+      tuning.autarchyPshDerate *
+      tuning.solarSystemEfficiency
     : 0;
   // Full alternator Wh (drive-hours × limit × η) — same for display,
   // `netDailyDeficitWh`, and phases after battery. Coverage bridge below
@@ -129,7 +163,7 @@ export function sizeBattery(
   const alternatorTopUpWh = hasAlternator ? context.alternatorTopUpWh : 0;
   const dailyTopUpWh = solarTopUpWh + alternatorTopUpWh;
   const alternatorBridgeStandingCredit = hasAlternator
-    ? ALTERNATOR_BRIDGE_STANDING_CREDIT[input.travelBehavior.standingDuration]
+    ? tuning.alternatorBridgeStandingCredit[input.travelBehavior.standingDuration]
     : undefined;
   const alternatorTopUpForCoverageWh = hasAlternator
     ? alternatorTopUpWh * (alternatorBridgeStandingCredit ?? 1)
@@ -141,7 +175,25 @@ export function sizeBattery(
   // "every day is bad" assumption stops being physical — otherwise the
   // formula produces absurd multi-thousand-Ah banks for permanent users
   // who set 60+ days on the slider.
-  const bridgeDays = Math.min(effectiveAutarchyDays, AUTARCHY_MAX_BRIDGE_DAYS);
+  const bridgeDaysRaw = Math.min(
+    effectiveAutarchyDays,
+    tuning.autarchyMaxBridgeDays,
+  );
+  const {
+    reliefBaseDays: shoreBridgeReliefBaseDays,
+    reliefEffectiveDays: shoreBridgeReliefEffectiveDays,
+    alternatorReliefScale: shoreReliefAlternatorScale,
+  } = shoreBatteryBridgeReliefDays(
+    context.shoreAvailability,
+    effectiveAutarchyDays,
+    hasAlternator,
+    input.travelBehavior.standingDuration,
+    tuning,
+  );
+  const bridgeDaysForSoft = Math.max(
+    bridgeDaysRaw - shoreBridgeReliefEffectiveDays,
+    1,
+  );
 
   // RAW deficit for display / telemetry — collapses to 0 when solar+alt
   // fully cover daily demand.
@@ -161,13 +213,13 @@ export function sizeBattery(
   const portableCredibilityBump =
     dailyWh > 0 && portableBridgeSolarWh > 0
       ? Math.min(
-          TOP_UP_COVERAGE_PORTABLE_CAP_BUMP,
-          (portableBridgeSolarWh / dailyWh) * TOP_UP_COVERAGE_PORTABLE_WEIGHT,
+          tuning.topUpCoveragePortableCapBump,
+          (portableBridgeSolarWh / dailyWh) * tuning.topUpCoveragePortableWeight,
         )
       : 0;
-  const baseCoverageCap = topUpCoverageBaseCapForPsh(context.psh);
+  const baseCoverageCap = topUpCoverageBaseCapForPsh(context.psh, tuning);
   const capBeforeStanding = Math.min(
-    TOP_UP_COVERAGE_ABS_MAX,
+    tuning.topUpCoverageAbsMax,
     baseCoverageCap + portableCredibilityBump,
   );
   const trip: TripDuration = input.travelBehavior.tripDuration;
@@ -175,20 +227,20 @@ export function sizeBattery(
     hasAlternator &&
     trip === "permanent" &&
     input.travelBehavior.standingDuration !== "short"
-      ? TOP_UP_COVERAGE_STANDING_CAP_MULT[input.travelBehavior.standingDuration]
+      ? tuning.topUpCoverageStandingCapMult[input.travelBehavior.standingDuration]
       : 1;
   const effectiveCoverageCap = Math.min(
-    TOP_UP_COVERAGE_ABS_MAX,
+    tuning.topUpCoverageAbsMax,
     capBeforeStanding * standingCoverageCapMult,
   );
   const coverageRatio = Math.min(rawCoverage, effectiveCoverageCap);
   const bridgeDailyDeficitWh = dailyWh * (1 - coverageRatio);
-  const softBridgeWh = bridgeDailyDeficitWh * bridgeDays;
+  const softBridgeWh = bridgeDailyDeficitWh * bridgeDaysForSoft;
 
   // Storm reserve: one full off-grid day with no top-up at all. Applies
   // uniformly; the soft bridge above scales when the user sets more
   // autarky days.
-  const hardFloorWh = dailyWh * HARD_BRIDGE_DAYS;
+  const hardFloorWh = dailyWh * tuning.hardBridgeDays;
 
   const bindingBranch: "soft" | "hard" =
     softBridgeWh >= hardFloorWh ? "soft" : "hard";
@@ -197,7 +249,7 @@ export function sizeBattery(
   const cUsableWh = energyWh / etaRt;
   const cNomWh = cUsableWh / dod;
   const minCapacityAh = uSys > 0 ? cNomWh / uSys : 0;
-  const recommendedCapacityAh = minCapacityAh * RESERVE_FACTOR;
+  const recommendedCapacityAh = minCapacityAh * tuning.batterySafetyFactor;
 
   return {
     dailyWh,
@@ -222,5 +274,10 @@ export function sizeBattery(
     effectiveCoverageCap,
     bridgeDailyDeficitWh,
     bindingBranch,
+    shoreBridgeReliefBaseDays,
+    shoreBridgeReliefEffectiveDays,
+    shoreReliefAlternatorScale,
+    autarchyBridgeDaysRaw: bridgeDaysRaw,
+    autarchyBridgeDaysForSoft: bridgeDaysForSoft,
   };
 }

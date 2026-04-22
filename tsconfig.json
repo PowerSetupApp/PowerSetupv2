@@ -33,7 +33,6 @@
     "docs",
     "features",
     ".agents",
-    ".cursor",
-    "src/lib/algorithm/_legacy"
+    ".cursor"
   ]
 }

@@ -5,3 +5,10 @@ export function getAllAlgorithmFlowRequiredKeys(): string[] {
   const fromGroups = ALGORITHM_SETTINGS_GROUPS.flatMap((g) => g.fields.map((f) => f.key));
   return [...fromGroups, "productSelectionMode", "reasonGenerationMode"];
 }
+
+/** Stable list for coverage tests — keep in sync with `getAllAlgorithmFlowRequiredKeys()`. */
+export const FLOW_NARRATIVE_KEYS_USED = [
+  ...ALGORITHM_SETTINGS_GROUPS.flatMap((g) => g.fields.map((f) => f.key)),
+  "productSelectionMode",
+  "reasonGenerationMode",
+] as const;

@@ -45,7 +45,7 @@ export async function updateModelPricingRow(
 
 export async function fetchAndSaveModelPricing(
   provider: "openai" | "google",
-): Promise<{ count: number }> {
+): Promise<{ count: number; failed: number }> {
   const prisma = getPrisma();
   let modelIds: string[] = [];
 
@@ -74,26 +74,30 @@ export async function fetchAndSaveModelPricing(
     modelIds = ["gemini-2.0-flash-exp", "gemini-1.5-pro", "gemini-1.5-flash"];
   }
 
-  if (modelIds.length === 0) return { count: 0 };
+  if (modelIds.length === 0) return { count: 0, failed: 0 };
 
-  // Atomar: alle Upserts oder keinen — vermeidet halbfertigen Stand.
   const ops = modelIds.map((modelId) => {
     const p = KNOWN_MODEL_PRICING_USD_PER_1M[modelId] ?? { input: 0, output: 0 };
-    return prisma.modelPricing.upsert({
-      where: { modelId },
-      create: {
-        modelId,
-        displayName: modelId.toUpperCase(),
-        provider,
-        inputPrice: p.input,
-        outputPrice: p.output,
-      },
-      update: {
-        ...(p.input > 0 ? { inputPrice: p.input } : {}),
-        ...(p.output > 0 ? { outputPrice: p.output } : {}),
-      },
-    });
+    return () =>
+      prisma.modelPricing.upsert({
+        where: { modelId },
+        create: {
+          modelId,
+          displayName: modelId.toUpperCase(),
+          provider,
+          inputPrice: p.input,
+          outputPrice: p.output,
+        },
+        update: {
+          ...(p.input > 0 ? { inputPrice: p.input } : {}),
+          ...(p.output > 0 ? { outputPrice: p.output } : {}),
+        },
+      });
   });
-  await prisma.$transaction(ops);
-  return { count: modelIds.length };
+  const results = await Promise.allSettled(ops.map((op) => op()));
+  const failed = results.filter((r) => r.status === "rejected").length;
+  if (failed === modelIds.length) {
+    throw new Error("Alle Upserts fehlgeschlagen");
+  }
+  return { count: modelIds.length - failed, failed };
 }

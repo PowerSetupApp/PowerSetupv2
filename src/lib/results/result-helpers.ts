@@ -1,4 +1,4 @@
-/** 30 Tage — Result-UUID (Produktregel; siehe `.context/domain.md`). */
+/** 30 Tage — Retention für Result-UUIDs (Produktregel). */
 const RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
 export function addResultRetention(from: Date = new Date()): Date {

@@ -9,6 +9,7 @@ import {
   enrichPrefilterForAdmin,
   type AlgorithmTestRecommendationPreviewPayload,
 } from "@/lib/admin/algorithm-test-recommendation-preview";
+import { algorithmSettingsToComputeOptions } from "@/lib/algorithm/options-from-db";
 import { runAlgorithmPreview } from "@/lib/admin/algorithm-preview";
 import { importAdminDomain } from "@/lib/db/queries/admin-catalog-io";
 import {
@@ -45,6 +46,7 @@ export async function saveAISettingsAction(input: {
   imageModel: string;
   geminiApiKey: string;
   openaiApiKey: string;
+  systemPrompt: string;
   userPromptTemplate: string;
   imagePromptTemplate: string;
   specsOptimizationPrompt: string;
@@ -90,10 +92,9 @@ export async function syncAlgorithmClassesAction() {
 export async function runAlgorithmTestAction(rawInput: unknown) {
   try {
     const input = parseAlgorithmInput(rawInput);
-    // Der neue Algorithmus ist eine reine Funktion mit hartkodierten Konstanten —
-    // es wird NICHT mehr aus `AlgorithmSettings` gemerged. `effectiveInput`
-    // entspricht daher dem validierten Wizard-Input unverändert.
-    const preview = runAlgorithmPreview(input);
+    const algoRow = await getAlgorithmSettings();
+    const algoOpts = algorithmSettingsToComputeOptions(algoRow);
+    const preview = runAlgorithmPreview(input, algoOpts);
 
     const productsResult = await listActiveProductsForRecommendation();
     const products = productsResult.ok ? productsResult.data : [];
@@ -115,7 +116,7 @@ export async function runAlgorithmTestAction(rawInput: unknown) {
       output: preview.output,
       breakdown: preview.breakdown,
       effectiveInput: input,
-      hasDbSettings: false,
+      hasDbSettings: true,
       recommendationPreview,
     };
   } catch (error) {
@@ -134,9 +135,9 @@ export async function saveModelPricingRowAction(modelId: string, inputPrice: num
 }
 
 export async function refreshModelPricingFromProviderAction(provider: "openai" | "google") {
-  const { count } = await fetchAndSaveModelPricing(provider);
+  const { count, failed } = await fetchAndSaveModelPricing(provider);
   revalidatePath("/admin/settings");
-  return { count };
+  return { count, failed };
 }
 
 export async function loadAmazonSettingsAction() {

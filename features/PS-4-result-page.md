@@ -15,7 +15,7 @@
 
 ## Definition of Done (MVP)
 
-- [ ] Result-UUID nach Reload erreichbar (Retention laut `.context/domain.md`)
+- [ ] Result-UUID nach Reload erreichbar (Retention 30 Tage, siehe `src/lib/results/result-helpers.ts`)
 - [ ] Affiliate-Links / Darstellung wie PRD
 
 Vollständige Spec: bei Bedarf mit `/requirements` vertiefen.

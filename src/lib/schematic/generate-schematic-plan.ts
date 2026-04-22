@@ -3,6 +3,7 @@ import type { SchematicVariant } from "@/generated/prisma/client";
 
 import { callAI } from "@/lib/ai/client";
 import { buildSchematicPrompt } from "@/lib/ai/prompts/schematic";
+import { getAISettings } from "@/lib/db/queries/admin-settings-ai";
 
 import { buildFormSummaryDe } from "./form-summary";
 import type { SchematicProductBrief } from "./product-brief";
@@ -51,18 +52,27 @@ export async function generateSchematicPlanFromContext(params: {
   }
 
   const formSummaryDe = buildFormSummaryDe(params.formData);
-  const { systemInstruction, userPrompt } = buildSchematicPrompt({
+  const built = buildSchematicPrompt({
     variant: params.variant,
     calculations: params.calculations,
     products: params.products,
     formSummaryDe,
   });
 
-  const res = await callAI({
-    systemInstruction,
-    userPrompt,
-    responseMimeType: "application/json",
-  });
+  const aiSettings = await getAISettings();
+  const adminSystem = aiSettings.systemPrompt.trim();
+  const systemInstruction = adminSystem
+    ? `${built.systemInstruction}\n\n--- Zusätzliche Vorgaben (Admin) ---\n${adminSystem}`
+    : built.systemInstruction;
+
+  const res = await callAI(
+    {
+      systemInstruction,
+      userPrompt: built.userPrompt,
+      responseMimeType: "application/json",
+    },
+    aiSettings,
+  );
 
   const raw = JSON.parse(res.text) as unknown;
   const plan = schematicPlanSchema.parse(raw);

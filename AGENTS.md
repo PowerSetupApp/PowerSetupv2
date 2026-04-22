@@ -3,15 +3,13 @@
 Mobile-first Next.js 16 Web-App. Camping-Elektrik-Planer für Anfänger.
 8-Schritt Wizard → Algorithmus → KI-Empfehlungen → PDF-Schaltplan.
 
-**Zwei Oberflächen:** Endnutzer sehen **nur** Wizard + Ergebnis (und Folgeflows wie PDF). Der **Admin** (`/admin/*`) ist ausschließlich für Betreiber — anderes Publikum, andere UI-Priorität (funktional vollständig laut Spec). Kurzüberblick: [docs/reference/ADMIN-AGENT-BRIEF.md](docs/reference/ADMIN-AGENT-BRIEF.md).
+**Zwei Oberflächen:** Endnutzer sehen **nur** Wizard + Ergebnis (und Folgeflows wie PDF). Der **Admin** (`/admin/`*) ist ausschließlich für Betreiber — anderes Publikum, andere UI-Priorität (funktional vollständig laut Spec). Kurzüberblick: [docs/reference/ADMIN-AGENT-BRIEF.md](docs/reference/ADMIN-AGENT-BRIEF.md).
 
 ## Immer zuerst lesen
 
 - [features/INDEX.md](features/INDEX.md) — **Feature-Specs** PS-1 … PS-9 (kuratierte Umsetzungs-Checklisten)
 - [REWRITE_PLAN.md](REWRITE_PLAN.md) — **Phasen & Zielstruktur** (Rewrite, Ordnerbaum, Alt→Neu)
-- `.context/architecture.md` — **Kontext-Atlas:** kompakte Ordnerübersicht, Modul-Zuständigkeiten, Kopplungen/Blast-Radius (Ziel ≤ ~180 Zeilen; keine Regeln/Domain hier)
-- `.context/domain.md` — Fachbegriffe (PSH, DoD, MPPT, Ah, Wp etc.)
-- `.context/conventions.md` — Coding-Standards, Patterns
+- Projekt-Kontext / Architektur-Atlas / Fachbegriffe: über **Graphify** abfragen (Knowledge Graph aus dem Repo)
 
 ## Referenz-Material (read-only, nie bearbeiten)
 
@@ -29,12 +27,16 @@ Mobile-first Next.js 16 Web-App. Camping-Elektrik-Planer für Anfänger.
 
 Quelltext für alle Skills liegt unter `**.agents/skills/<name>/SKILL.md`** — dort aktualisieren. Die Cursor-Regeln unter `.cursor/rules/` verweisen nur noch darauf (keine doppelte Pflege).
 
-- `/requirements` — Neues Feature planen, Spec schreiben
-- `/architecture` — Technisches Design, Architektur-Entscheidungen
-- `/frontend` — React/Next.js UI bauen; bei **sichtbarer Oberfläche** zuerst `.agents/skills/frontend/SKILL.md` **und** die dort verlinkten Anhänge `design-anthropic-frontend.md` + `ui-ux-pro-max.md` mitdenken (optional: `scripts/search.py`). Cursor-Pflicht: `.cursor/rules/frontend.mdc`.
-- `/backend` — API Routes, Prisma Queries, DB-Logik
-- `/qa` — Testen + Security Audit
-- `/deploy` — Vercel Deployment (nur manuell)
+**Kern (PowerSetup):**
+
+- `/requirements` — Neues Feature planen, Spec schreiben → [.agents/skills/requirements/SKILL.md](.agents/skills/requirements/SKILL.md)
+- `/architecture` — Technisches Design, Architektur-Entscheidungen → [.agents/skills/architecture/SKILL.md](.agents/skills/architecture/SKILL.md)
+- `/frontend` — React/Next.js UI bauen; bei **sichtbarer Oberfläche** zuerst [.agents/skills/frontend/SKILL.md](.agents/skills/frontend/SKILL.md) **und** die dort verlinkten Anhänge `design-anthropic-frontend.md` + `ui-ux-pro-max.md` mitdenken (optional: `scripts/search.py`). Cursor-Pflicht: `.cursor/rules/frontend.mdc`.
+- `/backend` — API Routes, Prisma Queries, DB-Logik → [.agents/skills/backend/SKILL.md](.agents/skills/backend/SKILL.md)
+- `/qa` — Testen + Security Audit → [.agents/skills/qa/SKILL.md](.agents/skills/qa/SKILL.md)
+- `/deploy` — Vercel Deployment (nur manuell) → [.agents/skills/deploy/SKILL.md](.agents/skills/deploy/SKILL.md)
+- [algorithm-architect](.agents/skills/algorithm-architect/SKILL.md) — Regelbasierte Berechnungen (Eingaben → Ergebnis), Sizing, Scoring, Ranking; Wizard/Algorithmus-Logik in `src/lib/algorithm/`
+- [mobile-home-electrics-basics](.agents/skills/mobile-home-electrics-basics/SKILL.md) — Referenz Physik/Formeln Camping-Elektrik (12/24/48 V, Kabel, Batterie, Solar, Schutz); bei Fachfragen und als Basis für den Algorithmus
 
 ### Zusätzlich installiert (skills.sh, vollständige Regeln im jeweiligen Ordner)
 
@@ -53,7 +55,7 @@ Kurzverweise in den PowerSetup-Skills oben; keine Regeln hier duplizieren.
 
 ## Tests & CI
 
-- **Unit / Integration:** Vitest ist die sinnvolle Standardwahl für TypeScript und Next.js; Details und Ablauf: `.agents/skills/test-driven-development/SKILL.md`. Cursor-Regel bei Testdateien: `.cursor/rules/testing.mdc`.
+- **Unit / Integration:** Vitest ist die sinnvolle Standardwahl für TypeScript und Next.js; Details und Ablauf: [.agents/skills/test-driven-development/SKILL.md](.agents/skills/test-driven-development/SKILL.md). Cursor-Regel bei Testdateien: `.cursor/rules/testing.mdc`.
 - **E2E (optional):** Playwright erst sinnvoll, wenn kritische User-Flows stabil regressionstestbar sein sollen; der **interne Browser in Cursor** ersetzt das nicht (kein automatisierter Gatekeeper in CI).
 - **GitHub Actions:** Liegt `.github/workflows/ci.yml` im Repo, prüfen ob `package.json` an der **Wurzel** existiert — ohne Wurzel-App überspringt der Workflow Install/Test (dieses Kontext-Repo bleibt grün). Sobald die PowerSetup-App hier oder in einem anderen Repo mit CI liegt: `npm run lint` / `npm run test` per `package.json` anbinden (`--if-present` ist im Workflow schon berücksichtigt).
 
@@ -61,9 +63,8 @@ Kurzverweise in den PowerSetup-Skills oben; keine Regeln hier duplizieren.
 
 - Kein direkter `prisma`-Import außerhalb `src/lib/db/queries/` (nie in API Routes oder Komponenten)
 - Kein `any` — alle Types Zod-inferred
-- **Zeilenbudget:** UI-Komponenten max. **~150 Zeilen** pro Datei (Rest auslagern); **API-Route-Dateien** (`route.ts`) max. **~80 Zeilen** — Logik nach `src/lib/` delegieren (Details: `.context/conventions.md`)
+- **Zeilenbudget:** UI-Komponenten max. **~150 Zeilen** pro Datei (Rest auslagern); **API-Route-Dateien** (`route.ts`) max. **~80 Zeilen** — Logik nach `src/lib/` delegieren
 - Einzige Berechnungsquelle: `POST /api/generate/[id]`
-- Nach strukturellen Änderungen (siehe gleiche Trigger wie in `.cursor/rules/general.mdc` → Abschnitt „Kontext-Atlas“): `.context/architecture.md` im selben Arbeitsgang aktualisieren; bei Wachstum Einträge zusammenführen oder streichen, Zielgröße einhalten
 - Neue Features zuerst via `/requirements` spezifizieren, dann coden
 
 ## Produkt-Flow (Kernlogik)

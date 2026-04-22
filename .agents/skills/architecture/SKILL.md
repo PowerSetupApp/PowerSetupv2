@@ -9,15 +9,14 @@ Ich plane technische Designs — kein Code, nur Struktur und Entscheidungen.
 
 ## Ablauf
 
-1. **Kontext lesen**: `.context/architecture.md` + Feature-Spec aus `features/`
+1. **Kontext lesen**: Feature-Spec aus `features/` + Projekt-Kontext via Graphify abfragen
 2. **Referenz prüfen**: `docs/reference/schema.prisma` für DB-Entscheidungen
 3. **Design erstellen**:
    - Welche Dateien werden angelegt/geändert?
    - Welche DB-Modelle braucht es?
    - Welche API Routes?
    - Wie fließen die Daten?
-4. **Entscheidung dokumentieren**: `.context/architecture.md` aktualisieren
-5. **Übergabe**: "Design fertig! Nächster Schritt: `/frontend` oder `/backend`"
+4. **Übergabe**: "Design fertig! Nächster Schritt: `/frontend` oder `/backend`"
 
 ## Wichtige Regeln
 

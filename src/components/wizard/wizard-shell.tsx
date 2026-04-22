@@ -13,6 +13,7 @@ import { useWizardStore } from "@/store/wizard";
 
 import { WIZARD_STEPS } from "./wizard-constants";
 import { WizardNavBar } from "./wizard-nav-bar";
+import { useWizardResultSubmit } from "./use-wizard-result-submit";
 
 export interface WizardShellProps {
   step: number;
@@ -23,6 +24,7 @@ export interface WizardShellProps {
 export function WizardShell({ step, children, onStepChange }: WizardShellProps) {
   const input = useWizardStore((s) => s.input);
   const completed = completedWizardStepIds(step, input);
+  const { submit, pending, error, canSubmit } = useWizardResultSubmit(input);
 
   return (
     <div className="flex min-h-dvh flex-1 flex-col">
@@ -57,12 +59,29 @@ export function WizardShell({ step, children, onStepChange }: WizardShellProps) 
         >
           <div className="flex min-h-0 flex-1 flex-col gap-6">{children}</div>
         </main>
+        {step === 8 && error ? (
+          <p className="text-sm text-destructive" role="alert">
+            {error}
+          </p>
+        ) : null}
         <WizardNavBar
           canBack={step > 1}
-          canNext={step < 8 && validateWizardStep(step, input)}
+          canNext={
+            step === 8
+              ? canSubmit && !pending
+              : step < 8 && validateWizardStep(step, input)
+          }
           onBack={() => onStepChange(step - 1)}
-          onNext={() => onStepChange(step + 1)}
-          nextLabel={step === 7 ? "Zur Übersicht" : "Weiter"}
+          onNext={step === 8 ? submit : () => onStepChange(step + 1)}
+          nextLabel={
+            step === 8
+              ? pending
+                ? "Wird gespeichert …"
+                : "Ergebnis speichern & anzeigen"
+              : step === 7
+                ? "Zur Übersicht"
+                : "Weiter"
+          }
         />
       </div>
     </div>

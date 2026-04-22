@@ -1,13 +1,19 @@
 import { cacheTag } from "next/cache";
 
-import type { AlgorithmSettings } from "@/generated/prisma/client";
+import { Prisma, type AlgorithmSettings } from "@/generated/prisma/client";
 import { CACHE_TAGS } from "@/lib/cache/tags";
 import { getPrisma } from "@/lib/db/client";
+import {
+  normalizeAlgorithmSettingsImportRow,
+  pickAlgorithmSettingsDbFields,
+} from "@/lib/schemas/admin-catalog-json";
 
 export type AlgorithmSettingsPatch = Partial<Omit<AlgorithmSettings, "id" | "updatedAt">>;
 
 function stripUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
-  return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined)) as Partial<T>;
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== undefined && v !== null),
+  ) as Partial<T>;
 }
 
 /**
@@ -17,11 +23,14 @@ function stripUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
  */
 export async function getAlgorithmSettings(): Promise<AlgorithmSettings> {
   const prisma = getPrisma();
-  return prisma.algorithmSettings.upsert({
-    where: { id: "default" },
-    create: { id: "default" },
-    update: {},
-  });
+  const existing = await prisma.algorithmSettings.findUnique({ where: { id: "default" } });
+  if (existing) return existing;
+  try {
+    return await prisma.algorithmSettings.create({ data: { id: "default" } });
+  } catch {
+    // Race: anderer Request hat die Zeile zwischen findUnique und create angelegt.
+    return prisma.algorithmSettings.findUniqueOrThrow({ where: { id: "default" } });
+  }
 }
 
 /**
@@ -40,11 +49,24 @@ export async function getAlgorithmSettingsCached(): Promise<AlgorithmSettings | 
 
 export async function updateAlgorithmSettings(patch: AlgorithmSettingsPatch): Promise<void> {
   const prisma = getPrisma();
-  const data = stripUndefined(patch as Record<string, unknown>) as AlgorithmSettingsPatch;
+  const stripped = stripUndefined(patch as Record<string, unknown>);
+  // Alte Admin-Clients / JSON können noch `dodLifepo4`, `simultaneousLow`, … senden —
+  // DB-Spalten v2 kennen die nicht. Normalisierung mappt Legacy → erlaubte Felder.
+  const normalized = normalizeAlgorithmSettingsImportRow({
+    id: "default",
+    ...stripped,
+  } as Record<string, unknown>);
+  const safe = pickAlgorithmSettingsDbFields(normalized);
+  const rowId = typeof safe.id === "string" ? safe.id : "default";
+  const { id: _id, createdAt: _c, updatedAt: _u, ...updatePayload } = safe;
+  void _id;
+  void _c;
+  void _u;
+  const data = stripUndefined(updatePayload as Record<string, unknown>) as AlgorithmSettingsPatch;
   await prisma.algorithmSettings.upsert({
-    where: { id: "default" },
-    create: { id: "default", ...data },
-    update: data,
+    where: { id: rowId },
+    create: { id: rowId, ...data } as Prisma.AlgorithmSettingsUncheckedCreateInput,
+    update: data as Prisma.AlgorithmSettingsUncheckedUpdateInput,
   });
 }
 

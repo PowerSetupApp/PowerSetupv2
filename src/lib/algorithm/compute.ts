@@ -11,22 +11,10 @@
  */
 
 import {
-  ABSORPTION_TAIL_H,
-  ALTERNATOR_CONTINUOUS_LIMIT_A,
-  AUTARCHY_MAX_BRIDGE_DAYS,
-  AUTARCHY_PSH_DERATE,
-  TOP_UP_COVERAGE_CAP,
-  TOP_UP_COVERAGE_STANDING_CAP_MULT,
-  C_RATE_CHARGE_MAX,
-  DOD_DEFAULTS,
-  HARD_BRIDGE_DAYS,
-  INVERTER_EFFICIENCY,
-  SOLAR_SYSTEM_EFFICIENCY,
-  INVERTER_STANDBY_HOURS,
-  INVERTER_STANDBY_W,
-  PEAK_FACTOR,
-  ROUNDTRIP_DEFAULTS,
-} from "./constants";
+  mergeAlgorithmTuning,
+  type AlgorithmTuning,
+  type ComputeOptions,
+} from "./algorithm-tuning";
 import {
   alternatorTopUpEstimateWh,
   autarchyMaxDays,
@@ -46,16 +34,7 @@ import { sizeSolar } from "./phases/solar";
 import type { AlgorithmInput, AlgorithmOutput } from "./types";
 import { validate } from "./validate";
 
-export interface ComputeOptions {
-  /** When true, `AlgorithmOutput.breakdown` is populated. */
-  explain?: boolean;
-  /**
-   * Safe continuous alternator current override. Defaults to
-   * `ALTERNATOR_CONTINUOUS_LIMIT_A` (60 A). Override for documented
-   * higher-output alternators.
-   */
-  alternatorLimitA?: number;
-}
+export type { ComputeOptions } from "./algorithm-tuning";
 
 /**
  * Compute a camper 12 / 24 / 48 V electrical system.
@@ -69,65 +48,57 @@ export function computeAlgorithm(
   input: AlgorithmInput,
   options: ComputeOptions = {},
 ): AlgorithmOutput {
-  const { explain = false, alternatorLimitA = ALTERNATOR_CONTINUOUS_LIMIT_A } =
-    options;
+  const { explain = false, alternatorLimitA: alternatorLimitOpt, ...tuningOverrides } = options;
+  const tuning = mergeAlgorithmTuning(tuningOverrides as Partial<AlgorithmTuning>);
+  const alternatorLimitA = alternatorLimitOpt ?? tuning.alternatorContinuousLimitA;
 
-  // Boundary validation — fail fast with a field-specific message.
-  validate(input);
+  validate(input, tuning);
 
-  // Clamp the autarky-days sentinel into the output domain.
-  const maxDays = autarchyMaxDays(input);
+  const maxDays = autarchyMaxDays(input, tuning);
   const effectiveAutarchyDays = Math.min(input.autarchyDays, maxDays);
 
-  // Derived signals.
   const driveHoursPerDay = driveHours(
     input.travelBehavior,
     input.energySources,
+    tuning,
   );
   const shoreAvail = shoreAvailability(input);
-  const peakFactor = PEAK_FACTOR[input.simultaneousLoad];
-  const psh = computePsh(input.travelBehavior);
+  const peakFactor = tuning.peakFactor[input.simultaneousLoad];
+  const psh = computePsh(input.travelBehavior, tuning);
 
-  // Energy classification.
   const { dcWh, acWh, peakAcW, peakDcW } = classifyConsumers(input.consumers);
 
-  // Inverter standby only when there is at least one AC load.
   const inverterStandbyWh =
-    peakAcW > 0 ? INVERTER_STANDBY_W * INVERTER_STANDBY_HOURS : 0;
-  const dailyWh = dcWh + acWh / INVERTER_EFFICIENCY + inverterStandbyWh;
+    peakAcW > 0 ? tuning.inverterStandbyW * tuning.inverterStandbyHours : 0;
+  const dailyWh =
+    dcWh + acWh / tuning.inverterEfficiency + inverterStandbyWh;
 
-  // Sub-calculations in dependency order.
-  //
-  // Battery sizing now subtracts an estimated solar + alternator top-up
-  // from the daily load ("soft autarky"), so we have to know `totalAvailableWp`
-  // and the alternator-only top-up before sizing the bank. The booster still
-  // runs after battery because its output current is clamped by battery
-  // acceptance (C-rate × recommendedCapacityAh) — see
-  // `alternatorTopUpEstimateWh` for why this is intentional and not circular.
-  const solar = sizeSolar(dailyWh, psh, input);
+  const solar = sizeSolar(dailyWh, psh, input, tuning);
   const alternatorTopUpWh = alternatorTopUpEstimateWh(
     driveHoursPerDay,
     input,
     alternatorLimitA,
+    tuning,
   );
   const portableBridgeSolarWh = input.energySources.includes("solar")
     ? solar.portableEffectiveWp *
       psh *
-      AUTARCHY_PSH_DERATE *
-      SOLAR_SYSTEM_EFFICIENCY
+      tuning.autarchyPshDerate *
+      tuning.solarSystemEfficiency
     : 0;
   const battery = sizeBattery(dailyWh, effectiveAutarchyDays, input, {
     psh,
+    shoreAvailability: shoreAvail,
     totalAvailableWp: solar.totalAvailableWp,
     alternatorTopUpWh,
     portableBridgeSolarWh,
-  });
-  const booster = sizeBooster(battery, driveHoursPerDay, input, alternatorLimitA);
-  const charger = sizeCharger(battery, shoreAvail, dailyWh, input);
+  }, tuning);
+  const booster = sizeBooster(battery, driveHoursPerDay, input, alternatorLimitA, tuning);
+  const charger = sizeCharger(battery, shoreAvail, dailyWh, input, tuning);
   const inverter = sizeInverter(peakAcW, peakFactor);
   const controller = sizeController(solar, input);
   const portableController = sizePortableController(solar, input);
-  const cables = sizeCables(input, booster, charger, inverter, controller, peakDcW);
+  const cables = sizeCables(input, booster, charger, inverter, controller, peakDcW, tuning);
 
   const output: AlgorithmOutput = {
     battery,
@@ -156,23 +127,23 @@ export function computeAlgorithm(
       maxAutarchyDaysForTrip: maxDays,
       autarchyTopUpProfile: autarchyTopUpProfile(input),
       alternatorLimitA,
-      dod: DOD_DEFAULTS[input.batteryPreference],
-      roundtripEfficiency: ROUNDTRIP_DEFAULTS[input.batteryPreference],
-      chemCRateMax: C_RATE_CHARGE_MAX[input.batteryPreference],
-      absorptionTailH: ABSORPTION_TAIL_H[input.batteryPreference],
-      autarchyPshDerate: AUTARCHY_PSH_DERATE,
-      autarchyMaxBridgeDays: AUTARCHY_MAX_BRIDGE_DAYS,
-      topUpCoverageCap: TOP_UP_COVERAGE_CAP,
-      topUpCoveragePshBaseCap: topUpCoverageBaseCapForPsh(psh),
+      dod: tuning.dodDefaults[input.batteryPreference],
+      roundtripEfficiency: tuning.roundtripDefaults[input.batteryPreference],
+      chemCRateMax: tuning.cRateChargeMax[input.batteryPreference],
+      absorptionTailH: tuning.absorptionTailH[input.batteryPreference],
+      autarchyPshDerate: tuning.autarchyPshDerate,
+      autarchyMaxBridgeDays: tuning.autarchyMaxBridgeDays,
+      topUpCoverageCap: tuning.topUpCoverageCap,
+      topUpCoveragePshBaseCap: topUpCoverageBaseCapForPsh(psh, tuning),
       topUpCoverageStandingCapMult:
         battery.hasAlternator &&
         input.travelBehavior.tripDuration === "permanent" &&
         input.travelBehavior.standingDuration !== "short"
-          ? TOP_UP_COVERAGE_STANDING_CAP_MULT[
+          ? tuning.topUpCoverageStandingCapMult[
               input.travelBehavior.standingDuration
             ]
           : 1,
-      hardBridgeDays: HARD_BRIDGE_DAYS,
+      hardBridgeDays: tuning.hardBridgeDays,
       autarchySolarTopUpWh: battery.solarTopUpWh,
       autarchyAlternatorTopUpWh: battery.alternatorTopUpWh,
       autarchyDailyTopUpWh: battery.dailyTopUpWh,
@@ -187,6 +158,13 @@ export function computeAlgorithm(
       autarchyEffectiveCoverageCap: battery.effectiveCoverageCap ?? 0,
       autarchyBridgeDailyDeficitWh: battery.bridgeDailyDeficitWh ?? 0,
       autarchyBindingBranch: battery.bindingBranch,
+      shoreBridgeReliefBaseDays: battery.shoreBridgeReliefBaseDays,
+      shoreBridgeReliefEffectiveDays: battery.shoreBridgeReliefEffectiveDays,
+      shoreReliefAlternatorScale: battery.shoreReliefAlternatorScale,
+      autarchyBridgeDaysRaw: battery.autarchyBridgeDaysRaw,
+      autarchyBridgeDaysForSoft: battery.autarchyBridgeDaysForSoft,
+      shoreBatteryReliefAutarchyThreshold:
+        tuning.shoreBatteryReliefAutarchyThresholdDays,
     };
   }
 

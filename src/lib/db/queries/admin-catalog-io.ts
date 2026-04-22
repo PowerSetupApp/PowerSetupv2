@@ -8,6 +8,7 @@ import {
   collectMissingProductReferences,
   filterSystemSettingsForImport,
   parseAlgorithmSettingsImport,
+  pickAlgorithmSettingsDbFields,
   parseBrandFilterCategoriesImport,
   parseBrandsImport,
   parseCategoriesImport,
@@ -376,28 +377,21 @@ async function importAdminDomainInner(
       return { imported: items.length };
     }
     case "algorithm-settings": {
-      const row = parseAlgorithmSettingsImport(raw);
-      // Unbekannte / entfernte Legacy-Spalten (batteryCompact, alternatorEuro6dSmart, …)
-      // werden verworfen, damit sie Prisma nicht mit "unknown arg" kippen.
+      const row = parseAlgorithmSettingsImport(raw) as Record<string, unknown>;
+      const safe = pickAlgorithmSettingsDbFields(row);
       const {
         updatedAt: _updatedAt,
-        batteryCompact: _batteryCompact,
-        batteryMedium: _batteryMedium,
-        batterySpacious: _batterySpacious,
-        alternatorEuro6dSmart: _alternatorEuro6dSmart,
-        alternatorUnknown: _alternatorUnknown,
-        ...data
-      } = row;
+        createdAt: _createdAt,
+        id: rowId,
+        ...patch
+      } = safe;
       void _updatedAt;
-      void _batteryCompact;
-      void _batteryMedium;
-      void _batterySpacious;
-      void _alternatorEuro6dSmart;
-      void _alternatorUnknown;
+      void _createdAt;
+      const id = typeof rowId === "string" ? rowId : "default";
       await prisma.algorithmSettings.upsert({
-        where: { id: data.id },
-        create: data,
-        update: data,
+        where: { id },
+        create: { id, ...patch } as never,
+        update: patch as never,
       });
       return { imported: 1 };
     }

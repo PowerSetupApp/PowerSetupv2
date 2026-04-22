@@ -19,3 +19,6 @@ src/generated/
 
 # Local Cursor IDE settings (machine-specific)
 .cursor/settings.json
+
+# Local Claude worktrees (embedded git)
+.claude/worktrees/

@@ -7,15 +7,15 @@ import {
   syncAlgorithmClassesAction,
 } from "@/app/admin/settings/actions";
 import { AlgorithmFlowNarrative } from "@/components/admin/settings/algorithm-flow-narrative";
+import { AlgorithmSettingsMatrixEditor } from "@/components/admin/settings/algorithm-settings-matrix-editor";
 import { ALGORITHM_SETTINGS_GROUPS } from "@/components/admin/settings/algorithm-settings-groups";
+import type { AlgorithmMatrixFieldKey } from "@/lib/schemas/algorithm-settings-matrices";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, RefreshCw, RotateCcw, Save } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-
-// TODO(new-algorithm): DB writes from this panel are currently unused. Re-wire once hardcoded constants prove out (see src/lib/algorithm/_legacy/constants-backup.json).
 
 type Row = AlgorithmSettings;
 
@@ -41,7 +41,7 @@ export function AlgorithmSettingsPanel() {
     void load();
   }, [load]);
 
-  const handleChange = (key: string, value: string | number) => {
+  const handleChange = (key: string, value: string | number | object) => {
     if (!settings) return;
     setSettings({ ...settings, [key]: value } as Row);
     setDirty(true);
@@ -185,6 +185,18 @@ export function AlgorithmSettingsPanel() {
             <CardContent className="space-y-3">
               {group.fields.map((field) => {
                 const raw = (settings as Record<string, unknown>)[field.key];
+                if (field.type === "matrix") {
+                  return (
+                    <div key={field.key} className="flex flex-col gap-2">
+                      <Label className="text-sm font-medium">{field.label}</Label>
+                      <AlgorithmSettingsMatrixEditor
+                        fieldKey={field.key as AlgorithmMatrixFieldKey}
+                        value={raw}
+                        onChange={(next) => handleChange(field.key, next as object)}
+                      />
+                    </div>
+                  );
+                }
                 const value =
                   field.type === "string" ? String(raw ?? "") : raw === undefined || raw === null ? "" : String(raw);
                 return (

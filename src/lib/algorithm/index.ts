@@ -13,6 +13,12 @@
  */
 
 export { computeAlgorithm, type ComputeOptions } from "./compute";
+export {
+  mergeAlgorithmTuning,
+  DEFAULT_ALGORITHM_TUNING,
+  type AlgorithmTuning,
+} from "./algorithm-tuning";
+export { algorithmSettingsToComputeOptions } from "./options-from-db";
 export { validate } from "./validate";
 export { applyCustomOverrides } from "./apply-custom-overrides";
 export * from "./types";

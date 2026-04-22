@@ -11,7 +11,7 @@
  *   eDriveWh  = driveHours * iOut * systemVoltage * BOOSTER_EFFICIENCY
  */
 
-import { BOOSTER_EFFICIENCY, C_RATE_CHARGE_MAX } from "../constants";
+import type { AlgorithmTuning } from "../algorithm-tuning";
 import type {
   AlgorithmInput,
   BatteryRecommendation,
@@ -23,6 +23,7 @@ export function sizeBooster(
   driveHoursPerDay: number,
   input: AlgorithmInput,
   alternatorLimitA: number,
+  tuning: AlgorithmTuning,
 ): BoosterRecommendation {
   const chem = input.batteryPreference;
   const needsConversion = input.vehicleVoltage !== input.systemVoltage;
@@ -42,7 +43,7 @@ export function sizeBooster(
   }
 
   const batteryAcceptA =
-    C_RATE_CHARGE_MAX[chem] * battery.recommendedCapacityAh;
+    tuning.cRateChargeMax[chem] * battery.recommendedCapacityAh;
   // Alternator's safe continuous power translated to house-side current.
   //   P_alt   = alternatorLimitA * vehicleVoltage
   //   I_house = P_alt / systemVoltage
@@ -51,12 +52,12 @@ export function sizeBooster(
   const outputCurrentA = Math.min(batteryAcceptA, alternatorMaxOutputA);
   const inputCurrentA =
     (input.systemVoltage * outputCurrentA) /
-    (input.vehicleVoltage * BOOSTER_EFFICIENCY);
+    (input.vehicleVoltage * tuning.boosterEfficiency);
   const dailyAlternatorChargeWh =
     driveHoursPerDay *
     outputCurrentA *
     input.systemVoltage *
-    BOOSTER_EFFICIENCY;
+    tuning.boosterEfficiency;
 
   return {
     needed: true,

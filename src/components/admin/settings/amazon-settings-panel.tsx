@@ -12,6 +12,7 @@ export function AmazonSettingsPanel() {
   const [tag, setTag] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -44,15 +45,29 @@ export function AmazonSettingsPanel() {
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="partner-tag">Partner Tag</Label>
-          <Input id="partner-tag" value={tag} onChange={(e) => setTag(e.target.value)} placeholder="deinTag-21" />
+          <Input
+            id="partner-tag"
+            value={tag}
+            onChange={(e) => {
+              setError(null);
+              setTag(e.target.value);
+            }}
+            placeholder="deinTag-21"
+            aria-invalid={error ? true : undefined}
+          />
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
         </div>
         <Button
           type="button"
           onClick={async () => {
             setSaving(true);
+            setError(null);
             try {
               await saveAmazonSettingsAction(tag);
               await load();
+            } catch (e) {
+              const msg = e instanceof Error ? e.message : "Speichern fehlgeschlagen.";
+              setError(msg);
             } finally {
               setSaving(false);
             }

@@ -7,15 +7,8 @@
  * reference file.
  */
 
-import {
-  BOOSTER_EFFICIENCY,
-  DRIVE_HOURS_PER_DAY,
-  MAX_AUTARCHY_DAYS,
-  PSH_TABLE,
-  ROOF_PACKING_FACTOR,
-  WP_PER_M2,
-  type AutarchyTopUpProfile,
-} from "./constants";
+import type { AutarchyTopUpProfile } from "./constants";
+import type { AlgorithmTuning } from "./algorithm-tuning";
 import type {
   AlgorithmInput,
   Consumer,
@@ -33,12 +26,13 @@ import type {
 export function driveHours(
   travel: TravelBehavior,
   energySources: readonly EnergySource[],
+  tuning: AlgorithmTuning,
 ): number {
   if (!energySources.includes("alternator")) return 0;
-  // `DRIVE_HOURS_PER_DAY[trip][standing]` covers both 2-axis rows
+  // `driveHoursPerDay[trip][standing]` covers both 2-axis rows
   // (`week`/`extended`) and "any standing" rows (`weekend`/`permanent`, where
   // all three standing-duration entries hold the same value).
-  return DRIVE_HOURS_PER_DAY[travel.tripDuration][travel.standingDuration];
+  return tuning.driveHoursPerDay[travel.tripDuration][travel.standingDuration];
 }
 
 /**
@@ -67,8 +61,8 @@ export function shoreAvailability(input: AlgorithmInput): ShoreAvailability {
 }
 
 /** PSH lookup (references/solar.md). `all_year` is the annual average. */
-export function psh(travel: TravelBehavior): number {
-  return PSH_TABLE[travel.winterLocation][travel.season];
+export function psh(travel: TravelBehavior, tuning: AlgorithmTuning): number {
+  return tuning.pshTable[travel.winterLocation][travel.season];
 }
 
 /**
@@ -114,13 +108,14 @@ export function classifyConsumers(consumers: readonly Consumer[]): {
 export function roofWp(
   roofAreas: readonly RoofArea[],
   roofModuleType: RoofModuleType,
+  tuning: AlgorithmTuning,
 ): number {
-  const wpPerM2 = WP_PER_M2[roofModuleType];
+  const wpPerM2 = roofModuleType === "flexible" ? tuning.wpPerM2Flexible : tuning.wpPerM2Rigid;
   let total = 0;
   for (const area of roofAreas) {
     // cm × cm → m² (divide by 10 000).
     const areaM2 = (area.length * area.width) / 10_000;
-    total += areaM2 * wpPerM2 * ROOF_PACKING_FACTOR;
+    total += areaM2 * wpPerM2 * tuning.roofUtilizationFactor;
   }
   return total;
 }
@@ -128,8 +123,9 @@ export function roofWp(
 /**
  * Classify the user's selected `energySources` into the three top-up
  * profiles used by `MAX_AUTARCHY_DAYS`. `shore_power` is intentionally
- * ignored — shore power does not help while off-grid (that's the whole
- * point of the autarky window).
+ * ignored **here** — it is not a daily PV/LM top-up during the autarchy
+ * window. Shore still affects battery sizing via soft-bridge relief days
+ * (`shoreBatteryBridgeReliefDays` in `phases/battery.ts`).
  */
 export function autarchyTopUpProfile(
   input: AlgorithmInput,
@@ -146,9 +142,9 @@ export function autarchyTopUpProfile(
  * the value the wizard slider max must match and the value `validate` and
  * `computeAlgorithm` clamp user input against.
  */
-export function autarchyMaxDays(input: AlgorithmInput): number {
+export function autarchyMaxDays(input: AlgorithmInput, tuning: AlgorithmTuning): number {
   const profile = autarchyTopUpProfile(input);
-  return MAX_AUTARCHY_DAYS[input.travelBehavior.tripDuration][profile];
+  return tuning.maxAutarchyDays[input.travelBehavior.tripDuration][profile];
 }
 
 /**
@@ -171,6 +167,7 @@ export function alternatorTopUpEstimateWh(
   driveHoursPerDay: number,
   input: AlgorithmInput,
   alternatorLimitA: number,
+  tuning: AlgorithmTuning,
 ): number {
   if (!input.energySources.includes("alternator")) return 0;
   const alternatorMaxOutputA =
@@ -179,6 +176,6 @@ export function alternatorTopUpEstimateWh(
     driveHoursPerDay *
     alternatorMaxOutputA *
     input.systemVoltage *
-    BOOSTER_EFFICIENCY
+    tuning.boosterEfficiency
   );
 }

@@ -1,20 +1,22 @@
 import type { AICompletionRequest, AICompletionResult } from "./types";
 import { AIInvocationError } from "./types";
 
-const GEMINI_MODEL = "gemini-2.0-flash";
+import { DEFAULT_GEMINI_REST_MODEL } from "./resolve-chat-models";
+
 const REQUEST_TIMEOUT_MS = 30_000;
 
-function geminiApiKey(): string | undefined {
-  return process.env.GEMINI_API_KEY ?? process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-}
-
-export async function completeWithGemini(request: AICompletionRequest): Promise<AICompletionResult> {
-  const key = geminiApiKey();
+export async function completeWithGemini(
+  request: AICompletionRequest,
+  apiKey: string,
+  restModelId: string = DEFAULT_GEMINI_REST_MODEL,
+): Promise<AICompletionResult> {
+  const key = apiKey.trim();
   if (!key) {
-    throw new AIInvocationError("GEMINI_API_KEY (oder GOOGLE_GENERATIVE_AI_API_KEY) fehlt");
+    throw new AIInvocationError("Gemini-API-Schlüssel fehlt (Admin „KI & Modelle“ oder GEMINI_API_KEY / GOOGLE_GENERATIVE_AI_API_KEY)");
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+  const modelId = restModelId.trim() || DEFAULT_GEMINI_REST_MODEL;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelId)}:generateContent`;
 
   const body: Record<string, unknown> = {
     contents: [{ parts: [{ text: request.userPrompt }] }],
@@ -71,7 +73,7 @@ export async function completeWithGemini(request: AICompletionRequest): Promise<
   return {
     text,
     provider: "gemini",
-    model: GEMINI_MODEL,
+    model: modelId,
     inputTokens: json.usageMetadata?.promptTokenCount ?? 0,
     outputTokens: json.usageMetadata?.candidatesTokenCount ?? 0,
   };

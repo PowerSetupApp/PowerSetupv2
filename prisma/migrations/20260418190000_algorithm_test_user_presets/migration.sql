@@ -1,5 +1,5 @@
 -- Algorithmus-Test: Admin-Presets (realistische Szenarien), getrennt von Zufalls-Filtern
-CREATE TABLE "AlgorithmTestUserPreset" (
+CREATE TABLE IF NOT EXISTS "AlgorithmTestUserPreset" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
@@ -12,4 +12,4 @@ CREATE TABLE "AlgorithmTestUserPreset" (
     CONSTRAINT "AlgorithmTestUserPreset_pkey" PRIMARY KEY ("id")
 );
 
-CREATE INDEX "AlgorithmTestUserPreset_isActive_sortOrder_idx" ON "AlgorithmTestUserPreset"("isActive", "sortOrder");
+CREATE INDEX IF NOT EXISTS "AlgorithmTestUserPreset_isActive_sortOrder_idx" ON "AlgorithmTestUserPreset"("isActive", "sortOrder");

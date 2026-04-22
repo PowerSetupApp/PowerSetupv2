@@ -1,14 +1,21 @@
 import type { AICompletionRequest, AICompletionResult } from "./types";
 import { AIInvocationError } from "./types";
 
-const OPENAI_MODEL = "gpt-4o-mini";
+import { DEFAULT_OPENAI_CHAT_MODEL } from "./resolve-chat-models";
+
 const REQUEST_TIMEOUT_MS = 30_000;
 
-export async function completeWithOpenAI(request: AICompletionRequest): Promise<AICompletionResult> {
-  const key = process.env.OPENAI_API_KEY;
+export async function completeWithOpenAI(
+  request: AICompletionRequest,
+  apiKey: string,
+  model: string = DEFAULT_OPENAI_CHAT_MODEL,
+): Promise<AICompletionResult> {
+  const key = apiKey.trim();
   if (!key) {
-    throw new AIInvocationError("OPENAI_API_KEY fehlt");
+    throw new AIInvocationError("OpenAI-API-Schlüssel fehlt (Admin „KI & Modelle“ oder OPENAI_API_KEY)");
   }
+
+  const chatModel = model.trim() || DEFAULT_OPENAI_CHAT_MODEL;
 
   const messages: { role: "system" | "user"; content: string }[] = [];
   if (request.systemInstruction?.trim()) {
@@ -27,7 +34,7 @@ export async function completeWithOpenAI(request: AICompletionRequest): Promise<
         Authorization: `Bearer ${key}`,
       },
       body: JSON.stringify({
-        model: OPENAI_MODEL,
+        model: chatModel,
         messages,
         temperature: 0.2,
         ...(request.responseMimeType === "application/json"
@@ -63,7 +70,7 @@ export async function completeWithOpenAI(request: AICompletionRequest): Promise<
   return {
     text,
     provider: "openai",
-    model: OPENAI_MODEL,
+    model: chatModel,
     inputTokens: json.usage?.prompt_tokens ?? 0,
     outputTokens: json.usage?.completion_tokens ?? 0,
   };

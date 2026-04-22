@@ -12,13 +12,8 @@
  * `ROUTES` order).
  */
 
-import {
-  COPPER_RHO,
-  CRITICAL_DU_MAX_PCT,
-  INVERTER_EFFICIENCY,
-  ROUTES,
-  STANDARD_DU_MAX_PCT,
-} from "../constants";
+import { ROUTES } from "../constants";
+import type { AlgorithmTuning } from "../algorithm-tuning";
 import type {
   AlgorithmInput,
   BoosterRecommendation,
@@ -101,12 +96,13 @@ export function sizeCables(
   inverter: InverterRecommendation,
   controller: ControllerRecommendation,
   peakDcW: number,
+  tuning: AlgorithmTuning,
 ): CableRecommendation[] {
   // Hoist the inverter's DC-input current once — it is used for both
   // `service_to_inverter` and as a component of `battery_to_fuse_box`.
   const iInvDc =
     inverter.recommendedW > 0 && input.systemVoltage > 0
-      ? inverter.recommendedW / (input.systemVoltage * INVERTER_EFFICIENCY)
+      ? inverter.recommendedW / (input.systemVoltage * tuning.inverterEfficiency)
       : 0;
 
   return ROUTES.map(([routeId, displayName, isCritical]) => {
@@ -120,13 +116,13 @@ export function sizeCables(
       peakDcW,
       iInvDc,
     );
-    const duMaxPct = isCritical ? CRITICAL_DU_MAX_PCT : STANDARD_DU_MAX_PCT;
+    const duMaxPct = isCritical ? tuning.voltageDropCritical : tuning.voltageDropNormal;
     const duMaxV = (voltage * duMaxPct) / 100;
 
     let minCrossSection = 0;
     if (lengthM > 0 && currentA > 0 && duMaxV > 0) {
       // Voltage-drop-limited minimum (references/cables.md core formula).
-      minCrossSection = (2 * lengthM * currentA * COPPER_RHO) / duMaxV;
+      minCrossSection = (2 * lengthM * currentA * tuning.copperResistivity) / duMaxV;
     }
 
     return {

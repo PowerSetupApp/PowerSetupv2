@@ -238,6 +238,11 @@ Top-Level: **`AlgorithmOutput`** — Objekt mit den Keys `battery`, `solar`, `bo
 | `dailyTopUpWh` | `decimal` | [Wh/Tag] — Summe beider Top-Ups |
 | `netDailyDeficitWh` | `decimal` | [Wh/Tag] — `max(dailyWh - dailyTopUpWh, 0)` |
 | `bindingBranch` | `enum` `soft` \| `hard` | `hard` wenn der 1-Tages-Floor größer wurde als `netDeficit · autarchyDays` |
+| `shoreBridgeReliefBaseDays` | `decimal` | [Tage] — Landstrom-Basis-Relief für Soft-Bridge |
+| `shoreBridgeReliefEffectiveDays` | `decimal` | [Tage] — Relief nach Schwelle + Ladebooster-Skalierung |
+| `shoreReliefAlternatorScale` | `decimal` | dimensionslos |
+| `autarchyBridgeDaysRaw` | `decimal` | [Tage] — vor Landstrom-Relief |
+| `autarchyBridgeDaysForSoft` | `decimal` | [Tage] — Multiplikator auf `bridgeDailyDeficitWh` |
 
 ## C.2 `solar` — `SolarRecommendation`
 

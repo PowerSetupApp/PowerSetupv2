@@ -44,6 +44,12 @@ const FIELD_LABELS: Record<string, string> = {
   roundtripEfficiency: "Roundtrip-Wirkungsgrad",
   chemCRateMax: "Max. C-Rate (Chemie)",
   absorptionTailH: "Absorption-Tail",
+  shoreBridgeReliefBaseDays: "Landstrom-Relief (Basis, Tage)",
+  shoreBridgeReliefEffectiveDays: "Landstrom-Relief (effektiv, Tage)",
+  shoreReliefAlternatorScale: "Landstrom-Relief × Ladebooster-Skalierung",
+  autarchyBridgeDaysRaw: "Brückentage (roh, vor Relief)",
+  autarchyBridgeDaysForSoft: "Brückentage (weiche Brücke)",
+  shoreBatteryReliefAutarchyThreshold: "Autarkie-Schwelle Landstrom-Relief",
 };
 
 const FIELD_UNITS: Record<string, string> = {
@@ -60,6 +66,12 @@ const FIELD_UNITS: Record<string, string> = {
   maxAutarchyDaysForTrip: "Tage",
   alternatorLimitA: "A",
   absorptionTailH: "h",
+  shoreBridgeReliefBaseDays: "Tage",
+  shoreBridgeReliefEffectiveDays: "Tage",
+  shoreReliefAlternatorScale: "×",
+  autarchyBridgeDaysRaw: "Tage",
+  autarchyBridgeDaysForSoft: "Tage",
+  shoreBatteryReliefAutarchyThreshold: "Tage",
 };
 
 function formatEntry(key: string, value: number | string): string {

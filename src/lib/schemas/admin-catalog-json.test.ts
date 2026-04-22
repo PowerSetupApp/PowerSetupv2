@@ -125,60 +125,29 @@ describe("admin-catalog-json", () => {
     expect(err).toContain("categoryId");
   });
 
-  it("parseAlgorithmSettingsImport reads flat object", () => {
+  it("parseAlgorithmSettingsImport reads v2 object and maps legacy DoD", () => {
     const row = {
       id: "default",
       dodLifepo4: 0.95,
       dodAgm: 0.5,
       dodGel: 0.5,
-      simultaneousLow: 0.3,
-      simultaneousModerate: 0.5,
-      simultaneousHigh: 0.8,
-      alternatorStandard: 30,
-      alternatorEnhanced: 90,
-      alternatorDriveHours: 2,
-      boosterEfficiency: 0.95,
-      batterySafetyFactor: 1.2,
-      solarSafetyFactor: 1.1,
-      standingDaysShort: 2,
-      standingDaysMedium: 5,
-      standingDaysLong: 8,
-      maxBackupDays: 5,
-      wpPerM2Rigid: 235,
-      wpPerM2Flexible: 180,
-      cloudyYieldFactor: 0.3,
-      recommendedSolarYieldFactor: 1.2,
-      roofUtilizationFactor: 0.8,
-      roofOrientationFactor: 0.85,
-      portableOrientationFactor: 1,
-      sunHoursSummer: 5,
-      sunHoursAllYear: 3.5,
-      sunHoursWinter: 2,
-      locationGermanyAlps: 0.8,
-      locationSouthernEurope: 1.2,
-      locationScandinavia: 0.6,
-      locationVaries: 1,
-      dutyCycleCompressor: 0.35,
-      dutyCycleAbsorber: 0.7,
+      batterySafetyFactor: 1.25,
       inverterClasses: "500",
       chargerClasses: "10",
-      chargerTimeHoursSlow: 12,
-      chargerTimeHoursNormal: 8,
-      chargerTimeHoursFast: 5,
       solarControllerClasses: "10",
       cableSizes: "6",
-      voltageDropCritical: 2,
+      voltageDropCritical: 1,
       voltageDropNormal: 3,
-      voltageDropSolar: 3,
       copperResistivity: 0.0178,
       minPreselectionScore: 30,
       productSelectionMode: "algorithm",
       reasonGenerationMode: "algorithm",
       updatedAt: "2026-01-01T00:00:00.000Z",
     };
-    const parsed = parseAlgorithmSettingsImport(row);
+    const parsed = parseAlgorithmSettingsImport(row) as Record<string, unknown>;
     expect(parsed.id).toBe("default");
     expect(parsed.minPreselectionScore).toBe(30);
+    expect(parsed.dodDefaults).toEqual({ lifepo4: 0.95, agm: 0.5, gel: 0.5 });
   });
 
   it("buildExportEnvelope sets kind and exportVersion", () => {

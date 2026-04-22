@@ -151,77 +151,118 @@ const promptVersionSchema = z.object({
   updatedAt: z.coerce.date(),
 });
 
-// Legacy-Spalten, die wir beim Import tolerieren (damit alte JSON-Exporte noch einlesbar bleiben),
-// aber nicht mehr in die Datenbank schreiben.
-// Siehe Migration `20260418120000_algorithm_settings_wire_up`.
-const algorithmSettingsLegacyFields = z
-  .object({
-    alternatorEuro6dSmart: z.number().optional(),
-    alternatorUnknown: z.number().optional(),
-    batteryCompact: z.number().optional(),
-    batteryMedium: z.number().optional(),
-    batterySpacious: z.number().optional(),
-  })
-  .partial();
+/** Nur Prisma-Spalten von `AlgorithmSettings` (v2) — plus `id`. */
+const ALGORITHM_SETTINGS_ALLOWED_KEYS = new Set([
+  "id",
+  "maxAutarchyDays",
+  "pshTable",
+  "solarBagAlignmentUplift",
+  "driveHoursPerDay",
+  "dodDefaults",
+  "roundtripDefaults",
+  "cRateChargeMax",
+  "absorptionTailH",
+  "chargerTargetCRate",
+  "shoreBridgeReliefDays",
+  "alternatorBridgeStandingCredit",
+  "topUpCoverageStandingCapMult",
+  "peakFactor",
+  "batterySafetyFactor",
+  "autarchyPshDerate",
+  "autarchyMaxBridgeDays",
+  "hardBridgeDays",
+  "topUpCoverageCap",
+  "topUpCoverageCapAtLowPsh",
+  "topUpCoveragePshBandHigh",
+  "topUpCoveragePshBandLow",
+  "topUpCoveragePortableWeight",
+  "topUpCoveragePortableCapBump",
+  "topUpCoverageAbsMax",
+  "shoreBatteryReliefAutarchyThresholdDays",
+  "inverterEfficiency",
+  "inverterStandbyW",
+  "inverterStandbyHours",
+  "alternatorContinuousLimitA",
+  "boosterEfficiency",
+  "chargerEfficiency",
+  "solarSystemEfficiency",
+  "wpPerM2Rigid",
+  "wpPerM2Flexible",
+  "roofUtilizationFactor",
+  "solarBagUtilization",
+  "voltageDropCritical",
+  "voltageDropNormal",
+  "copperResistivity",
+  "inverterClasses",
+  "chargerClasses",
+  "solarControllerClasses",
+  "cableSizes",
+  "minPreselectionScore",
+  "productSelectionMode",
+  "reasonGenerationMode",
+  "createdAt",
+  "updatedAt",
+]);
+
+export function normalizeAlgorithmSettingsImportRow(
+  raw: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const key of ALGORITHM_SETTINGS_ALLOWED_KEYS) {
+    if (key in raw && raw[key] !== undefined) out[key] = raw[key];
+  }
+  out.id = typeof raw.id === "string" ? raw.id : "default";
+
+  if (out.dodDefaults === undefined && typeof raw.dodLifepo4 === "number") {
+    out.dodDefaults = {
+      lifepo4: raw.dodLifepo4,
+      agm: typeof raw.dodAgm === "number" ? raw.dodAgm : 0.5,
+      gel: typeof raw.dodGel === "number" ? raw.dodGel : 0.5,
+    };
+  }
+
+  if (
+    out.peakFactor === undefined &&
+    typeof raw.simultaneousLow === "number" &&
+    raw.simultaneousLow >= 1 &&
+    typeof raw.simultaneousModerate === "number" &&
+    raw.simultaneousModerate >= 1 &&
+    typeof raw.simultaneousHigh === "number" &&
+    raw.simultaneousHigh >= 1
+  ) {
+    out.peakFactor = {
+      low: raw.simultaneousLow,
+      moderate: raw.simultaneousModerate,
+      high: raw.simultaneousHigh,
+    };
+  }
+
+  return out;
+}
+
+/**
+ * Nur Spalten, die es in `AlgorithmSettings` (v2) wirklich gibt.
+ * Verhindert P2022, wenn z. B. ein alter Client oder JSON noch `dodLifepo4` mitschickt.
+ */
+export function pickAlgorithmSettingsDbFields(row: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const key of ALGORITHM_SETTINGS_ALLOWED_KEYS) {
+    const v = row[key];
+    if (v !== undefined && v !== null) {
+      out[key] = v;
+    }
+  }
+  return out;
+}
 
 const algorithmSettingsRowSchema = z
-  .object({
-    id: z.string(),
-    dodLifepo4: z.number(),
-    dodAgm: z.number(),
-    dodGel: z.number(),
-    simultaneousLow: z.number(),
-    simultaneousModerate: z.number(),
-    simultaneousHigh: z.number(),
-    alternatorStandard: z.number(),
-    alternatorEnhanced: z.number(),
-    alternatorDriveHours: z.number().optional(),
-    boosterEfficiency: z.number().optional(),
-    batterySafetyFactor: z.number(),
-    solarSafetyFactor: z.number(),
-    standingDaysShort: z.number(),
-    standingDaysMedium: z.number(),
-    standingDaysLong: z.number(),
-    maxBackupDays: z.number(),
-    wpPerM2Rigid: z.number(),
-    wpPerM2Flexible: z.number(),
-    cloudyYieldFactor: z.number(),
-    cloudyYieldFactorSummer: z.number().optional(),
-    cloudyYieldFactorWinter: z.number().optional(),
-    recommendedSolarYieldFactor: z.number(),
-    solarSystemEfficiency: z.number().optional(),
-    maxPortableWp: z.number().int().optional(),
-    roofUtilizationFactor: z.number(),
-    roofOrientationFactor: z.number(),
-    portableOrientationFactor: z.number(),
-    sunHoursSummer: z.number(),
-    sunHoursAllYear: z.number(),
-    sunHoursWinter: z.number(),
-    locationGermanyAlps: z.number(),
-    locationSouthernEurope: z.number(),
-    locationScandinavia: z.number(),
-    locationEastern: z.number().optional(),
-    locationVaries: z.number(),
-    dutyCycleCompressor: z.number(),
-    dutyCycleAbsorber: z.number(),
-    inverterClasses: z.string(),
-    chargerClasses: z.string(),
-    chargerTimeHoursSlow: z.number(),
-    chargerTimeHoursNormal: z.number(),
-    chargerTimeHoursFast: z.number(),
-    chargerAbsorptionOverhead: z.number().optional(),
-    solarControllerClasses: z.string(),
-    cableSizes: z.string(),
-    voltageDropCritical: z.number(),
-    voltageDropNormal: z.number(),
-    voltageDropSolar: z.number(),
-    copperResistivity: z.number(),
-    minPreselectionScore: z.number().int(),
-    productSelectionMode: z.string(),
-    reasonGenerationMode: z.string(),
-    updatedAt: z.coerce.date(),
+  .record(z.string(), z.unknown())
+  .superRefine((val, ctx) => {
+    if (typeof val.id !== "string") {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "id (string) erforderlich", path: ["id"] });
+    }
   })
-  .and(algorithmSettingsLegacyFields);
+  .transform((raw) => normalizeAlgorithmSettingsImportRow(raw));
 
 export function buildExportEnvelope<T>(kind: AdminExportDomain, items: T[]) {
   return {

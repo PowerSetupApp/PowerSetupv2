@@ -10,13 +10,7 @@
  *   chargingTimeH   = cap * DoD / (iRec * CHARGER_EFFICIENCY) + ABSORPTION_TAIL_H[chem]
  */
 
-import {
-  ABSORPTION_TAIL_H,
-  CHARGER_EFFICIENCY,
-  CHARGER_TARGET_C_RATE,
-  C_RATE_CHARGE_MAX,
-  DOD_DEFAULTS,
-} from "../constants";
+import type { AlgorithmTuning } from "../algorithm-tuning";
 import type {
   AlgorithmInput,
   BatteryRecommendation,
@@ -29,6 +23,7 @@ export function sizeCharger(
   shoreAvail: ShoreAvailability,
   dailyWh: number,
   input: AlgorithmInput,
+  tuning: AlgorithmTuning,
 ): ChargerRecommendation {
   if (shoreAvail === "never") {
     return {
@@ -41,8 +36,8 @@ export function sizeCharger(
 
   const chem = input.batteryPreference;
   const cAh = battery.recommendedCapacityAh;
-  const dod = DOD_DEFAULTS[chem];
-  const chemCeilingA = C_RATE_CHARGE_MAX[chem] * cAh;
+  const dod = tuning.dodDefaults[chem];
+  const chemCeilingA = tuning.cRateChargeMax[chem] * cAh;
 
   let targetCurrentA: number;
   if (shoreAvail === "full_time") {
@@ -50,11 +45,11 @@ export function sizeCharger(
     const iAvgLoad =
       input.systemVoltage > 0 ? dailyWh / 24 / input.systemVoltage : 0;
     targetCurrentA = Math.max(
-      CHARGER_TARGET_C_RATE.full_time * cAh,
+      tuning.chargerTargetCRate.full_time * cAh,
       iAvgLoad,
     );
   } else {
-    targetCurrentA = CHARGER_TARGET_C_RATE[shoreAvail] * cAh;
+    targetCurrentA = tuning.chargerTargetCRate[shoreAvail] * cAh;
   }
 
   const recommendedCurrentA = Math.min(targetCurrentA, chemCeilingA);
@@ -62,8 +57,8 @@ export function sizeCharger(
   let chargingTimeHours = 0;
   if (recommendedCurrentA > 0) {
     chargingTimeHours =
-      (cAh * dod) / (recommendedCurrentA * CHARGER_EFFICIENCY) +
-      ABSORPTION_TAIL_H[chem];
+      (cAh * dod) / (recommendedCurrentA * tuning.chargerEfficiency) +
+      tuning.absorptionTailH[chem];
   }
 
   return {

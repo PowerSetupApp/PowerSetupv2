@@ -1,8 +1,10 @@
 import type { AlgorithmOutput } from "@/lib/algorithm/types";
+import { AIInvocationError } from "@/lib/ai/types";
 
 import { listActiveProductsForRecommendation } from "@/lib/db/queries/products";
 
 import { selectProductsWithAI, validateAISelections } from "./ai-selector";
+import { enforceAiSelectionsMinima } from "./enforce-ai-selections";
 import { prefilterProductsForRecommendation } from "./prefilter";
 import type { AISelectionItem, PrefilterResult, ProductRecommendationRow } from "./types";
 
@@ -21,8 +23,20 @@ export interface RecommendationPipelineResult {
 }
 
 /**
- * Phase 4 — reine Bibliothek: Prefilter aus DB-Produkten, optional KI-Auswahl.
- * Speichern in `Result` erfolgt später in `POST /api/generate/[id]` (Phase 5).
+ * Empfehlungs-Pipeline (wie im Legacy-Projekt):
+ *
+ * 1. **Prefilter** — deterministisch aus Katalog + `AlgorithmOutput`: pro Kategorie
+ *    (Bucket) werden passende Produkte bewertet und auf eine kleine Top-Liste begrenzt
+ *    (`prefilterProductsForRecommendation`).
+ * 2. **KI (optional)** — erhält nur diese vorgefilterten Kandidaten im Prompt und wählt
+ *    daraus sinnvolle `productId`s; pro Eintrag eine kurze Begründung (`reasonDe`).
+ *    Halluzinierte IDs werden verworfen (`validateAISelections`).
+ * 3. **Fallback** — wenn die KI nicht erreichbar ist oder die Antwort nicht nutzbar ist,
+ *    wird nur der Prefilter gespeichert. Die Ergebnis-Seite zeigt dann die besten
+ *    Prefilter-Treffer inkl. Kabel pro Strecke ohne KI-Text (`parse-result-view-model` /
+ *    `buildProductDisplayLines`).
+ *
+ * Persistenz: `POST /api/generate/[id]` → `runGenerateForResultId` → diese Funktion.
  */
 export async function runRecommendationPipeline(params: {
   calculations: AlgorithmOutput;
@@ -48,10 +62,30 @@ export async function runRecommendationPipeline(params: {
     return { prefilter };
   }
 
-  const ai = await selectProductsWithAI({ calculations: params.calculations, prefilter });
-  const validated = validateAISelections(ai.selections, prefilter);
-  return {
-    prefilter,
-    ai: { ...ai, selections: validated },
-  };
+  try {
+    const ai = await selectProductsWithAI({
+      calculations: params.calculations,
+      prefilter,
+      products,
+    });
+    const validated = validateAISelections(ai.selections, prefilter);
+    const productMap = new Map(products.map((p) => [p.id, p]));
+    const enforced = enforceAiSelectionsMinima({
+      selections: validated,
+      calculations: params.calculations,
+      batteryRanked: prefilter.battery,
+      solarRanked: prefilter.solar,
+      productsById: productMap,
+    });
+    return {
+      prefilter,
+      ai: { ...ai, selections: enforced },
+    };
+  } catch (e) {
+    if (e instanceof AIInvocationError) {
+      console.warn("[runRecommendationPipeline] KI-Auswahl übersprungen:", e.message);
+      return { prefilter };
+    }
+    throw e;
+  }
 }

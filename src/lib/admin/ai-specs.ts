@@ -25,10 +25,15 @@ function renderPrompt(template: string, input: string, categoryName: string | nu
 export async function optimizeSpecsText(input: string, categoryName: string | null): Promise<OptimizeSpecsResult> {
   const settings = await getAISettings();
   const prompt = renderPrompt(settings.specsOptimizationPrompt, input, categoryName);
-  const completion = await callAI({
-    userPrompt: prompt,
-    responseMimeType: "text/plain",
-  });
+  const sys = settings.systemPrompt.trim();
+  const completion = await callAI(
+    {
+      ...(sys ? { systemInstruction: sys } : {}),
+      userPrompt: prompt,
+      responseMimeType: "text/plain",
+    },
+    settings,
+  );
   return {
     text: completion.text.trim(),
     provider: completion.provider,

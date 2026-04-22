@@ -9,6 +9,14 @@ function batteryTypeLabel(t: AlgorithmOutput["battery"]["type"]): string {
   return t.toUpperCase();
 }
 
+function fmtAh(ah: number): string {
+  return `${Math.round(ah)}`;
+}
+
+function fmtWp(wp: number): string {
+  return `${Math.round(wp)}`;
+}
+
 export function SystemSummaryCard({ calculations }: SystemSummaryCardProps) {
   const { battery, solar } = calculations;
 
@@ -26,13 +34,13 @@ export function SystemSummaryCard({ calculations }: SystemSummaryCardProps) {
         <div className="flex flex-col gap-1 sm:flex-row sm:justify-between sm:gap-4">
           <dt className="text-muted-foreground">Batterie (Ziel)</dt>
           <dd className="font-semibold text-foreground">
-            ca. {battery.recommendedCapacityAh} Ah · {batteryTypeLabel(battery.type)}
+            ca. {fmtAh(battery.recommendedCapacityAh)} Ah · {batteryTypeLabel(battery.type)}
           </dd>
         </div>
         <div className="flex flex-col gap-1 sm:flex-row sm:justify-between sm:gap-4">
           <dt className="text-muted-foreground">Solar</dt>
           <dd className="font-semibold text-foreground">
-            {solar.needed ? `mind. ca. ${solar.requiredWp} Wp` : "nicht erforderlich"}
+            {solar.needed ? `mind. ca. ${fmtWp(solar.requiredWp)} Wp` : "nicht erforderlich"}
           </dd>
         </div>
         <div className="flex flex-col gap-1 sm:flex-row sm:justify-between sm:gap-4">

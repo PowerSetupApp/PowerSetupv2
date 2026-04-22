@@ -7,7 +7,7 @@ description: Baut React/Next.js UI für PowerSetup (Wizard, shadcn/ui, Tailwind)
 
 ## Ablauf
 
-1. **Kontext lesen**: Feature-Spec + `.context/architecture.md`
+1. **Kontext lesen**: Feature-Spec + Projekt-Kontext via Graphify abfragen
 2. **Design-Pflicht bei sichtbarer UI** (Landing, Wizard, Marketing, Theme, „Redesign“, neue Seiten): **`design-anthropic-frontend.md`** + **`ui-ux-pro-max.md`** vollständig mitdenken; bei Farb/Typo/Layout-Entscheidungen optional `python .agents/skills/frontend/scripts/search.py "<thema>" --design-system -p "PowerSetup"` vom Repo-Root.
 3. **shadcn/ui prüfen**: Gibt es eine passende Komponente?
    ```bash

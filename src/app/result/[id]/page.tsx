@@ -8,6 +8,7 @@ import { SystemSummaryCard } from "@/components/result/system-summary-card";
 import { StreamingFallback } from "@/components/streaming-fallback";
 import { listProductsByIdsForResult } from "@/lib/db/queries/products";
 import { getResultByIdForPublic } from "@/lib/db/queries/results";
+import { enrichDisplayLinesWithCatalogHints } from "@/lib/results/build-product-display-lines";
 import { parseResultViewModel } from "@/lib/results/parse-result-view-model";
 import { isResultExpired } from "@/lib/results/result-helpers";
 
@@ -41,8 +42,13 @@ async function ResultPageBody({ params }: PageProps) {
 
   const expired = isResultExpired(row.expiresAt);
   const vm = parseResultViewModel(row);
-  const productsResult = await listProductsByIdsForResult(vm.productIdsForDisplay);
+  const orderedIds = vm.productDisplayLines.map((l) => l.productId);
+  const productsResult = await listProductsByIdsForResult(orderedIds);
   const products = productsResult.ok ? productsResult.data : [];
+  const displayLines =
+    vm.calculations != null
+      ? enrichDisplayLinesWithCatalogHints(vm.productDisplayLines, vm.calculations, products)
+      : vm.productDisplayLines;
   const ready = !expired && row.generationStatus === "succeeded" && vm.calculations !== null;
 
   return (
@@ -64,7 +70,7 @@ async function ResultPageBody({ params }: PageProps) {
       {ready && vm.calculations ? (
         <>
           <SystemSummaryCard calculations={vm.calculations} />
-          <ProductRecommendationList products={products} aiSelections={vm.aiSelections} />
+          <ProductRecommendationList lines={displayLines} products={products} aiSelections={vm.aiSelections} />
           <Suspense fallback={<div className="h-32 animate-pulse rounded-2xl bg-muted/25" aria-hidden />}>
             <SchematicSection
               resultId={id}

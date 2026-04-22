@@ -1,6 +1,6 @@
 # PowerSetup — Feature Index
 
-**Ausführung (Lesereihenfolge für Agenten):** [AGENTS.md](../AGENTS.md) (Regeln, Skills, Produkt-Flow) → [REWRITE_PLAN.md](../REWRITE_PLAN.md) (Phasen, Zielstruktur) → [.context/architecture.md](../.context/architecture.md) (Modul-Karte) → untenstehende PS-Specs. Admin separat: [docs/reference/ADMIN-AGENT-BRIEF.md](../docs/reference/ADMIN-AGENT-BRIEF.md), [PS-7-admin-panel.md](PS-7-admin-panel.md).
+**Ausführung (Lesereihenfolge für Agenten):** [AGENTS.md](../AGENTS.md) (Regeln, Skills, Produkt-Flow) → [REWRITE_PLAN.md](../REWRITE_PLAN.md) (Phasen, Zielstruktur) → Projekt-Kontext via Graphify → untenstehende PS-Specs. Admin separat: [docs/reference/ADMIN-AGENT-BRIEF.md](../docs/reference/ADMIN-AGENT-BRIEF.md), [PS-7-admin-panel.md](PS-7-admin-panel.md).
 
 | ID | Feature | Status | Spec |
 |----|---------|--------|------|

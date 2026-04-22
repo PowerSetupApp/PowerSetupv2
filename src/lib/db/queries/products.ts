@@ -21,6 +21,8 @@ export type ResultProductCard = {
   price: number | null;
   affiliateUrl: string | null;
   categoryName: string;
+  /** Für Solar-Hinweise (Modulanzahl) auf der Ergebnis-Seite. */
+  solarWp?: number | null;
 };
 
 /**
@@ -112,6 +114,7 @@ export async function listProductsByIdsForResult(
         price: decimalToNumber(r.price),
         affiliateUrl: applyAmazonPartnerTag(r.affiliateUrl),
         categoryName: r.category.name,
+        solarWp: r.solarWp,
       });
     }
     return ordered;

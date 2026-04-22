@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { mergeAlgorithmTuning } from "@/lib/algorithm/algorithm-tuning";
 import { AUTARCHY_UNBOUNDED } from "@/lib/algorithm/constants";
 import { autarchyMaxDays } from "@/lib/algorithm/derive";
 import type { AlgorithmInput, AlgorithmOutput } from "@/lib/algorithm/types";
@@ -42,7 +43,7 @@ function withoutSolar(input: AlgorithmInput): AlgorithmInput {
     energySources: cleared.energySources.filter((e) => e !== "solar"),
   };
   if (next.autarchyDays === AUTARCHY_UNBOUNDED) return next;
-  const maxNext = autarchyMaxDays(next);
+  const maxNext = autarchyMaxDays(next, mergeAlgorithmTuning({}));
   if (next.autarchyDays <= maxNext) return next;
   return { ...next, autarchyDays: maxNext };
 }

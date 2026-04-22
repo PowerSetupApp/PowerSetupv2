@@ -1,9 +1,6 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-
-import { Button } from "@/components/ui/button";
 import { Step8DebugFab } from "@/components/wizard/steps/step-8-debug-fab";
 import { Step8PreviewBlock } from "@/components/wizard/steps/step-8-preview-block";
 import { Step8SolarBatteryCard } from "@/components/wizard/steps/step-8-solar-battery-card";
@@ -31,11 +28,8 @@ function newBagId(): string {
 }
 
 export function Step8Review() {
-  const router = useRouter();
   const input = useWizardStore((s) => s.input);
   const patchInput = useWizardStore((s) => s.patchInput);
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [solarBranchOutput, setSolarBranchOutput] = useState<AlgorithmOutput | null>(null);
   const [debugOpen, setDebugOpen] = useState(false);
   const [hardFloorBinding, setHardFloorBinding] = useState(false);
@@ -89,33 +83,6 @@ export function Step8Review() {
     });
   }, [input.solarBags, patchInput]);
 
-  const submit = async () => {
-    setError(null);
-    setPending(true);
-    try {
-      const res = await fetch("/api/results", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ formData: input }),
-      });
-      const body = (await res.json().catch(() => ({}))) as { id?: string; error?: string };
-      if (!res.ok) {
-        setError(body.error ?? "Speichern fehlgeschlagen");
-        setPending(false);
-        return;
-      }
-      if (!body.id) {
-        setError("Ungültige Server-Antwort");
-        setPending(false);
-        return;
-      }
-      router.push(`/result/${body.id}`);
-    } catch {
-      setError("Netzwerkfehler");
-      setPending(false);
-    }
-  };
-
   const showAutarkyNote = canSubmit && (topUpCovers === true || (hardFloorBinding && hasSolar));
 
   return (
@@ -166,15 +133,6 @@ export function Step8Review() {
 
       {showAutarkyNote ? <p className={wizardCallout()}>{AUTARKY_TOPUP_NOTE}</p> : null}
 
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <Button
-        type="button"
-        disabled={!canSubmit || pending}
-        className="h-12 min-h-12 w-full rounded-xl sm:w-auto"
-        onClick={() => void submit()}
-      >
-        {pending ? "Wird gespeichert …" : "Ergebnis speichern & anzeigen"}
-      </Button>
       {!canSubmit ? (
         <p className="text-sm text-muted-foreground">
           Bitte alle Pflichtschritte ausfüllen (z. B. Energiequellen, Verbraucher, positive Kabellängen).

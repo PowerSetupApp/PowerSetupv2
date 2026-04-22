@@ -5,8 +5,8 @@
 
 ## Architektur-Referenz
 
-- [REWRITE_PLAN.md](../REWRITE_PLAN.md) — Phase 4 „KI & Recommendation“
-- [.context/architecture.md](../.context/architecture.md) — Modul-Flow `recommendation/` + `ai/`
+- [REWRITE_PLAN.md](../REWRITE_PLAN.md) — Phase 4 „KI & Recommendation”
+- Modul-Flow `recommendation/` + `ai/`: via Graphify abfragen
 
 ## Stand Code (MVP)
 

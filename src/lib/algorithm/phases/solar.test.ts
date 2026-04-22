@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { mergeAlgorithmTuning } from "../algorithm-tuning";
 import {
   SOLAR_BAG_ALIGNMENT_UPLIFT,
   SOLAR_BAG_UTILIZATION,
@@ -47,10 +48,11 @@ function baseInput(
 describe("sizeSolar — portableEffectiveWp", () => {
   const dailyWh = 1000;
   const psh = 2;
+  const tuning = mergeAlgorithmTuning({});
 
   it("Scandinavia winter: nominal 100 Wp × uplift × utilization", () => {
     const input = baseInput();
-    const out = sizeSolar(dailyWh, psh, input);
+    const out = sizeSolar(dailyWh, psh, input, tuning);
     const expected =
       100 *
       SOLAR_BAG_ALIGNMENT_UPLIFT.scandinavia.winter *
@@ -68,7 +70,7 @@ describe("sizeSolar — portableEffectiveWp", () => {
         standingDuration: "medium",
       },
     });
-    const out = sizeSolar(dailyWh, psh, input);
+    const out = sizeSolar(dailyWh, psh, input, tuning);
     const expected =
       100 *
       SOLAR_BAG_ALIGNMENT_UPLIFT.germany.all_year *
@@ -90,7 +92,7 @@ describe("sizeSolar — portableEffectiveWp", () => {
       solarBags: [{ id: "b", power: 400 }],
       systemVoltage: 12,
     });
-    const solar = sizeSolar(dailyWh, psh, input);
+    const solar = sizeSolar(dailyWh, psh, input, tuning);
     const roof = sizeController(solar, input);
     const bag = sizePortableController(solar, input);
     expect(roof.needed).toBe(true);
@@ -111,7 +113,7 @@ describe("sizeSolar — portableEffectiveWp", () => {
         standingDuration: "medium",
       },
     });
-    const out = sizeSolar(dailyWh, psh, input);
+    const out = sizeSolar(dailyWh, psh, input, tuning);
     const expected =
       100 *
       SOLAR_BAG_ALIGNMENT_UPLIFT.southern.summer *

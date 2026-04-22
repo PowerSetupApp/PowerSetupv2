@@ -33,6 +33,7 @@ import {
   TRIP_DURATIONS,
   WINTER_LOCATIONS,
 } from "./constants";
+import { mergeAlgorithmTuning, type AlgorithmTuning } from "./algorithm-tuning";
 import { autarchyMaxDays, autarchyTopUpProfile } from "./derive";
 import type {
   AlgorithmInput,
@@ -170,7 +171,10 @@ function validateTravelBehavior(tb: TravelBehavior): void {
  * Full structural + cross-field validation of `AlgorithmInput`.
  * Throws `Error` with a field-specific message on the first violation.
  */
-export function validate(input: AlgorithmInput): void {
+export function validate(
+  input: AlgorithmInput,
+  tuning: AlgorithmTuning = mergeAlgorithmTuning({}),
+): void {
   // A.1 system basis
   requireEnum(input.systemVoltage, SYSTEM_VOLTAGES, "systemVoltage");
   requireEnum(input.vehicleVoltage, SYSTEM_VOLTAGES, "vehicleVoltage");
@@ -212,7 +216,7 @@ export function validate(input: AlgorithmInput): void {
       `autarchyDays=${input.autarchyDays} must be in [1, ${AUTARCHY_UNBOUNDED}]`,
     );
   }
-  const maxDays = autarchyMaxDays(input);
+  const maxDays = autarchyMaxDays(input, tuning);
   if (
     input.autarchyDays !== AUTARCHY_UNBOUNDED &&
     input.autarchyDays > maxDays

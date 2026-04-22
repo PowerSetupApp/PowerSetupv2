@@ -1,4 +1,9 @@
 import type { NextConfig } from "next";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+/** Absolute app root (directory containing this file). Turbopack otherwise may infer a wrong root when nested lockfiles exist (e.g. under `docs/`), which triggers "Next.js package not found" panics. */
+const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
 const isDev = process.env.NODE_ENV === "development";
 /** VS Code / Cursor Simple Browser & lokale `next start`-Vorschau (iframe). Siehe Kommentar bei CSP. */
@@ -47,7 +52,10 @@ function buildContentSecurityPolicy(): string {
 
 const SECURITY_HEADERS = [
   { key: "Content-Security-Policy", value: buildContentSecurityPolicy() },
-  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+  // HSTS nur in Produktion (lokales http://localhost).
+  ...(isDev
+    ? []
+    : ([{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" }] as const)),
   ...(allowEmbeddedPreview ? [] : ([{ key: "X-Frame-Options", value: "DENY" }] as const)),
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -59,6 +67,9 @@ const SECURITY_HEADERS = [
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  turbopack: {
+    root: projectRoot,
+  },
   async headers() {
     return [
       {

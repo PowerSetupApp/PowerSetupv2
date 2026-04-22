@@ -44,7 +44,7 @@ export function WizardNavBar({
           disabled={!canNext}
           onClick={onNext}
         >
-          <span className="max-[360px]:sr-only">{nextLabel}</span>
+          <span className="min-w-0 max-[360px]:sr-only truncate">{nextLabel}</span>
           <ChevronRight className="size-4 shrink-0" aria-hidden />
         </Button>
       </div>

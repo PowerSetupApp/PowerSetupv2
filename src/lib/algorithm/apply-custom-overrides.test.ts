@@ -24,6 +24,11 @@ function baseBattery(): BatteryRecommendation {
     dailyTopUpWh: 0,
     netDailyDeficitWh: 2000,
     bindingBranch: "soft",
+    shoreBridgeReliefBaseDays: 0,
+    shoreBridgeReliefEffectiveDays: 0,
+    shoreReliefAlternatorScale: 1,
+    autarchyBridgeDaysRaw: 2,
+    autarchyBridgeDaysForSoft: 2,
   };
 }
 

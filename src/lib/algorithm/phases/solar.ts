@@ -13,11 +13,7 @@
  *   shortfallWh         = max(0, dailyWh - dailyYieldWh)
  */
 
-import {
-  SOLAR_BAG_ALIGNMENT_UPLIFT,
-  SOLAR_BAG_UTILIZATION,
-  SOLAR_SYSTEM_EFFICIENCY,
-} from "../constants";
+import type { AlgorithmTuning } from "../algorithm-tuning";
 import { roofWp as roofWpHelper } from "../derive";
 import type { AlgorithmInput, SolarRecommendation } from "../types";
 
@@ -25,18 +21,19 @@ export function sizeSolar(
   dailyWh: number,
   psh: number,
   input: AlgorithmInput,
+  tuning: AlgorithmTuning,
 ): SolarRecommendation {
-  const maxRoofWp = roofWpHelper(input.roofAreas, input.roofModuleType);
+  const maxRoofWp = roofWpHelper(input.roofAreas, input.roofModuleType, tuning);
   const portableWp = input.solarBags.reduce((sum, b) => sum + b.power, 0);
   const { winterLocation, season } = input.travelBehavior;
   const bagMultiplier =
-    SOLAR_BAG_ALIGNMENT_UPLIFT[winterLocation][season] * SOLAR_BAG_UTILIZATION;
+    tuning.solarBagAlignmentUplift[winterLocation][season] * tuning.solarBagUtilization;
   const portableEffectiveWp = portableWp * bagMultiplier;
   const totalAvailableWp = maxRoofWp + portableEffectiveWp;
 
-  const denom = psh * SOLAR_SYSTEM_EFFICIENCY;
+  const denom = psh * tuning.solarSystemEfficiency;
   const requiredWp = denom > 0 ? dailyWh / denom : 0;
-  const dailySolarYieldWh = totalAvailableWp * psh * SOLAR_SYSTEM_EFFICIENCY;
+  const dailySolarYieldWh = totalAvailableWp * psh * tuning.solarSystemEfficiency;
   const solarShortfallWh = Math.max(0, dailyWh - dailySolarYieldWh);
 
   return {

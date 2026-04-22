@@ -29,6 +29,17 @@ export interface ScoredProduct {
   name: string;
 }
 
+/** Bestes Kabel pro aktiver Strecke (für Prompt + Ergebnisliste). */
+export interface ScoredCableRoutePick {
+  route: string;
+  displayName: string;
+  productId: string;
+  bucket: "cable";
+  score: number;
+  categorySlug: string;
+  name: string;
+}
+
 export interface PrefilterResult {
   battery: ScoredProduct[];
   solar: ScoredProduct[];
@@ -36,6 +47,10 @@ export interface PrefilterResult {
   controller: ScoredProduct[];
   cable: ScoredProduct[];
   other: ScoredProduct[];
+  /** Optional: pro Leitungspfad ein Treffer (neu persistiert; alte JSON-Zeilen ohne Feld). */
+  cableByRoute?: ScoredCableRoutePick[];
+  /** Optional: zweiter Laderegler für Taschensolar, falls `portableController.needed`. */
+  controllerPortable?: ScoredProduct[];
 }
 
 export interface AISelectionItem {

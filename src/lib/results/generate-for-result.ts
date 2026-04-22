@@ -5,6 +5,8 @@ import {
   updateResultAfterGeneration,
 } from "@/lib/db/queries/results";
 import { AIInvocationError } from "@/lib/ai/types";
+import { algorithmSettingsToComputeOptions } from "@/lib/algorithm/options-from-db";
+import { getAlgorithmSettingsCached } from "@/lib/db/queries/admin-settings-algorithm";
 import { runRecommendationPipeline } from "@/lib/recommendation";
 import { runAlgorithm } from "@/lib/results/run-algorithm";
 import { parseAlgorithmInput } from "@/lib/schemas/wizard-input";
@@ -60,7 +62,18 @@ export async function runGenerateForResultId(id: string): Promise<GenerateOutcom
     }
 
     const rawInput = parseInput(row.formData);
-    const calculations = runAlgorithm(rawInput);
+    const algoRow = await getAlgorithmSettingsCached();
+    const algoOpts = algorithmSettingsToComputeOptions(algoRow);
+    let calculations: ReturnType<typeof runAlgorithm>;
+    try {
+      calculations = runAlgorithm(rawInput, algoOpts);
+    } catch (e) {
+      const msg =
+        e instanceof Error
+          ? e.message
+          : "Die Berechnung ist mit diesen gespeicherten Eingaben fehlgeschlagen.";
+      throw new GenerateResultError(500, msg);
+    }
     const pipeline = await runRecommendationPipeline({ calculations, runAi: true });
 
     await updateResultAfterGeneration({
@@ -89,6 +102,7 @@ export async function runGenerateForResultId(id: string): Promise<GenerateOutcom
     if (e instanceof AIInvocationError) {
       throw new GenerateResultError(502, e.message);
     }
+    console.error("[runGenerateForResultId] unexpected failure", e);
     throw new GenerateResultError(500, "Interner Berechnungsfehler");
   }
 }

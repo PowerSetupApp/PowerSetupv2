@@ -18,6 +18,7 @@ export function PricingSettingsPanel() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
   const [syncing, setSyncing] = useState<"openai" | "google" | null>(null);
+  const [syncNotice, setSyncNotice] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -49,6 +50,11 @@ export function PricingSettingsPanel() {
 
   return (
     <div className="space-y-6">
+      {syncNotice ? (
+        <p className="rounded-md border border-border/80 bg-muted/40 px-3 py-2 text-sm text-foreground" role="status">
+          {syncNotice}
+        </p>
+      ) : null}
       <ProviderCard
         title="OpenAI Modellpreise"
         rows={openai}
@@ -57,8 +63,13 @@ export function PricingSettingsPanel() {
         onSync={async () => {
           setSyncing("openai");
           try {
-            await refreshModelPricingFromProviderAction("openai");
+            const { count, failed } = await refreshModelPricingFromProviderAction("openai");
             await load();
+            setSyncNotice(
+              failed > 0
+                ? `${count} Preise aktualisiert (${failed} fehlgeschlagen).`
+                : `${count} Preise aktualisiert.`,
+            );
           } finally {
             setSyncing(null);
           }
@@ -82,8 +93,13 @@ export function PricingSettingsPanel() {
         onSync={async () => {
           setSyncing("google");
           try {
-            await refreshModelPricingFromProviderAction("google");
+            const { count, failed } = await refreshModelPricingFromProviderAction("google");
             await load();
+            setSyncNotice(
+              failed > 0
+                ? `${count} Preise aktualisiert (${failed} fehlgeschlagen).`
+                : `${count} Preise aktualisiert.`,
+            );
           } finally {
             setSyncing(null);
           }

@@ -277,6 +277,22 @@ export interface BatteryRecommendation {
    *     very short autarky settings or when top-ups cover daily demand).
    */
   bindingBranch: "soft" | "hard";
+  /**
+   * Landstrom-Relief für die weiche Brücke [Tage] — Lookup aus
+   * `SHORE_BRIDGE_RELIEF_DAYS[shoreAvailability]` (0 wenn `never`).
+   */
+  shoreBridgeReliefBaseDays: number;
+  /** Nach Autarkie-Schwelle und Ladebooster-Skalierung — abziehbar von `autarchyBridgeDaysRaw`. */
+  shoreBridgeReliefEffectiveDays: number;
+  /**
+   * Faktor `(1 − ALTERNATOR_BRIDGE_STANDING_CREDIT)` wenn Ladebooster gewählt,
+   * sonst `1` — skaliert das Landstrom-Relief (kurz stehen → 0 Relief).
+   */
+  shoreReliefAlternatorScale: number;
+  /** `min(autarchyDays, AUTARCHY_MAX_BRIDGE_DAYS)` vor Landstrom-Relief. */
+  autarchyBridgeDaysRaw: number;
+  /** `max(raw − shoreBridgeReliefEffectiveDays, 1)` — Multiplikator auf `bridgeDailyDeficitWh`. */
+  autarchyBridgeDaysForSoft: number;
 }
 
 /** Solar recommendation (C.2). */

@@ -1,11 +1,4 @@
 {
   "version": 1,
-  "hooks": {
-    "postToolUse": [
-      {
-        "command": "python .cursor/hooks/context_map_reminder.py",
-        "matcher": "Write"
-      }
-    ]
-  }
+  "hooks": {}
 }

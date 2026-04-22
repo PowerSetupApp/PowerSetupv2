@@ -65,6 +65,8 @@ export async function updateAISettings(input: {
   imageModel: string;
   geminiApiKey: string;
   openaiApiKey: string;
+  /** Optionaler globaler System-Prompt für Text-KI (Empfehlungen, Schaltplan, Specs). */
+  systemPrompt: string;
   userPromptTemplate: string;
   imagePromptTemplate: string;
   specsOptimizationPrompt: string;
@@ -100,7 +102,7 @@ export async function updateAISettings(input: {
     await tx.promptVersion.create({
       data: {
         version: nextVersion,
-        systemPrompt: "",
+        systemPrompt: input.systemPrompt,
         userPromptTemplate: input.userPromptTemplate,
         isActive: true,
       },
