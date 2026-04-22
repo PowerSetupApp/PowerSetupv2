@@ -20,5 +20,8 @@ src/generated/
 # Local Cursor IDE settings (machine-specific)
 .cursor/settings.json
 
+# graphify local cache (see .graphifyignore for corpus)
+graphify-out/cache/
+
 # Local Claude worktrees (embedded git)
 .claude/worktrees/

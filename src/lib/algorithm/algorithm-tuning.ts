@@ -12,6 +12,7 @@ import {
   AUTARCHY_PSH_DERATE,
   BOOSTER_EFFICIENCY,
   CHARGER_EFFICIENCY,
+  CABLE_CURRENT_SAFETY_FACTOR,
   CHARGER_TARGET_C_RATE,
   COPPER_RHO,
   C_RATE_CHARGE_MAX,
@@ -44,6 +45,7 @@ import {
   TOP_UP_COVERAGE_STANDING_CAP_MULT,
   WP_PER_M2,
 } from "./constants";
+import type { CableAmpacityInstallMode } from "./cable-ampacity";
 import type {
   BatteryPreference,
   Season,
@@ -98,6 +100,11 @@ export interface AlgorithmTuning {
   voltageDropCritical: number;
   voltageDropNormal: number;
   copperResistivity: number;
+
+  /** Multiplier on `currentA` before ampacity check (Nennstrom / Sicherung). */
+  cableCurrentSafetyFactor: number;
+  /** Free air vs bundled — bundled is more conservative for typical looms. */
+  cableAmpacityInstallMode: CableAmpacityInstallMode;
 }
 
 /** Code defaults — mirror of `constants.ts` (pre-DB tuning). */
@@ -145,6 +152,9 @@ export const DEFAULT_ALGORITHM_TUNING: AlgorithmTuning = {
   voltageDropCritical: CRITICAL_DU_MAX_PCT,
   voltageDropNormal: STANDARD_DU_MAX_PCT,
   copperResistivity: COPPER_RHO,
+  cableCurrentSafetyFactor: CABLE_CURRENT_SAFETY_FACTOR,
+  /** Default: conservative for cables in bundles / conduits (cables.md). */
+  cableAmpacityInstallMode: "bundled",
 };
 
 function mergeRecord<K extends string, V>(
@@ -220,6 +230,8 @@ export function mergeAlgorithmTuning(overrides: Partial<AlgorithmTuning> | null 
     voltageDropCritical: o.voltageDropCritical ?? d.voltageDropCritical,
     voltageDropNormal: o.voltageDropNormal ?? d.voltageDropNormal,
     copperResistivity: o.copperResistivity ?? d.copperResistivity,
+    cableCurrentSafetyFactor: o.cableCurrentSafetyFactor ?? d.cableCurrentSafetyFactor,
+    cableAmpacityInstallMode: o.cableAmpacityInstallMode ?? d.cableAmpacityInstallMode,
   };
 }
 

@@ -828,7 +828,7 @@
       "source_file": "src\\app\\admin\\settings\\actions.ts",
       "source_location": "L39",
       "id": "actions_loadaisettingsaction",
-      "community": 7,
+      "community": 0,
       "norm_label": "loadaisettingsaction()"
     },
     {
@@ -1071,7 +1071,7 @@
       "source_file": "src\\app\\api\\admin\\import\\[domain]\\route.ts",
       "source_location": "L1",
       "id": "src_app_api_admin_import_domain_route_ts",
-      "community": 3,
+      "community": 4,
       "norm_label": "route.ts"
     },
     {
@@ -1080,7 +1080,7 @@
       "source_file": "src\\app\\api\\wizard\\algorithm-preview\\route.ts",
       "source_location": "L17",
       "id": "route_post",
-      "community": 3,
+      "community": 4,
       "norm_label": "post()"
     },
     {
@@ -1089,7 +1089,7 @@
       "source_file": "src\\app\\api\\admin\\media\\upload\\route.ts",
       "source_location": "L1",
       "id": "src_app_api_admin_media_upload_route_ts",
-      "community": 3,
+      "community": 4,
       "norm_label": "route.ts"
     },
     {
@@ -1098,7 +1098,7 @@
       "source_file": "src\\app\\api\\admin\\optimize-specs\\route.ts",
       "source_location": "L1",
       "id": "src_app_api_admin_optimize_specs_route_ts",
-      "community": 3,
+      "community": 4,
       "norm_label": "route.ts"
     },
     {
@@ -1116,7 +1116,7 @@
       "source_file": "src\\app\\api\\generate\\[id]\\route.ts",
       "source_location": "L1",
       "id": "src_app_api_generate_id_route_ts",
-      "community": 3,
+      "community": 4,
       "norm_label": "route.ts"
     },
     {
@@ -1125,7 +1125,7 @@
       "source_file": "src\\app\\api\\pdf\\[id]\\route.ts",
       "source_location": "L22",
       "id": "route_clientkey",
-      "community": 3,
+      "community": 4,
       "norm_label": "clientkey()"
     },
     {
@@ -1134,7 +1134,7 @@
       "source_file": "src\\app\\api\\payments\\capture\\route.ts",
       "source_location": "L1",
       "id": "src_app_api_payments_capture_route_ts",
-      "community": 3,
+      "community": 4,
       "norm_label": "route.ts"
     },
     {
@@ -1143,7 +1143,7 @@
       "source_file": "src\\app\\api\\payments\\create\\route.ts",
       "source_location": "L1",
       "id": "src_app_api_payments_create_route_ts",
-      "community": 3,
+      "community": 4,
       "norm_label": "route.ts"
     },
     {
@@ -1152,7 +1152,7 @@
       "source_file": "src\\app\\api\\payments\\create\\route.ts",
       "source_location": "L12",
       "id": "route_appbaseurl",
-      "community": 3,
+      "community": 4,
       "norm_label": "appbaseurl()"
     },
     {
@@ -1161,7 +1161,7 @@
       "source_file": "src\\app\\api\\payments\\webhook\\route.ts",
       "source_location": "L1",
       "id": "src_app_api_payments_webhook_route_ts",
-      "community": 3,
+      "community": 4,
       "norm_label": "route.ts"
     },
     {
@@ -1170,7 +1170,7 @@
       "source_file": "src\\app\\api\\payments\\webhook\\route.ts",
       "source_location": "L6",
       "id": "route_readorderid",
-      "community": 3,
+      "community": 4,
       "norm_label": "readorderid()"
     },
     {
@@ -1179,7 +1179,7 @@
       "source_file": "src\\app\\api\\pdf\\[id]\\route.ts",
       "source_location": "L1",
       "id": "src_app_api_pdf_id_route_ts",
-      "community": 3,
+      "community": 4,
       "norm_label": "route.ts"
     },
     {
@@ -1188,7 +1188,7 @@
       "source_file": "src\\app\\api\\results\\route.ts",
       "source_location": "L1",
       "id": "src_app_api_results_route_ts",
-      "community": 3,
+      "community": 4,
       "norm_label": "route.ts"
     },
     {
@@ -1197,7 +1197,7 @@
       "source_file": "src\\app\\api\\results\\route.ts",
       "source_location": "L6",
       "id": "route_getprismaerrorcode",
-      "community": 3,
+      "community": 4,
       "norm_label": "getprismaerrorcode()"
     },
     {
@@ -1206,7 +1206,7 @@
       "source_file": "src\\app\\api\\results\\route.ts",
       "source_location": "L14",
       "id": "route_builddeverrordetail",
-      "community": 3,
+      "community": 4,
       "norm_label": "builddeverrordetail()"
     },
     {
@@ -1215,7 +1215,7 @@
       "source_file": "src\\app\\api\\wizard\\algorithm-preview\\route.ts",
       "source_location": "L1",
       "id": "src_app_api_wizard_algorithm_preview_route_ts",
-      "community": 3,
+      "community": 4,
       "norm_label": "route.ts"
     },
     {
@@ -3258,7 +3258,7 @@
       "source_file": "src\\components\\wizard\\steps\\use-wizard-step8-canonical-previews.ts",
       "source_location": "L1",
       "id": "src_components_wizard_steps_use_wizard_step8_canonical_previews_ts",
-      "community": 4,
+      "community": 3,
       "norm_label": "use-wizard-step8-canonical-previews.ts"
     },
     {
@@ -3267,7 +3267,7 @@
       "source_file": "src\\components\\wizard\\steps\\use-wizard-step8-canonical-previews.ts",
       "source_location": "L22",
       "id": "use_wizard_step8_canonical_previews_clearedbalanceoverrides",
-      "community": 4,
+      "community": 3,
       "norm_label": "clearedbalanceoverrides()"
     },
     {
@@ -3276,7 +3276,7 @@
       "source_file": "src\\components\\wizard\\steps\\use-wizard-step8-canonical-previews.ts",
       "source_location": "L39",
       "id": "use_wizard_step8_canonical_previews_withoutsolar",
-      "community": 4,
+      "community": 3,
       "norm_label": "withoutsolar()"
     },
     {
@@ -3285,7 +3285,7 @@
       "source_file": "src\\components\\wizard\\steps\\use-wizard-step8-canonical-previews.ts",
       "source_location": "L56",
       "id": "use_wizard_step8_canonical_previews_usewizardstep8canonicalpreviews",
-      "community": 4,
+      "community": 3,
       "norm_label": "usewizardstep8canonicalpreviews()"
     },
     {
@@ -4905,7 +4905,7 @@
       "source_file": "src\\lib\\ai\\prompts\\product-selection.ts",
       "source_location": "L1",
       "id": "src_lib_ai_prompts_product_selection_ts",
-      "community": 9,
+      "community": 10,
       "norm_label": "product-selection.ts"
     },
     {
@@ -4914,7 +4914,7 @@
       "source_file": "src\\lib\\ai\\prompts\\product-selection.ts",
       "source_location": "L5",
       "id": "product_selection_summarizecalculations",
-      "community": 9,
+      "community": 10,
       "norm_label": "summarizecalculations()"
     },
     {
@@ -4923,7 +4923,7 @@
       "source_file": "src\\lib\\ai\\prompts\\product-selection.ts",
       "source_location": "L14",
       "id": "product_selection_formatprefilterbuckets",
-      "community": 9,
+      "community": 10,
       "norm_label": "formatprefilterbuckets()"
     },
     {
@@ -4932,7 +4932,7 @@
       "source_file": "src\\lib\\ai\\prompts\\product-selection.ts",
       "source_location": "L51",
       "id": "product_selection_buildrequirementsblock",
-      "community": 9,
+      "community": 10,
       "norm_label": "buildrequirementsblock()"
     },
     {
@@ -4941,7 +4941,7 @@
       "source_file": "src\\lib\\ai\\prompts\\product-selection.ts",
       "source_location": "L63",
       "id": "product_selection_formatfullproductcatalog",
-      "community": 9,
+      "community": 10,
       "norm_label": "formatfullproductcatalog()"
     },
     {
@@ -4950,7 +4950,7 @@
       "source_file": "src\\lib\\ai\\prompts\\product-selection.ts",
       "source_location": "L93",
       "id": "product_selection_buildproductcontext",
-      "community": 9,
+      "community": 10,
       "norm_label": "buildproductcontext()"
     },
     {
@@ -4959,7 +4959,7 @@
       "source_file": "src\\lib\\ai\\prompts\\product-selection.ts",
       "source_location": "L103",
       "id": "product_selection_buildpromptformatblock",
-      "community": 9,
+      "community": 10,
       "norm_label": "buildpromptformatblock()"
     },
     {
@@ -4968,7 +4968,7 @@
       "source_file": "src\\lib\\ai\\prompts\\product-selection.ts",
       "source_location": "L118",
       "id": "product_selection_buildproductselectionprompt",
-      "community": 9,
+      "community": 10,
       "norm_label": "buildproductselectionprompt()"
     },
     {
@@ -4995,34 +4995,34 @@
       "source_file": "src\\lib\\algorithm\\algorithm-tuning.ts",
       "source_location": "L1",
       "id": "src_lib_algorithm_algorithm_tuning_ts",
-      "community": 4,
+      "community": 3,
       "norm_label": "algorithm-tuning.ts"
     },
     {
       "label": "mergeRecord()",
       "file_type": "code",
       "source_file": "src\\lib\\algorithm\\algorithm-tuning.ts",
-      "source_location": "L150",
+      "source_location": "L160",
       "id": "algorithm_tuning_mergerecord",
-      "community": 4,
+      "community": 3,
       "norm_label": "mergerecord()"
     },
     {
       "label": "mergeNested2()",
       "file_type": "code",
       "source_file": "src\\lib\\algorithm\\algorithm-tuning.ts",
-      "source_location": "L158",
+      "source_location": "L168",
       "id": "algorithm_tuning_mergenested2",
-      "community": 4,
+      "community": 3,
       "norm_label": "mergenested2()"
     },
     {
       "label": "mergeAlgorithmTuning()",
       "file_type": "code",
       "source_file": "src\\lib\\algorithm\\algorithm-tuning.ts",
-      "source_location": "L175",
+      "source_location": "L185",
       "id": "algorithm_tuning_mergealgorithmtuning",
-      "community": 4,
+      "community": 3,
       "norm_label": "mergealgorithmtuning()"
     },
     {
@@ -5080,6 +5080,42 @@
       "norm_label": "applycustomoverrides()"
     },
     {
+      "label": "cable-ampacity.ts",
+      "file_type": "code",
+      "source_file": "src\\lib\\algorithm\\cable-ampacity.ts",
+      "source_location": "L1",
+      "id": "src_lib_algorithm_cable_ampacity_ts",
+      "community": 9,
+      "norm_label": "cable-ampacity.ts"
+    },
+    {
+      "label": "minStandardMm2ForDesignCurrentA()",
+      "file_type": "code",
+      "source_file": "src\\lib\\algorithm\\cable-ampacity.ts",
+      "source_location": "L44",
+      "id": "cable_ampacity_minstandardmm2fordesigncurrenta",
+      "community": 9,
+      "norm_label": "minstandardmm2fordesigncurrenta()"
+    },
+    {
+      "label": "cable-standards.ts",
+      "file_type": "code",
+      "source_file": "src\\lib\\algorithm\\cable-standards.ts",
+      "source_location": "L1",
+      "id": "src_lib_algorithm_cable_standards_ts",
+      "community": 9,
+      "norm_label": "cable-standards.ts"
+    },
+    {
+      "label": "roundUpToStandardMm2()",
+      "file_type": "code",
+      "source_file": "src\\lib\\algorithm\\cable-standards.ts",
+      "source_location": "L15",
+      "id": "cable_standards_rounduptostandardmm2",
+      "community": 9,
+      "norm_label": "rounduptostandardmm2()"
+    },
+    {
       "label": "compute.test.ts",
       "file_type": "code",
       "source_file": "src\\lib\\algorithm\\compute.test.ts",
@@ -5092,7 +5128,7 @@
       "label": "defaultTravelBehavior()",
       "file_type": "code",
       "source_file": "src\\lib\\algorithm\\compute.test.ts",
-      "source_location": "L46",
+      "source_location": "L47",
       "id": "compute_test_defaulttravelbehavior",
       "community": 35,
       "norm_label": "defaulttravelbehavior()"
@@ -5101,7 +5137,7 @@
       "label": "defaultCableLengths()",
       "file_type": "code",
       "source_file": "src\\lib\\algorithm\\compute.test.ts",
-      "source_location": "L55",
+      "source_location": "L56",
       "id": "compute_test_defaultcablelengths",
       "community": 35,
       "norm_label": "defaultcablelengths()"
@@ -5110,7 +5146,7 @@
       "label": "minimalInput()",
       "file_type": "code",
       "source_file": "src\\lib\\algorithm\\compute.test.ts",
-      "source_location": "L67",
+      "source_location": "L68",
       "id": "compute_test_minimalinput",
       "community": 35,
       "norm_label": "minimalinput()"
@@ -5121,7 +5157,7 @@
       "source_file": "src\\lib\\algorithm\\compute.ts",
       "source_location": "L1",
       "id": "src_lib_algorithm_compute_ts",
-      "community": 4,
+      "community": 3,
       "norm_label": "compute.ts"
     },
     {
@@ -5130,7 +5166,7 @@
       "source_file": "src\\lib\\algorithm\\compute.ts",
       "source_location": "L47",
       "id": "compute_computealgorithm",
-      "community": 4,
+      "community": 3,
       "norm_label": "computealgorithm()"
     },
     {
@@ -5148,7 +5184,7 @@
       "source_file": "src\\lib\\algorithm\\derive.ts",
       "source_location": "L1",
       "id": "src_lib_algorithm_derive_ts",
-      "community": 4,
+      "community": 3,
       "norm_label": "derive.ts"
     },
     {
@@ -5157,7 +5193,7 @@
       "source_file": "src\\lib\\algorithm\\derive.ts",
       "source_location": "L26",
       "id": "derive_drivehours",
-      "community": 4,
+      "community": 3,
       "norm_label": "drivehours()"
     },
     {
@@ -5166,7 +5202,7 @@
       "source_file": "src\\lib\\algorithm\\derive.ts",
       "source_location": "L46",
       "id": "derive_shoreavailability",
-      "community": 4,
+      "community": 3,
       "norm_label": "shoreavailability()"
     },
     {
@@ -5175,7 +5211,7 @@
       "source_file": "src\\lib\\algorithm\\derive.ts",
       "source_location": "L64",
       "id": "derive_psh",
-      "community": 4,
+      "community": 3,
       "norm_label": "psh()"
     },
     {
@@ -5184,7 +5220,7 @@
       "source_file": "src\\lib\\algorithm\\derive.ts",
       "source_location": "L79",
       "id": "derive_classifyconsumers",
-      "community": 4,
+      "community": 3,
       "norm_label": "classifyconsumers()"
     },
     {
@@ -5193,7 +5229,7 @@
       "source_file": "src\\lib\\algorithm\\derive.ts",
       "source_location": "L108",
       "id": "derive_roofwp",
-      "community": 4,
+      "community": 3,
       "norm_label": "roofwp()"
     },
     {
@@ -5202,7 +5238,7 @@
       "source_file": "src\\lib\\algorithm\\derive.ts",
       "source_location": "L130",
       "id": "derive_autarchytopupprofile",
-      "community": 4,
+      "community": 3,
       "norm_label": "autarchytopupprofile()"
     },
     {
@@ -5211,7 +5247,7 @@
       "source_file": "src\\lib\\algorithm\\derive.ts",
       "source_location": "L145",
       "id": "derive_autarchymaxdays",
-      "community": 4,
+      "community": 3,
       "norm_label": "autarchymaxdays()"
     },
     {
@@ -5220,7 +5256,7 @@
       "source_file": "src\\lib\\algorithm\\derive.ts",
       "source_location": "L166",
       "id": "derive_alternatortopupestimatewh",
-      "community": 4,
+      "community": 3,
       "norm_label": "alternatortopupestimatewh()"
     },
     {
@@ -5256,7 +5292,7 @@
       "source_file": "src\\lib\\algorithm\\options-from-db.ts",
       "source_location": "L1",
       "id": "src_lib_algorithm_options_from_db_ts",
-      "community": 8,
+      "community": 0,
       "norm_label": "options-from-db.ts"
     },
     {
@@ -5265,7 +5301,7 @@
       "source_file": "src\\lib\\algorithm\\options-from-db.ts",
       "source_location": "L10",
       "id": "options_from_db_algorithmsettingstocomputeoptions",
-      "community": 8,
+      "community": 0,
       "norm_label": "algorithmsettingstocomputeoptions()"
     },
     {
@@ -5283,7 +5319,7 @@
       "source_file": "src\\lib\\algorithm\\validate.ts",
       "source_location": "L1",
       "id": "src_lib_algorithm_validate_ts",
-      "community": 4,
+      "community": 3,
       "norm_label": "validate.ts"
     },
     {
@@ -5292,7 +5328,7 @@
       "source_file": "src\\lib\\algorithm\\validate.ts",
       "source_location": "L51",
       "id": "validate_requireenum",
-      "community": 4,
+      "community": 3,
       "norm_label": "requireenum()"
     },
     {
@@ -5301,7 +5337,7 @@
       "source_file": "src\\lib\\algorithm\\validate.ts",
       "source_location": "L65",
       "id": "validate_requirerange",
-      "community": 4,
+      "community": 3,
       "norm_label": "requirerange()"
     },
     {
@@ -5310,7 +5346,7 @@
       "source_file": "src\\lib\\algorithm\\validate.ts",
       "source_location": "L83",
       "id": "validate_requirenonemptystring",
-      "community": 4,
+      "community": 3,
       "norm_label": "requirenonemptystring()"
     },
     {
@@ -5319,7 +5355,7 @@
       "source_file": "src\\lib\\algorithm\\validate.ts",
       "source_location": "L93",
       "id": "validate_validateconsumer",
-      "community": 4,
+      "community": 3,
       "norm_label": "validateconsumer()"
     },
     {
@@ -5328,7 +5364,7 @@
       "source_file": "src\\lib\\algorithm\\validate.ts",
       "source_location": "L122",
       "id": "validate_validateroofarea",
-      "community": 4,
+      "community": 3,
       "norm_label": "validateroofarea()"
     },
     {
@@ -5337,7 +5373,7 @@
       "source_file": "src\\lib\\algorithm\\validate.ts",
       "source_location": "L130",
       "id": "validate_validatesolarbag",
-      "community": 4,
+      "community": 3,
       "norm_label": "validatesolarbag()"
     },
     {
@@ -5346,7 +5382,7 @@
       "source_file": "src\\lib\\algorithm\\validate.ts",
       "source_location": "L136",
       "id": "validate_validatecablelengths",
-      "community": 4,
+      "community": 3,
       "norm_label": "validatecablelengths()"
     },
     {
@@ -5355,7 +5391,7 @@
       "source_file": "src\\lib\\algorithm\\validate.ts",
       "source_location": "L151",
       "id": "validate_validatetravelbehavior",
-      "community": 4,
+      "community": 3,
       "norm_label": "validatetravelbehavior()"
     },
     {
@@ -5364,7 +5400,7 @@
       "source_file": "src\\lib\\algorithm\\validate.ts",
       "source_location": "L174",
       "id": "validate_validate",
-      "community": 4,
+      "community": 3,
       "norm_label": "validate()"
     },
     {
@@ -5373,7 +5409,7 @@
       "source_file": "src\\lib\\algorithm\\phases\\battery.ts",
       "source_location": "L1",
       "id": "src_lib_algorithm_phases_battery_ts",
-      "community": 4,
+      "community": 3,
       "norm_label": "battery.ts"
     },
     {
@@ -5382,7 +5418,7 @@
       "source_file": "src\\lib\\algorithm\\phases\\battery.ts",
       "source_location": "L63",
       "id": "battery_topupcoveragebasecapforpsh",
-      "community": 4,
+      "community": 3,
       "norm_label": "topupcoveragebasecapforpsh()"
     },
     {
@@ -5391,7 +5427,7 @@
       "source_file": "src\\lib\\algorithm\\phases\\battery.ts",
       "source_location": "L105",
       "id": "battery_shorebatterybridgereliefdays",
-      "community": 4,
+      "community": 3,
       "norm_label": "shorebatterybridgereliefdays()"
     },
     {
@@ -5400,7 +5436,7 @@
       "source_file": "src\\lib\\algorithm\\phases\\battery.ts",
       "source_location": "L137",
       "id": "battery_sizebattery",
-      "community": 4,
+      "community": 3,
       "norm_label": "sizebattery()"
     },
     {
@@ -5409,7 +5445,7 @@
       "source_file": "src\\lib\\algorithm\\phases\\booster.ts",
       "source_location": "L1",
       "id": "src_lib_algorithm_phases_booster_ts",
-      "community": 4,
+      "community": 3,
       "norm_label": "booster.ts"
     },
     {
@@ -5418,7 +5454,7 @@
       "source_file": "src\\lib\\algorithm\\phases\\booster.ts",
       "source_location": "L21",
       "id": "booster_sizebooster",
-      "community": 4,
+      "community": 3,
       "norm_label": "sizebooster()"
     },
     {
@@ -5427,25 +5463,25 @@
       "source_file": "src\\lib\\algorithm\\phases\\cables.ts",
       "source_location": "L1",
       "id": "src_lib_algorithm_phases_cables_ts",
-      "community": 4,
+      "community": 3,
       "norm_label": "cables.ts"
     },
     {
       "label": "resolveRoute()",
       "file_type": "code",
       "source_file": "src\\lib\\algorithm\\phases\\cables.ts",
-      "source_location": "L27",
+      "source_location": "L32",
       "id": "cables_resolveroute",
-      "community": 4,
+      "community": 3,
       "norm_label": "resolveroute()"
     },
     {
       "label": "sizeCables()",
       "file_type": "code",
       "source_file": "src\\lib\\algorithm\\phases\\cables.ts",
-      "source_location": "L92",
+      "source_location": "L97",
       "id": "cables_sizecables",
-      "community": 4,
+      "community": 3,
       "norm_label": "sizecables()"
     },
     {
@@ -5454,7 +5490,7 @@
       "source_file": "src\\lib\\algorithm\\phases\\charger.ts",
       "source_location": "L1",
       "id": "src_lib_algorithm_phases_charger_ts",
-      "community": 4,
+      "community": 3,
       "norm_label": "charger.ts"
     },
     {
@@ -5463,7 +5499,7 @@
       "source_file": "src\\lib\\algorithm\\phases\\charger.ts",
       "source_location": "L21",
       "id": "charger_sizecharger",
-      "community": 4,
+      "community": 3,
       "norm_label": "sizecharger()"
     },
     {
@@ -5472,7 +5508,7 @@
       "source_file": "src\\lib\\algorithm\\phases\\controller.ts",
       "source_location": "L1",
       "id": "src_lib_algorithm_phases_controller_ts",
-      "community": 4,
+      "community": 3,
       "norm_label": "controller.ts"
     },
     {
@@ -5481,7 +5517,7 @@
       "source_file": "src\\lib\\algorithm\\phases\\controller.ts",
       "source_location": "L28",
       "id": "controller_sizecontroller",
-      "community": 4,
+      "community": 3,
       "norm_label": "sizecontroller()"
     },
     {
@@ -5490,7 +5526,7 @@
       "source_file": "src\\lib\\algorithm\\phases\\controller.ts",
       "source_location": "L44",
       "id": "controller_sizeportablecontroller",
-      "community": 4,
+      "community": 3,
       "norm_label": "sizeportablecontroller()"
     },
     {
@@ -5499,7 +5535,7 @@
       "source_file": "src\\lib\\algorithm\\phases\\inverter.ts",
       "source_location": "L1",
       "id": "src_lib_algorithm_phases_inverter_ts",
-      "community": 4,
+      "community": 3,
       "norm_label": "inverter.ts"
     },
     {
@@ -5508,7 +5544,7 @@
       "source_file": "src\\lib\\algorithm\\phases\\inverter.ts",
       "source_location": "L12",
       "id": "inverter_sizeinverter",
-      "community": 4,
+      "community": 3,
       "norm_label": "sizeinverter()"
     },
     {
@@ -5535,7 +5571,7 @@
       "source_file": "src\\lib\\algorithm\\phases\\solar.ts",
       "source_location": "L1",
       "id": "src_lib_algorithm_phases_solar_ts",
-      "community": 4,
+      "community": 3,
       "norm_label": "solar.ts"
     },
     {
@@ -5544,7 +5580,7 @@
       "source_file": "src\\lib\\algorithm\\phases\\solar.ts",
       "source_location": "L20",
       "id": "solar_sizesolar",
-      "community": 4,
+      "community": 3,
       "norm_label": "sizesolar()"
     },
     {
@@ -5553,7 +5589,7 @@
       "source_file": "src\\lib\\blob\\result-schematic.ts",
       "source_location": "L1",
       "id": "src_lib_blob_result_schematic_ts",
-      "community": 3,
+      "community": 4,
       "norm_label": "result-schematic.ts"
     },
     {
@@ -5562,7 +5598,7 @@
       "source_file": "src\\lib\\blob\\result-schematic.ts",
       "source_location": "L3",
       "id": "result_schematic_resultblobunavailableerror",
-      "community": 3,
+      "community": 4,
       "norm_label": "resultblobunavailableerror"
     },
     {
@@ -5571,7 +5607,7 @@
       "source_file": "src\\lib\\blob\\result-schematic.ts",
       "source_location": "L4",
       "id": "result_schematic_resultblobunavailableerror_constructor",
-      "community": 3,
+      "community": 4,
       "norm_label": ".constructor()"
     },
     {
@@ -5580,7 +5616,7 @@
       "source_file": "src\\lib\\blob\\result-schematic.ts",
       "source_location": "L10",
       "id": "result_schematic_uploadresultschematicpdf",
-      "community": 3,
+      "community": 4,
       "norm_label": "uploadresultschematicpdf()"
     },
     {
@@ -6516,7 +6552,7 @@
       "source_file": "src\\lib\\db\\queries\\credits.ts",
       "source_location": "L1",
       "id": "src_lib_db_queries_credits_ts",
-      "community": 3,
+      "community": 4,
       "norm_label": "credits.ts"
     },
     {
@@ -6525,7 +6561,7 @@
       "source_file": "src\\lib\\db\\queries\\credits.ts",
       "source_location": "L5",
       "id": "credits_insufficientcreditserror",
-      "community": 3,
+      "community": 4,
       "norm_label": "insufficientcreditserror"
     },
     {
@@ -6534,7 +6570,7 @@
       "source_file": "src\\lib\\db\\queries\\credits.ts",
       "source_location": "L6",
       "id": "credits_insufficientcreditserror_constructor",
-      "community": 3,
+      "community": 4,
       "norm_label": ".constructor()"
     },
     {
@@ -6543,7 +6579,7 @@
       "source_file": "src\\lib\\db\\queries\\credits.ts",
       "source_location": "L12",
       "id": "credits_getcreditbalance",
-      "community": 3,
+      "community": 4,
       "norm_label": "getcreditbalance()"
     },
     {
@@ -6552,7 +6588,7 @@
       "source_file": "src\\lib\\db\\queries\\credits.ts",
       "source_location": "L24",
       "id": "credits_grantcreditsfrompurchase",
-      "community": 3,
+      "community": 4,
       "norm_label": "grantcreditsfrompurchase()"
     },
     {
@@ -6561,7 +6597,7 @@
       "source_file": "src\\lib\\db\\queries\\credits.ts",
       "source_location": "L73",
       "id": "credits_consumecreditsandstoreschematic",
-      "community": 3,
+      "community": 4,
       "norm_label": "consumecreditsandstoreschematic()"
     },
     {
@@ -6723,7 +6759,7 @@
       "source_file": "src\\lib\\payments\\packages.ts",
       "source_location": "L1",
       "id": "src_lib_payments_packages_ts",
-      "community": 3,
+      "community": 4,
       "norm_label": "packages.ts"
     },
     {
@@ -6732,7 +6768,7 @@
       "source_file": "src\\lib\\payments\\packages.ts",
       "source_location": "L18",
       "id": "packages_parsecreditpackageid",
-      "community": 3,
+      "community": 4,
       "norm_label": "parsecreditpackageid()"
     },
     {
@@ -6741,7 +6777,7 @@
       "source_file": "src\\lib\\payments\\paypal-rest.ts",
       "source_location": "L1",
       "id": "src_lib_payments_paypal_rest_ts",
-      "community": 3,
+      "community": 4,
       "norm_label": "paypal-rest.ts"
     },
     {
@@ -6750,7 +6786,7 @@
       "source_file": "src\\lib\\payments\\paypal-rest.ts",
       "source_location": "L3",
       "id": "paypal_rest_apibase",
-      "community": 3,
+      "community": 4,
       "norm_label": "apibase()"
     },
     {
@@ -6759,7 +6795,7 @@
       "source_file": "src\\lib\\payments\\paypal-rest.ts",
       "source_location": "L7",
       "id": "paypal_rest_requireenv",
-      "community": 3,
+      "community": 4,
       "norm_label": "requireenv()"
     },
     {
@@ -6768,7 +6804,7 @@
       "source_file": "src\\lib\\payments\\paypal-rest.ts",
       "source_location": "L13",
       "id": "paypal_rest_paypalaccesstoken",
-      "community": 3,
+      "community": 4,
       "norm_label": "paypalaccesstoken()"
     },
     {
@@ -6777,7 +6813,7 @@
       "source_file": "src\\lib\\payments\\paypal-rest.ts",
       "source_location": "L35",
       "id": "paypal_rest_paypaljson",
-      "community": 3,
+      "community": 4,
       "norm_label": "paypaljson()"
     },
     {
@@ -6786,7 +6822,7 @@
       "source_file": "src\\lib\\payments\\paypal-rest.ts",
       "source_location": "L57",
       "id": "paypal_rest_paypalcreateorder",
-      "community": 3,
+      "community": 4,
       "norm_label": "paypalcreateorder()"
     },
     {
@@ -6795,7 +6831,7 @@
       "source_file": "src\\lib\\payments\\paypal-rest.ts",
       "source_location": "L99",
       "id": "paypal_rest_paypalgetorder",
-      "community": 3,
+      "community": 4,
       "norm_label": "paypalgetorder()"
     },
     {
@@ -6804,7 +6840,7 @@
       "source_file": "src\\lib\\payments\\paypal-rest.ts",
       "source_location": "L105",
       "id": "paypal_rest_paypalcaptureorder",
-      "community": 3,
+      "community": 4,
       "norm_label": "paypalcaptureorder()"
     },
     {
@@ -6813,7 +6849,7 @@
       "source_file": "src\\lib\\payments\\sync-paypal-credits.ts",
       "source_location": "L1",
       "id": "src_lib_payments_sync_paypal_credits_ts",
-      "community": 3,
+      "community": 4,
       "norm_label": "sync-paypal-credits.ts"
     },
     {
@@ -6822,7 +6858,7 @@
       "source_file": "src\\lib\\payments\\sync-paypal-credits.ts",
       "source_location": "L10",
       "id": "sync_paypal_credits_synccreditsfrompaypalorder",
-      "community": 3,
+      "community": 4,
       "norm_label": "synccreditsfrompaypalorder()"
     },
     {
@@ -6831,7 +6867,7 @@
       "source_file": "src\\lib\\pdf\\generator.ts",
       "source_location": "L1",
       "id": "src_lib_pdf_generator_ts",
-      "community": 3,
+      "community": 4,
       "norm_label": "generator.ts"
     },
     {
@@ -6840,7 +6876,7 @@
       "source_file": "src\\lib\\pdf\\generator.ts",
       "source_location": "L3",
       "id": "generator_resolveexecutablepath",
-      "community": 3,
+      "community": 4,
       "norm_label": "resolveexecutablepath()"
     },
     {
@@ -6849,7 +6885,7 @@
       "source_file": "src\\lib\\pdf\\generator.ts",
       "source_location": "L17",
       "id": "generator_launchargs",
-      "community": 3,
+      "community": 4,
       "norm_label": "launchargs()"
     },
     {
@@ -6858,7 +6894,7 @@
       "source_file": "src\\lib\\pdf\\generator.ts",
       "source_location": "L26",
       "id": "generator_htmltopdfbuffer",
-      "community": 3,
+      "community": 4,
       "norm_label": "htmltopdfbuffer()"
     },
     {
@@ -6867,7 +6903,7 @@
       "source_file": "src\\lib\\ratelimit\\index.ts",
       "source_location": "L1",
       "id": "src_lib_ratelimit_index_ts",
-      "community": 3,
+      "community": 4,
       "norm_label": "index.ts"
     },
     {
@@ -6876,7 +6912,7 @@
       "source_file": "src\\lib\\ratelimit\\index.ts",
       "source_location": "L11",
       "id": "index_getgeneratelimiter",
-      "community": 3,
+      "community": 4,
       "norm_label": "getgeneratelimiter()"
     },
     {
@@ -6885,7 +6921,7 @@
       "source_file": "src\\lib\\ratelimit\\index.ts",
       "source_location": "L18",
       "id": "index_getpdfschematiclimiter",
-      "community": 3,
+      "community": 4,
       "norm_label": "getpdfschematiclimiter()"
     },
     {
@@ -6894,7 +6930,7 @@
       "source_file": "src\\lib\\ratelimit\\index.ts",
       "source_location": "L26",
       "id": "index_resetratelimitersfortest",
-      "community": 3,
+      "community": 4,
       "norm_label": "__resetratelimitersfortest()"
     },
     {
@@ -6930,7 +6966,7 @@
       "source_file": "src\\lib\\recommendation\\ai-selector.ts",
       "source_location": "L1",
       "id": "src_lib_recommendation_ai_selector_ts",
-      "community": 9,
+      "community": 10,
       "norm_label": "ai-selector.ts"
     },
     {
@@ -6939,7 +6975,7 @@
       "source_file": "src\\lib\\recommendation\\ai-selector.ts",
       "source_location": "L10",
       "id": "ai_selector_mapproductgroupkeytobucket",
-      "community": 9,
+      "community": 10,
       "norm_label": "mapproductgroupkeytobucket()"
     },
     {
@@ -6948,7 +6984,7 @@
       "source_file": "src\\lib\\recommendation\\ai-selector.ts",
       "source_location": "L46",
       "id": "ai_selector_flattenproductgroups",
-      "community": 9,
+      "community": 10,
       "norm_label": "flattenproductgroups()"
     },
     {
@@ -6957,7 +6993,7 @@
       "source_file": "src\\lib\\recommendation\\ai-selector.ts",
       "source_location": "L73",
       "id": "ai_selector_stripmodelmarkdownfences",
-      "community": 9,
+      "community": 10,
       "norm_label": "stripmodelmarkdownfences()"
     },
     {
@@ -6966,7 +7002,7 @@
       "source_file": "src\\lib\\recommendation\\ai-selector.ts",
       "source_location": "L85",
       "id": "ai_selector_parsejsonlenient",
-      "community": 9,
+      "community": 10,
       "norm_label": "parsejsonlenient()"
     },
     {
@@ -6975,7 +7011,7 @@
       "source_file": "src\\lib\\recommendation\\ai-selector.ts",
       "source_location": "L99",
       "id": "ai_selector_extractselectionsarray",
-      "community": 9,
+      "community": 10,
       "norm_label": "extractselectionsarray()"
     },
     {
@@ -6984,7 +7020,7 @@
       "source_file": "src\\lib\\recommendation\\ai-selector.ts",
       "source_location": "L125",
       "id": "ai_selector_normalizebucket",
-      "community": 9,
+      "community": 10,
       "norm_label": "normalizebucket()"
     },
     {
@@ -6993,7 +7029,7 @@
       "source_file": "src\\lib\\recommendation\\ai-selector.ts",
       "source_location": "L140",
       "id": "ai_selector_coerceselectionrow",
-      "community": 9,
+      "community": 10,
       "norm_label": "coerceselectionrow()"
     },
     {
@@ -7002,7 +7038,7 @@
       "source_file": "src\\lib\\recommendation\\ai-selector.ts",
       "source_location": "L166",
       "id": "ai_selector_parseproductselectionjson",
-      "community": 9,
+      "community": 10,
       "norm_label": "parseproductselectionjson()"
     },
     {
@@ -7011,7 +7047,7 @@
       "source_file": "src\\lib\\recommendation\\ai-selector.ts",
       "source_location": "L178",
       "id": "ai_selector_validateaiselections",
-      "community": 9,
+      "community": 10,
       "norm_label": "validateaiselections()"
     },
     {
@@ -7020,7 +7056,7 @@
       "source_file": "src\\lib\\recommendation\\ai-selector.ts",
       "source_location": "L202",
       "id": "ai_selector_selectproductswithai",
-      "community": 9,
+      "community": 10,
       "norm_label": "selectproductswithai()"
     },
     {
@@ -7029,7 +7065,7 @@
       "source_file": "src\\lib\\recommendation\\enforce-ai-selections.ts",
       "source_location": "L1",
       "id": "src_lib_recommendation_enforce_ai_selections_ts",
-      "community": 10,
+      "community": 5,
       "norm_label": "enforce-ai-selections.ts"
     },
     {
@@ -7038,7 +7074,7 @@
       "source_file": "src\\lib\\recommendation\\enforce-ai-selections.ts",
       "source_location": "L10",
       "id": "enforce_ai_selections_enforceaiselectionsminima",
-      "community": 10,
+      "community": 5,
       "norm_label": "enforceaiselectionsminima()"
     },
     {
@@ -7056,7 +7092,7 @@
       "source_file": "src\\lib\\recommendation\\index.ts",
       "source_location": "L1",
       "id": "src_lib_recommendation_index_ts",
-      "community": 9,
+      "community": 10,
       "norm_label": "index.ts"
     },
     {
@@ -7065,7 +7101,7 @@
       "source_file": "src\\lib\\recommendation\\index.ts",
       "source_location": "L41",
       "id": "index_runrecommendationpipeline",
-      "community": 9,
+      "community": 10,
       "norm_label": "runrecommendationpipeline()"
     },
     {
@@ -7083,169 +7119,160 @@
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
       "source_location": "L1",
       "id": "src_lib_recommendation_prefilter_ts",
-      "community": 10,
+      "community": 9,
       "norm_label": "prefilter.ts"
-    },
-    {
-      "label": "roundUpToStandardMm2()",
-      "file_type": "code",
-      "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L20",
-      "id": "prefilter_rounduptostandardmm2",
-      "community": 10,
-      "norm_label": "rounduptostandardmm2()"
     },
     {
       "label": "detectBucket()",
       "file_type": "code",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L28",
+      "source_location": "L20",
       "id": "prefilter_detectbucket",
-      "community": 10,
+      "community": 9,
       "norm_label": "detectbucket()"
     },
     {
       "label": "canonicalBatteryChem()",
       "file_type": "code",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L41",
+      "source_location": "L33",
       "id": "prefilter_canonicalbatterychem",
-      "community": 10,
+      "community": 9,
       "norm_label": "canonicalbatterychem()"
     },
     {
       "label": "batteryChemFromRow()",
       "file_type": "code",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L50",
+      "source_location": "L42",
       "id": "prefilter_batterychemfromrow",
-      "community": 10,
+      "community": 9,
       "norm_label": "batterychemfromrow()"
     },
     {
       "label": "controllerKindFromRow()",
       "file_type": "code",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L66",
+      "source_location": "L58",
       "id": "prefilter_controllerkindfromrow",
-      "community": 10,
+      "community": 9,
       "norm_label": "controllerkindfromrow()"
     },
     {
       "label": "inverterWaveformBonus()",
       "file_type": "code",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L85",
+      "source_location": "L77",
       "id": "prefilter_inverterwaveformbonus",
-      "community": 10,
+      "community": 9,
       "norm_label": "inverterwaveformbonus()"
     },
     {
       "label": "isPortableMountHint()",
       "file_type": "code",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L102",
+      "source_location": "L94",
       "id": "prefilter_isportablemounthint",
-      "community": 10,
+      "community": 9,
       "norm_label": "isportablemounthint()"
     },
     {
       "label": "isFuseLikeRow()",
       "file_type": "code",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L110",
+      "source_location": "L102",
       "id": "prefilter_isfuselikerow",
-      "community": 10,
+      "community": 9,
       "norm_label": "isfuselikerow()"
     },
     {
       "label": "parseFuseRatingFromName()",
       "file_type": "code",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L115",
+      "source_location": "L107",
       "id": "prefilter_parsefuseratingfromname",
-      "community": 10,
+      "community": 9,
       "norm_label": "parsefuseratingfromname()"
     },
     {
       "label": "fuseRatingFromRow()",
       "file_type": "code",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L122",
+      "source_location": "L114",
       "id": "prefilter_fuseratingfromrow",
-      "community": 10,
+      "community": 9,
       "norm_label": "fuseratingfromrow()"
     },
     {
       "label": "collectFuseTargets()",
       "file_type": "code",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L127",
+      "source_location": "L119",
       "id": "prefilter_collectfusetargets",
-      "community": 10,
+      "community": 9,
       "norm_label": "collectfusetargets()"
     },
     {
       "label": "scoreFuseProduct()",
       "file_type": "code",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L143",
+      "source_location": "L135",
       "id": "prefilter_scorefuseproduct",
-      "community": 10,
+      "community": 9,
       "norm_label": "scorefuseproduct()"
     },
     {
       "label": "scoreProduct()",
       "file_type": "code",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L156",
+      "source_location": "L148",
       "id": "prefilter_scoreproduct",
-      "community": 10,
+      "community": 9,
       "norm_label": "scoreproduct()"
     },
     {
       "label": "isActiveCableRoute()",
       "file_type": "code",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L242",
+      "source_location": "L234",
       "id": "prefilter_isactivecableroute",
-      "community": 10,
+      "community": 9,
       "norm_label": "isactivecableroute()"
     },
     {
       "label": "scoreCableForRoute()",
       "file_type": "code",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L246",
+      "source_location": "L238",
       "id": "prefilter_scorecableforroute",
-      "community": 10,
+      "community": 9,
       "norm_label": "scorecableforroute()"
     },
     {
       "label": "buildCableByRoute()",
       "file_type": "code",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L255",
+      "source_location": "L247",
       "id": "prefilter_buildcablebyroute",
-      "community": 10,
+      "community": 9,
       "norm_label": "buildcablebyroute()"
     },
     {
       "label": "sortAndLimit()",
       "file_type": "code",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L282",
+      "source_location": "L274",
       "id": "prefilter_sortandlimit",
-      "community": 10,
+      "community": 9,
       "norm_label": "sortandlimit()"
     },
     {
       "label": "prefilterProductsForRecommendation()",
       "file_type": "code",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L286",
+      "source_location": "L278",
       "id": "prefilter_prefilterproductsforrecommendation",
-      "community": 10,
+      "community": 9,
       "norm_label": "prefilterproductsforrecommendation()"
     },
     {
@@ -8046,7 +8073,7 @@
       "source_file": "src\\lib\\schematic\\schematic-html.ts",
       "source_location": "L1",
       "id": "src_lib_schematic_schematic_html_ts",
-      "community": 3,
+      "community": 4,
       "norm_label": "schematic-html.ts"
     },
     {
@@ -8055,7 +8082,7 @@
       "source_file": "src\\lib\\schematic\\schematic-html.ts",
       "source_location": "L3",
       "id": "schematic_html_esc",
-      "community": 3,
+      "community": 4,
       "norm_label": "esc()"
     },
     {
@@ -8064,7 +8091,7 @@
       "source_file": "src\\lib\\schematic\\schematic-html.ts",
       "source_location": "L11",
       "id": "schematic_html_schematicplantoprinthtml",
-      "community": 3,
+      "community": 4,
       "norm_label": "schematicplantoprinthtml()"
     },
     {
@@ -8217,7 +8244,7 @@
       "source_file": "src\\lib\\wizard\\top-up-covers-daily.ts",
       "source_location": "L1",
       "id": "src_lib_wizard_top_up_covers_daily_ts",
-      "community": 4,
+      "community": 3,
       "norm_label": "top-up-covers-daily.ts"
     },
     {
@@ -8226,7 +8253,7 @@
       "source_file": "src\\lib\\wizard\\top-up-covers-daily.ts",
       "source_location": "L9",
       "id": "top_up_covers_daily_topupcoversdailywh",
-      "community": 4,
+      "community": 3,
       "norm_label": "topupcoversdailywh()"
     },
     {
@@ -10611,8 +10638,8 @@
       "source_file": "src\\lib\\recommendation\\enforce-ai-selections.ts",
       "source_location": "L26",
       "weight": 1.0,
-      "_src": "enforce_ai_selections_enforceaiselectionsminima",
-      "_tgt": "route_get",
+      "_src": "route_get",
+      "_tgt": "enforce_ai_selections_enforceaiselectionsminima",
       "source": "route_get",
       "target": "enforce_ai_selections_enforceaiselectionsminima"
     },
@@ -15348,7 +15375,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\algorithm\\algorithm-tuning.ts",
-      "source_location": "L150",
+      "source_location": "L160",
       "weight": 1.0,
       "_src": "src_lib_algorithm_algorithm_tuning_ts",
       "_tgt": "algorithm_tuning_mergerecord",
@@ -15360,7 +15387,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\algorithm\\algorithm-tuning.ts",
-      "source_location": "L158",
+      "source_location": "L168",
       "weight": 1.0,
       "_src": "src_lib_algorithm_algorithm_tuning_ts",
       "_tgt": "algorithm_tuning_mergenested2",
@@ -15372,7 +15399,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\algorithm\\algorithm-tuning.ts",
-      "source_location": "L175",
+      "source_location": "L185",
       "weight": 1.0,
       "_src": "src_lib_algorithm_algorithm_tuning_ts",
       "_tgt": "algorithm_tuning_mergealgorithmtuning",
@@ -15384,7 +15411,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\algorithm\\algorithm-tuning.ts",
-      "source_location": "L183",
+      "source_location": "L193",
       "weight": 1.0,
       "_src": "algorithm_tuning_mergealgorithmtuning",
       "_tgt": "algorithm_tuning_mergerecord",
@@ -15396,7 +15423,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\algorithm\\algorithm-tuning.ts",
-      "source_location": "L179",
+      "source_location": "L189",
       "weight": 1.0,
       "_src": "algorithm_tuning_mergealgorithmtuning",
       "_tgt": "algorithm_tuning_mergenested2",
@@ -15411,8 +15438,8 @@
       "source_file": "src\\lib\\algorithm\\compute.ts",
       "source_location": "L52",
       "weight": 1.0,
-      "_src": "compute_computealgorithm",
-      "_tgt": "algorithm_tuning_mergealgorithmtuning",
+      "_src": "algorithm_tuning_mergealgorithmtuning",
+      "_tgt": "compute_computealgorithm",
       "source": "algorithm_tuning_mergealgorithmtuning",
       "target": "compute_computealgorithm"
     },
@@ -15515,8 +15542,68 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "src\\lib\\algorithm\\cable-ampacity.ts",
+      "source_location": "L44",
+      "weight": 1.0,
+      "_src": "src_lib_algorithm_cable_ampacity_ts",
+      "_tgt": "cable_ampacity_minstandardmm2fordesigncurrenta",
+      "source": "src_lib_algorithm_cable_ampacity_ts",
+      "target": "cable_ampacity_minstandardmm2fordesigncurrenta",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\lib\\algorithm\\cable-ampacity.ts",
+      "source_location": "L53",
+      "weight": 1.0,
+      "_src": "cable_ampacity_minstandardmm2fordesigncurrenta",
+      "_tgt": "cable_standards_rounduptostandardmm2",
+      "source": "cable_ampacity_minstandardmm2fordesigncurrenta",
+      "target": "cable_standards_rounduptostandardmm2"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src\\lib\\algorithm\\cable-standards.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_src": "src_lib_algorithm_cable_standards_ts",
+      "_tgt": "cable_standards_rounduptostandardmm2",
+      "source": "src_lib_algorithm_cable_standards_ts",
+      "target": "cable_standards_rounduptostandardmm2",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\lib\\recommendation\\prefilter.ts",
+      "source_location": "L219",
+      "weight": 1.0,
+      "_src": "prefilter_scoreproduct",
+      "_tgt": "cable_standards_rounduptostandardmm2",
+      "source": "cable_standards_rounduptostandardmm2",
+      "target": "prefilter_scoreproduct"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src\\lib\\recommendation\\prefilter.ts",
+      "source_location": "L240",
+      "weight": 1.0,
+      "_src": "prefilter_scorecableforroute",
+      "_tgt": "cable_standards_rounduptostandardmm2",
+      "source": "cable_standards_rounduptostandardmm2",
+      "target": "prefilter_scorecableforroute"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "src\\lib\\algorithm\\compute.test.ts",
-      "source_location": "L46",
+      "source_location": "L47",
       "weight": 1.0,
       "_src": "src_lib_algorithm_compute_test_ts",
       "_tgt": "compute_test_defaulttravelbehavior",
@@ -15528,7 +15615,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\algorithm\\compute.test.ts",
-      "source_location": "L55",
+      "source_location": "L56",
       "weight": 1.0,
       "_src": "src_lib_algorithm_compute_test_ts",
       "_tgt": "compute_test_defaultcablelengths",
@@ -15540,7 +15627,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\algorithm\\compute.test.ts",
-      "source_location": "L67",
+      "source_location": "L68",
       "weight": 1.0,
       "_src": "src_lib_algorithm_compute_test_ts",
       "_tgt": "compute_test_minimalinput",
@@ -15552,7 +15639,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\algorithm\\compute.test.ts",
-      "source_location": "L81",
+      "source_location": "L82",
       "weight": 1.0,
       "_src": "compute_test_minimalinput",
       "_tgt": "compute_test_defaulttravelbehavior",
@@ -15564,7 +15651,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\algorithm\\compute.test.ts",
-      "source_location": "L83",
+      "source_location": "L84",
       "weight": 1.0,
       "_src": "compute_test_minimalinput",
       "_tgt": "compute_test_defaultcablelengths",
@@ -15951,8 +16038,8 @@
       "source_file": "src\\lib\\results\\generate-for-result.ts",
       "source_location": "L66",
       "weight": 1.0,
-      "_src": "generate_for_result_rungenerateforresultid",
-      "_tgt": "options_from_db_algorithmsettingstocomputeoptions",
+      "_src": "options_from_db_algorithmsettingstocomputeoptions",
+      "_tgt": "generate_for_result_rungenerateforresultid",
       "source": "options_from_db_algorithmsettingstocomputeoptions",
       "target": "generate_for_result_rungenerateforresultid"
     },
@@ -16284,7 +16371,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\algorithm\\phases\\cables.ts",
-      "source_location": "L27",
+      "source_location": "L32",
       "weight": 1.0,
       "_src": "src_lib_algorithm_phases_cables_ts",
       "_tgt": "cables_resolveroute",
@@ -16296,7 +16383,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\algorithm\\phases\\cables.ts",
-      "source_location": "L92",
+      "source_location": "L97",
       "weight": 1.0,
       "_src": "src_lib_algorithm_phases_cables_ts",
       "_tgt": "cables_sizecables",
@@ -18819,8 +18906,8 @@
       "source_file": "src\\lib\\recommendation\\ai-selector.ts",
       "source_location": "L208",
       "weight": 1.0,
-      "_src": "ai_selector_selectproductswithai",
-      "_tgt": "admin_settings_ai_getaisettings",
+      "_src": "admin_settings_ai_getaisettings",
+      "_tgt": "ai_selector_selectproductswithai",
       "source": "admin_settings_ai_getaisettings",
       "target": "ai_selector_selectproductswithai"
     },
@@ -18831,8 +18918,8 @@
       "source_file": "src\\lib\\schematic\\generate-schematic-plan.ts",
       "source_location": "L62",
       "weight": 1.0,
-      "_src": "generate_schematic_plan_generateschematicplanfromcontext",
-      "_tgt": "admin_settings_ai_getaisettings",
+      "_src": "admin_settings_ai_getaisettings",
+      "_tgt": "generate_schematic_plan_generateschematicplanfromcontext",
       "source": "admin_settings_ai_getaisettings",
       "target": "generate_schematic_plan_generateschematicplanfromcontext"
     },
@@ -18915,8 +19002,8 @@
       "source_file": "src\\lib\\results\\generate-for-result.ts",
       "source_location": "L65",
       "weight": 1.0,
-      "_src": "generate_for_result_rungenerateforresultid",
-      "_tgt": "admin_settings_algorithm_getalgorithmsettingscached",
+      "_src": "admin_settings_algorithm_getalgorithmsettingscached",
+      "_tgt": "generate_for_result_rungenerateforresultid",
       "source": "admin_settings_algorithm_getalgorithmsettingscached",
       "target": "generate_for_result_rungenerateforresultid"
     },
@@ -19899,8 +19986,8 @@
       "source_file": "src\\lib\\recommendation\\index.ts",
       "source_location": "L73",
       "weight": 1.0,
-      "_src": "index_runrecommendationpipeline",
-      "_tgt": "enforce_ai_selections_enforceaiselectionsminima",
+      "_src": "enforce_ai_selections_enforceaiselectionsminima",
+      "_tgt": "index_runrecommendationpipeline",
       "source": "enforce_ai_selections_enforceaiselectionsminima",
       "target": "index_runrecommendationpipeline"
     },
@@ -19947,18 +20034,6 @@
       "source_location": "L20",
       "weight": 1.0,
       "_src": "src_lib_recommendation_prefilter_ts",
-      "_tgt": "prefilter_rounduptostandardmm2",
-      "source": "src_lib_recommendation_prefilter_ts",
-      "target": "prefilter_rounduptostandardmm2",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L28",
-      "weight": 1.0,
-      "_src": "src_lib_recommendation_prefilter_ts",
       "_tgt": "prefilter_detectbucket",
       "source": "src_lib_recommendation_prefilter_ts",
       "target": "prefilter_detectbucket",
@@ -19968,7 +20043,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L41",
+      "source_location": "L33",
       "weight": 1.0,
       "_src": "src_lib_recommendation_prefilter_ts",
       "_tgt": "prefilter_canonicalbatterychem",
@@ -19980,7 +20055,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L50",
+      "source_location": "L42",
       "weight": 1.0,
       "_src": "src_lib_recommendation_prefilter_ts",
       "_tgt": "prefilter_batterychemfromrow",
@@ -19992,7 +20067,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L66",
+      "source_location": "L58",
       "weight": 1.0,
       "_src": "src_lib_recommendation_prefilter_ts",
       "_tgt": "prefilter_controllerkindfromrow",
@@ -20004,7 +20079,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L85",
+      "source_location": "L77",
       "weight": 1.0,
       "_src": "src_lib_recommendation_prefilter_ts",
       "_tgt": "prefilter_inverterwaveformbonus",
@@ -20016,7 +20091,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L102",
+      "source_location": "L94",
       "weight": 1.0,
       "_src": "src_lib_recommendation_prefilter_ts",
       "_tgt": "prefilter_isportablemounthint",
@@ -20028,7 +20103,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L110",
+      "source_location": "L102",
       "weight": 1.0,
       "_src": "src_lib_recommendation_prefilter_ts",
       "_tgt": "prefilter_isfuselikerow",
@@ -20040,7 +20115,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L115",
+      "source_location": "L107",
       "weight": 1.0,
       "_src": "src_lib_recommendation_prefilter_ts",
       "_tgt": "prefilter_parsefuseratingfromname",
@@ -20052,7 +20127,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L122",
+      "source_location": "L114",
       "weight": 1.0,
       "_src": "src_lib_recommendation_prefilter_ts",
       "_tgt": "prefilter_fuseratingfromrow",
@@ -20064,7 +20139,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L127",
+      "source_location": "L119",
       "weight": 1.0,
       "_src": "src_lib_recommendation_prefilter_ts",
       "_tgt": "prefilter_collectfusetargets",
@@ -20076,7 +20151,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L143",
+      "source_location": "L135",
       "weight": 1.0,
       "_src": "src_lib_recommendation_prefilter_ts",
       "_tgt": "prefilter_scorefuseproduct",
@@ -20088,7 +20163,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L156",
+      "source_location": "L148",
       "weight": 1.0,
       "_src": "src_lib_recommendation_prefilter_ts",
       "_tgt": "prefilter_scoreproduct",
@@ -20100,7 +20175,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L242",
+      "source_location": "L234",
       "weight": 1.0,
       "_src": "src_lib_recommendation_prefilter_ts",
       "_tgt": "prefilter_isactivecableroute",
@@ -20112,7 +20187,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L246",
+      "source_location": "L238",
       "weight": 1.0,
       "_src": "src_lib_recommendation_prefilter_ts",
       "_tgt": "prefilter_scorecableforroute",
@@ -20124,7 +20199,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L255",
+      "source_location": "L247",
       "weight": 1.0,
       "_src": "src_lib_recommendation_prefilter_ts",
       "_tgt": "prefilter_buildcablebyroute",
@@ -20136,7 +20211,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L282",
+      "source_location": "L274",
       "weight": 1.0,
       "_src": "src_lib_recommendation_prefilter_ts",
       "_tgt": "prefilter_sortandlimit",
@@ -20148,7 +20223,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L286",
+      "source_location": "L278",
       "weight": 1.0,
       "_src": "src_lib_recommendation_prefilter_ts",
       "_tgt": "prefilter_prefilterproductsforrecommendation",
@@ -20160,31 +20235,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L227",
-      "weight": 1.0,
-      "_src": "prefilter_scoreproduct",
-      "_tgt": "prefilter_rounduptostandardmm2",
-      "source": "prefilter_rounduptostandardmm2",
-      "target": "prefilter_scoreproduct",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L248",
-      "weight": 1.0,
-      "_src": "prefilter_scorecableforroute",
-      "_tgt": "prefilter_rounduptostandardmm2",
-      "source": "prefilter_rounduptostandardmm2",
-      "target": "prefilter_scorecableforroute",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L304",
+      "source_location": "L296",
       "weight": 1.0,
       "_src": "prefilter_prefilterproductsforrecommendation",
       "_tgt": "prefilter_detectbucket",
@@ -20196,7 +20247,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L51",
+      "source_location": "L43",
       "weight": 1.0,
       "_src": "prefilter_batterychemfromrow",
       "_tgt": "prefilter_canonicalbatterychem",
@@ -20208,7 +20259,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L175",
+      "source_location": "L167",
       "weight": 1.0,
       "_src": "prefilter_scoreproduct",
       "_tgt": "prefilter_batterychemfromrow",
@@ -20220,7 +20271,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L213",
+      "source_location": "L205",
       "weight": 1.0,
       "_src": "prefilter_scoreproduct",
       "_tgt": "prefilter_controllerkindfromrow",
@@ -20232,7 +20283,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L205",
+      "source_location": "L197",
       "weight": 1.0,
       "_src": "prefilter_scoreproduct",
       "_tgt": "prefilter_inverterwaveformbonus",
@@ -20244,7 +20295,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L192",
+      "source_location": "L184",
       "weight": 1.0,
       "_src": "prefilter_scoreproduct",
       "_tgt": "prefilter_isportablemounthint",
@@ -20256,7 +20307,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L144",
+      "source_location": "L136",
       "weight": 1.0,
       "_src": "prefilter_scorefuseproduct",
       "_tgt": "prefilter_isfuselikerow",
@@ -20268,7 +20319,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L124",
+      "source_location": "L116",
       "weight": 1.0,
       "_src": "prefilter_fuseratingfromrow",
       "_tgt": "prefilter_parsefuseratingfromname",
@@ -20280,7 +20331,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L145",
+      "source_location": "L137",
       "weight": 1.0,
       "_src": "prefilter_scorefuseproduct",
       "_tgt": "prefilter_fuseratingfromrow",
@@ -20292,7 +20343,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L292",
+      "source_location": "L284",
       "weight": 1.0,
       "_src": "prefilter_prefilterproductsforrecommendation",
       "_tgt": "prefilter_collectfusetargets",
@@ -20304,7 +20355,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L238",
+      "source_location": "L230",
       "weight": 1.0,
       "_src": "prefilter_scoreproduct",
       "_tgt": "prefilter_scorefuseproduct",
@@ -20316,7 +20367,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L225",
+      "source_location": "L217",
       "weight": 1.0,
       "_src": "prefilter_scoreproduct",
       "_tgt": "prefilter_isactivecableroute",
@@ -20328,7 +20379,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L305",
+      "source_location": "L297",
       "weight": 1.0,
       "_src": "prefilter_prefilterproductsforrecommendation",
       "_tgt": "prefilter_scoreproduct",
@@ -20340,7 +20391,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L261",
+      "source_location": "L253",
       "weight": 1.0,
       "_src": "prefilter_buildcablebyroute",
       "_tgt": "prefilter_isactivecableroute",
@@ -20352,7 +20403,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L264",
+      "source_location": "L256",
       "weight": 1.0,
       "_src": "prefilter_buildcablebyroute",
       "_tgt": "prefilter_scorecableforroute",
@@ -20364,7 +20415,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L317",
+      "source_location": "L309",
       "weight": 1.0,
       "_src": "prefilter_prefilterproductsforrecommendation",
       "_tgt": "prefilter_buildcablebyroute",
@@ -20376,7 +20427,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "src\\lib\\recommendation\\prefilter.ts",
-      "source_location": "L337",
+      "source_location": "L329",
       "weight": 1.0,
       "_src": "prefilter_prefilterproductsforrecommendation",
       "_tgt": "prefilter_sortandlimit",
@@ -20547,8 +20598,8 @@
       "source_file": "src\\lib\\results\\parse-result-view-model.ts",
       "source_location": "L76",
       "weight": 1.0,
-      "_src": "parse_result_view_model_parseresultviewmodel",
-      "_tgt": "build_product_display_lines_buildproductdisplaylines",
+      "_src": "build_product_display_lines_buildproductdisplaylines",
+      "_tgt": "parse_result_view_model_parseresultviewmodel",
       "source": "build_product_display_lines_buildproductdisplaylines",
       "target": "parse_result_view_model_parseresultviewmodel"
     },

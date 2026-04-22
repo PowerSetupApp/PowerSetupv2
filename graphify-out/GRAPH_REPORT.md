@@ -1,12 +1,12 @@
 # Graph Report - PowerSetup2  (2026-04-22)
 
 ## Corpus Check
-- 338 files · ~299,198 words
+- 340 files · ~297,849 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 967 nodes · 1091 edges · 76 communities detected
-- Extraction: 73% EXTRACTED · 27% INFERRED · 0% AMBIGUOUS · INFERRED: 294 edges (avg confidence: 0.8)
+- 970 nodes · 1093 edges · 76 communities detected
+- Extraction: 73% EXTRACTED · 27% INFERRED · 0% AMBIGUOUS · INFERRED: 297 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -100,6 +100,8 @@
 10. `runAlgorithmTestAction()` - 10 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `loadAISettingsAction()` --calls--> `getAISettings()`  [INFERRED]
+  src\app\admin\settings\actions.ts → src\lib\db\queries\admin-settings-ai.ts
 - `generateProductSelection()` --calls--> `selectProductsHybrid()`  [INFERRED]
   docs\reference\ai.ts → docs\reference\recommendation\selection\hybrid-selector.ts
 - `generateText()` --calls--> `generateAIReasons()`  [INFERRED]
@@ -108,14 +110,12 @@
   docs\reference\recommendation\reasoning\algorithm-reasoner.ts → docs\reference\recommendation\reasoning\templates.ts
 - `loadBrandsWithTypes()` --calls--> `readFromDatabase()`  [INFERRED]
   src\app\admin\brands\page.tsx → src\lib\db\prisma-errors.ts
-- `loadAISettingsAction()` --calls--> `getAISettings()`  [INFERRED]
-  src\app\admin\settings\actions.ts → src\lib\db\queries\admin-settings-ai.ts
 
 ## Communities
 
 ### Community 0 - "Community 0"
 Cohesion: 0.04
-Nodes (52): createAlgorithmTestUserPresetAction(), deleteAlgorithmTestUserPresetAction(), getAlgorithmTestPresetByIdAction(), listAlgorithmTestPresetsAction(), loadAlgorithmSettingsAction(), loadAmazonSettingsAction(), loadGeminiImageModelsAction(), loadGeminiModelsAction() (+44 more)
+Nodes (54): createAlgorithmTestUserPresetAction(), deleteAlgorithmTestUserPresetAction(), getAlgorithmTestPresetByIdAction(), listAlgorithmTestPresetsAction(), loadAISettingsAction(), loadAlgorithmSettingsAction(), loadAmazonSettingsAction(), loadGeminiImageModelsAction() (+46 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.09
@@ -127,15 +127,15 @@ Nodes (31): getAdminBrandById(), getAdminCategoryForEditorById(), getAdminConsum
 
 ### Community 3 - "Community 3"
 Cohesion: 0.06
-Nodes (28): consumeCreditsAndStoreSchematic(), getCreditBalance(), grantCreditsFromPurchase(), InsufficientCreditsError, htmlToPdfBuffer(), launchArgs(), resolveExecutablePath(), getGenerateLimiter() (+20 more)
+Nodes (32): mergeAlgorithmTuning(), mergeNested2(), mergeRecord(), shoreBatteryBridgeReliefDays(), sizeBattery(), topUpCoverageBaseCapForPsh(), sizeBooster(), sizeCables() (+24 more)
 
 ### Community 4 - "Community 4"
 Cohesion: 0.06
-Nodes (32): mergeAlgorithmTuning(), mergeNested2(), mergeRecord(), shoreBatteryBridgeReliefDays(), sizeBattery(), topUpCoverageBaseCapForPsh(), sizeBooster(), sizeCables() (+24 more)
+Nodes (28): consumeCreditsAndStoreSchematic(), getCreditBalance(), grantCreditsFromPurchase(), InsufficientCreditsError, htmlToPdfBuffer(), launchArgs(), resolveExecutablePath(), getGenerateLimiter() (+20 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.08
-Nodes (24): generateAIReasons(), cleanReason(), generateAlgorithmReasons(), selectProductsAlgorithmically(), groupConsumerTemplatesByCategory(), countSystemSettings(), applyQuantitySafetyOverrides(), selectProductsHybrid() (+16 more)
+Nodes (25): generateAIReasons(), cleanReason(), generateAlgorithmReasons(), selectProductsAlgorithmically(), enforceAiSelectionsMinima(), groupConsumerTemplatesByCategory(), countSystemSettings(), applyQuantitySafetyOverrides() (+17 more)
 
 ### Community 6 - "Community 6"
 Cohesion: 0.11
@@ -143,19 +143,19 @@ Nodes (29): importCatalogJsonAction(), exportAdminDomain(), importAdminDomain(),
 
 ### Community 7 - "Community 7"
 Cohesion: 0.11
-Nodes (22): loadAISettingsAction(), getAISettings(), buildPrompt(), generateProductSelection(), generateText(), optimizeSpecsText(), renderPrompt(), backoffMs() (+14 more)
+Nodes (21): getAISettings(), buildPrompt(), generateProductSelection(), generateText(), optimizeSpecsText(), renderPrompt(), backoffMs(), callAI() (+13 more)
 
 ### Community 8 - "Community 8"
-Cohesion: 0.1
-Nodes (17): runAlgorithmPreview(), applyCustomOverrides(), existsResult(), extractFailureMessage(), GenerateResultError, parseInput(), runGenerateForResultId(), algorithmSettingsToComputeOptions() (+9 more)
+Cohesion: 0.11
+Nodes (16): runAlgorithmPreview(), applyCustomOverrides(), existsResult(), extractFailureMessage(), GenerateResultError, parseInput(), runGenerateForResultId(), addResultRetention() (+8 more)
 
 ### Community 9 - "Community 9"
 Cohesion: 0.17
-Nodes (18): coerceSelectionRow(), extractSelectionsArray(), flattenProductGroups(), mapProductGroupKeyToBucket(), normalizeBucket(), parseJsonLenient(), parseProductSelectionJson(), selectProductsWithAI() (+10 more)
+Nodes (19): minStandardMm2ForDesignCurrentA(), roundUpToStandardMm2(), batteryChemFromRow(), buildCableByRoute(), canonicalBatteryChem(), collectFuseTargets(), controllerKindFromRow(), detectBucket() (+11 more)
 
 ### Community 10 - "Community 10"
-Cohesion: 0.19
-Nodes (19): enforceAiSelectionsMinima(), batteryChemFromRow(), buildCableByRoute(), canonicalBatteryChem(), collectFuseTargets(), controllerKindFromRow(), detectBucket(), fuseRatingFromRow() (+11 more)
+Cohesion: 0.17
+Nodes (18): coerceSelectionRow(), extractSelectionsArray(), flattenProductGroups(), mapProductGroupKeyToBucket(), normalizeBucket(), parseJsonLenient(), parseProductSelectionJson(), selectProductsWithAI() (+10 more)
 
 ### Community 12 - "Community 12"
 Cohesion: 0.23
@@ -526,10 +526,10 @@ Nodes (1): Pretty-print an AlgorithmOutput so the human can eyeball numbers.
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `POST()` connect `Community 3` to `Community 1`, `Community 2`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 12`, `Community 14`?**
+- **Why does `POST()` connect `Community 4` to `Community 1`, `Community 2`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 12`, `Community 14`?**
   _High betweenness centrality (0.102) - this node is a cross-community bridge._
-- **Why does `getPrisma()` connect `Community 1` to `Community 0`, `Community 2`, `Community 3`, `Community 5`, `Community 6`, `Community 7`, `Community 8`?**
-  _High betweenness centrality (0.080) - this node is a cross-community bridge._
+- **Why does `getPrisma()` connect `Community 1` to `Community 0`, `Community 2`, `Community 4`, `Community 5`, `Community 6`, `Community 7`, `Community 8`?**
+  _High betweenness centrality (0.079) - this node is a cross-community bridge._
 - **Why does `runAlgorithm()` connect `Community 8` to `Community 3`, `Community 4`?**
   _High betweenness centrality (0.050) - this node is a cross-community bridge._
 - **Are the 47 inferred relationships involving `getPrisma()` (e.g. with `POST()` and `listAlgorithmTestPresets()`) actually correct?**

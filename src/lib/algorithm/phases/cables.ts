@@ -1,17 +1,22 @@
 /**
- * Phase: cable sizing — 1:1 mirror of `_size_cable` + the ROUTES loop in
- * `docs/reference/algorithm/camper_electrics_sizing.py` (SECTION F).
+ * Phase: cable sizing — based on `docs/reference/algorithm/...` SECTION F, plus
+ * Strombelastbarkeit: `min = max(ΔU_min, A_ampacity)` per
+ * `mobile-home-electrics-basics/references/cables.md` (voltage drop *and* ampacity).
  *
- * For each route, resolve (L, I, U) per the route table in inputs.md B.5,
- * then:
+ * For each route, resolve (L, I, U) per the route table in inputs.md B.5, then:
  *   dUMaxV         = U * (1 % critical / 3 % standard)
- *   minCrossSection = 2 * L * I * COPPER_RHO / dUMaxV   [mm²]
+ *   aVoltage      = 2 * L * I * ρ / dUMaxV   (mm²)
+ *   aAmpacity     = min standard mm² for I * cableCurrentSafetyFactor
+ *   minCrossSection = max(aVoltage, aAmpacity)
+ *   recommendedCrossSection = next standard trade size ≥ min
  *
  * If L = 0 or I = 0, `minCrossSection = 0` (route unused / empty). The entry
  * is still emitted so the output shape is stable (always 7 cables in the
  * `ROUTES` order).
  */
 
+import { minStandardMm2ForDesignCurrentA } from "../cable-ampacity";
+import { roundUpToStandardMm2 } from "../cable-standards";
 import { ROUTES } from "../constants";
 import type { AlgorithmTuning } from "../algorithm-tuning";
 import type {
@@ -116,13 +121,33 @@ export function sizeCables(
       peakDcW,
       iInvDc,
     );
-    const duMaxPct = isCritical ? tuning.voltageDropCritical : tuning.voltageDropNormal;
+    const duMaxPct = isCritical
+      ? tuning.voltageDropCritical
+      : tuning.voltageDropNormal;
     const duMaxV = (voltage * duMaxPct) / 100;
 
-    let minCrossSection = 0;
+    const designA = currentA * tuning.cableCurrentSafetyFactor;
+    const aAmp =
+      currentA > 0
+        ? minStandardMm2ForDesignCurrentA(
+            designA,
+            tuning.cableAmpacityInstallMode,
+          )
+        : 0;
+
+    let aVoltage = 0;
     if (lengthM > 0 && currentA > 0 && duMaxV > 0) {
-      // Voltage-drop-limited minimum (references/cables.md core formula).
-      minCrossSection = (2 * lengthM * currentA * tuning.copperResistivity) / duMaxV;
+      aVoltage = (2 * lengthM * currentA * tuning.copperResistivity) / duMaxV;
+    }
+
+    let minCrossSection = 0;
+    if (currentA > 0) {
+      if (lengthM > 0 && duMaxV > 0) {
+        minCrossSection = Math.max(aVoltage, aAmp);
+      } else {
+        // Length or drop budget unusable: still need thermal minimum.
+        minCrossSection = aAmp;
+      }
     }
 
     return {
@@ -132,8 +157,7 @@ export function sizeCables(
       currentA,
       voltage,
       minCrossSection,
-      // Legacy-compat: spec C.7 says recommended == min until the type is trimmed.
-      recommendedCrossSection: minCrossSection,
+      recommendedCrossSection: roundUpToStandardMm2(minCrossSection),
       isCritical,
     };
   });

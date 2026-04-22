@@ -436,6 +436,12 @@ export const SOLAR_BAG_ALIGNMENT_UPLIFT: Record<
 /** Copper resistivity in Ω·mm²/m (VDE / DIN engineering value at elevated T). */
 export const COPPER_RHO = 0.0178;
 
+/**
+ * DC cable / fuse headroom on sustained current (see `references/protection.md` +
+ * `references/cables.md` in `mobile-home-electrics-basics`).
+ */
+export const CABLE_CURRENT_SAFETY_FACTOR = 1.25;
+
 /** Maximum continuous charge C-rate per chemistry (references/batteries.md). */
 export const C_RATE_CHARGE_MAX: Record<BatteryPreference, number> = {
   lifepo4: 0.5,

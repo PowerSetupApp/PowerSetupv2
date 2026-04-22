@@ -4,6 +4,7 @@
  * Ausgabe ist die einzige Produktmenge, die die KI im Prompt sieht (`types.RecommendationPipelineResult`).
  */
 
+import { roundUpToStandardMm2 } from "@/lib/algorithm/cable-standards";
 import type { AlgorithmOutput, BatteryPreference, CableRecommendation } from "@/lib/algorithm/types";
 
 import type {
@@ -14,16 +15,7 @@ import type {
   ScoredProduct,
 } from "./types";
 
-/** Handelsübliche Kupfer-Querschnitte [mm²] — Aufrunden für Kabelwahl. */
-const STANDARD_MM2 = [1.5, 2.5, 4, 6, 10, 16, 25, 35, 50, 70, 95, 120, 150, 185, 240] as const;
-
-export function roundUpToStandardMm2(raw: number): number {
-  if (!Number.isFinite(raw) || raw <= 0) return 0;
-  for (const s of STANDARD_MM2) {
-    if (s >= raw - 1e-6) return s;
-  }
-  return STANDARD_MM2[STANDARD_MM2.length - 1];
-}
+export { roundUpToStandardMm2 };
 
 function detectBucket(slug: string): RecommendationBucket {
   const s = slug.toLowerCase();

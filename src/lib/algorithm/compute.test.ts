@@ -9,6 +9,7 @@
 
 import { describe, expect, it } from "vitest";
 
+import { roundUpToStandardMm2 } from "./cable-standards";
 import { mergeAlgorithmTuning } from "./algorithm-tuning";
 import { computeAlgorithm } from "./compute";
 import { validate } from "./validate";
@@ -162,7 +163,9 @@ describe("compute_algorithm — hand-computable case", () => {
     expect(b2f!.currentA).toBeCloseTo(expectedI, 9);
     const expectedMinMm2 = (2 * 2 * expectedI * COPPER_RHO) / (12 * 0.01);
     expect(b2f!.minCrossSection).toBeCloseTo(expectedMinMm2, 9);
-    expect(b2f!.recommendedCrossSection).toBe(b2f!.minCrossSection);
+    expect(b2f!.recommendedCrossSection).toBe(
+      roundUpToStandardMm2(b2f!.minCrossSection),
+    );
   });
 
   it("emits every route exactly once, in ROUTES order", () => {
@@ -389,6 +392,36 @@ describe("cable sizing — cables.md worked example", () => {
   });
 });
 
+describe("cable sizing — ampacity lower bound (short run)", () => {
+  it("dominates voltage-drop for battery->inverter on a very short run", () => {
+    // Back-oven on AC: high inverter; 0.2 m -> ΔU would imply ~3–4 mm², but
+    // ~100 A+ needs ~50 mm² (bundled ampacity × 1.25) per mobile-home ref.
+    const out = computeAlgorithm(
+      minimalInput({
+        systemVoltage: 24,
+        vehicleVoltage: 24,
+        consumers: [
+          { id: "o", name: "Oven", power: 2000, daily: 0.1, voltage: 230 },
+        ],
+        energySources: [],
+        cableLengths: {
+          starterToService: 1.5,
+          boosterToService: 1,
+          solarToRegulator: 4.75,
+          regulatorToService: 0.2,
+          chargerToService: 1,
+          serviceToInverter: 0.2,
+          batteryToFuseBox: 2,
+        },
+        simultaneousLoad: "moderate",
+      }),
+    );
+    const inv = out.cables.find((c) => c.route === "service_to_inverter");
+    expect(inv).toBeDefined();
+    expect(inv!.minCrossSection).toBeGreaterThan(25);
+  });
+});
+
 describe("booster sizing — 24 V bank fed from 12 V alternator", () => {
   it("40 A out / 88.89 A starter side when battery acceptance wins", () => {
     // Build a case that forces outputCurrentA = 40 A. Set
@@ -482,14 +515,16 @@ describe("roofWp — cm^2 → m^2 → Wp conversion", () => {
 });
 
 describe("legacy-compat output stubs", () => {
-  it("solar.recommendation = '' and recommendedCrossSection == minCrossSection", () => {
+  it("solar.recommendation = '' and recommended is standard size ≥ minCrossSection", () => {
     const consumers: Consumer[] = [
       { id: "l", name: "Laptop", power: 90, daily: 4, voltage: 230 },
     ];
     const out = computeAlgorithm(minimalInput({ consumers }));
     expect(out.solar.recommendation).toBe("");
     for (const c of out.cables) {
-      expect(c.recommendedCrossSection).toBe(c.minCrossSection);
+      expect(c.recommendedCrossSection).toBe(
+        roundUpToStandardMm2(c.minCrossSection),
+      );
     }
   });
 
