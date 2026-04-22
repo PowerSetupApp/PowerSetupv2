@@ -61,6 +61,8 @@ export function algorithmSettingsToComputeOptions(row: AlgorithmSettings | null)
   partial.voltageDropCritical = row.voltageDropCritical;
   partial.voltageDropNormal = row.voltageDropNormal;
   partial.copperResistivity = row.copperResistivity;
+  partial.cableCurrentSafetyFactor = row.cableCurrentSafetyFactor;
+  partial.ambientTempC = row.ambientTempC;
 
   return partial as ComputeOptions;
 }

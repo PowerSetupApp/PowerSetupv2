@@ -6,6 +6,8 @@ import { AdminDbUnavailableBanner } from "@/components/admin/admin-db-banner";
 import { AdminProductImportDialog } from "@/components/admin/admin-product-import-dialog";
 import { AdminProductsTableSection } from "@/components/admin/admin-products-table-section";
 import { Button } from "@/components/ui/button";
+import { AdminCatalogCoverageSummary } from "@/components/admin/admin-catalog-coverage-summary";
+import { getCatalogComponentDimensionStats } from "@/lib/db/queries/admin-catalog-component-stats";
 import { listAdminProductCategories, listAdminProducts } from "@/lib/db/queries/admin-catalog-read";
 
 export default function AdminProductsPage() {
@@ -44,6 +46,15 @@ async function AdminProductsHeaderActions() {
 async function AdminProductsBody() {
   const [productsResult, categoriesResult] = await Promise.all([listAdminProducts(), listAdminProductCategories()]);
 
+  let coverage: Awaited<ReturnType<typeof getCatalogComponentDimensionStats>> | null = null;
+  if (productsResult.ok && categoriesResult.ok) {
+    try {
+      coverage = await getCatalogComponentDimensionStats();
+    } catch {
+      coverage = null;
+    }
+  }
+
   return (
     <>
       {!productsResult.ok ? <AdminDbUnavailableBanner message={productsResult.message} /> : null}
@@ -51,6 +62,7 @@ async function AdminProductsBody() {
 
       {productsResult.ok && categoriesResult.ok ? (
         <>
+          {coverage ? <AdminCatalogCoverageSummary stats={coverage} /> : null}
           <p className="text-sm text-muted-foreground">
             <span className="font-medium text-foreground">{productsResult.data.length}</span> Produkte insgesamt
           </p>

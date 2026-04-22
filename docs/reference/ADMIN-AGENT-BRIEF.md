@@ -25,7 +25,7 @@ Diese Datei ist der **kurze Einstieg für jede Ausführung** (Implementierung/Re
 
 - **Navigation:** wie [routes-and-navigation.md](admin/routes-and-navigation.md) (Dashboard, Produkte, Marken, Kategorien, Mediathek, Verbraucher, Verbr.-Kategorien, Ergebnisse, Einstellungen, Link zur Website).
 - **Jede Route:** CRUD bzw. Listen/Detail wie in den jeweiligen `admin/*.md` Dateien; **Einstellungen** = 4 Tabs (KI, Algorithmus, Preise, Amazon) inkl. aller persistierten Keys (siehe [system-settings-keys.md](admin/system-settings-keys.md)).
-- **Produkte:** Liste mit Suche, Kategorie-Filter, „Nur unvollständige“, Bulk-Update sichtbarer Zeilen, Import-Dialog (Amazon/KI), Bearbeiten mit dynamischen Filter-Werten, Mediathek-Modal, Specs-KI-Optimierung — siehe [products.md](admin/products.md).
+- **Produkte:** Liste mit Suche, Kategorie-Filter, Lücken-Checkboxen (Filter-Werte / Foto-Preis / Algorithmus-Spec, ODER), Bulk-Update sichtbarer Zeilen, Import-Dialog (Amazon/KI), Bearbeiten mit dynamischen Filter-Werten, Mediathek-Modal, Specs-KI-Optimierung — siehe [products.md](admin/products.md).
 - **Marken:** Tabelle + Suche, Dialog „Neue Marke“, Zuordnung Wizard-Gruppen → Produktkategorien (Checkbox-Raster) — siehe [brands.md](admin/brands.md).
 - **Mediathek:** Produktfluss über Upload-API; eigenständige Galerie-Seite an echten Storage anbinden — siehe [media.md](admin/media.md).
 

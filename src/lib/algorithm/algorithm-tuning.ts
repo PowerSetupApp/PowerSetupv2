@@ -105,6 +105,14 @@ export interface AlgorithmTuning {
   cableCurrentSafetyFactor: number;
   /** Free air vs bundled — bundled is more conservative for typical looms. */
   cableAmpacityInstallMode: CableAmpacityInstallMode;
+  /** Ambient temperature (°C) for ampacity derating; table basis 30 °C. */
+  ambientTempC: number;
+
+  /**
+   * Kälte-/Hochspannungs-Reserve auf Modul-Voc (Branchenüblich ca. 1.2×
+   * Nominal-Voc statt T-Koeffizient in Iteration 1).
+   */
+  vocColdMultiplier: number;
 }
 
 /** Code defaults — mirror of `constants.ts` (pre-DB tuning). */
@@ -155,6 +163,8 @@ export const DEFAULT_ALGORITHM_TUNING: AlgorithmTuning = {
   cableCurrentSafetyFactor: CABLE_CURRENT_SAFETY_FACTOR,
   /** Default: conservative for cables in bundles / conduits (cables.md). */
   cableAmpacityInstallMode: "bundled",
+  ambientTempC: 30,
+  vocColdMultiplier: 1.2,
 };
 
 function mergeRecord<K extends string, V>(
@@ -232,6 +242,8 @@ export function mergeAlgorithmTuning(overrides: Partial<AlgorithmTuning> | null 
     copperResistivity: o.copperResistivity ?? d.copperResistivity,
     cableCurrentSafetyFactor: o.cableCurrentSafetyFactor ?? d.cableCurrentSafetyFactor,
     cableAmpacityInstallMode: o.cableAmpacityInstallMode ?? d.cableAmpacityInstallMode,
+    ambientTempC: o.ambientTempC ?? d.ambientTempC,
+    vocColdMultiplier: o.vocColdMultiplier ?? d.vocColdMultiplier,
   };
 }
 

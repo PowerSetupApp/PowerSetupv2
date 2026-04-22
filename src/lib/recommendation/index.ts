@@ -1,3 +1,4 @@
+import { mergeAlgorithmTuning, type AlgorithmTuning } from "@/lib/algorithm/algorithm-tuning";
 import type { AlgorithmOutput } from "@/lib/algorithm/types";
 import { AIInvocationError } from "@/lib/ai/types";
 
@@ -7,8 +8,12 @@ import { selectProductsWithAI, validateAISelections } from "./ai-selector";
 import { enforceAiSelectionsMinima } from "./enforce-ai-selections";
 import { prefilterProductsForRecommendation } from "./prefilter";
 import type { AISelectionItem, PrefilterResult, ProductRecommendationRow } from "./types";
+import { buildSolarWiringRecommendation } from "./wiring/solar-wiring";
+import type { SolarWiringRecommendation } from "./wiring/types";
 
 export type { AISelectionItem, PrefilterResult, ProductRecommendationRow } from "./types";
+export type { SolarWiringRecommendation, SolarWiringWarning, SolarWiringRationale } from "./wiring/types";
+export { readPositiveNumberFilter } from "./wiring/filter-values";
 export { prefilterProductsForRecommendation } from "./prefilter";
 export { selectProductsWithAI, parseProductSelectionJson } from "./ai-selector";
 
@@ -20,6 +25,7 @@ export interface RecommendationPipelineResult {
     inputTokens: number;
     outputTokens: number;
   };
+  wiring?: SolarWiringRecommendation | null;
 }
 
 /**
@@ -44,7 +50,10 @@ export async function runRecommendationPipeline(params: {
   productsOverride?: ProductRecommendationRow[];
   runAi: boolean;
   perCategoryLimit?: number;
+  /** DB-/Wizard-Overrides (u. a. `vocColdMultiplier`, Kabel-Sicherheitsfaktor). */
+  tuningOverrides?: Partial<AlgorithmTuning>;
 }): Promise<RecommendationPipelineResult> {
+  const tuning = mergeAlgorithmTuning(params.tuningOverrides ?? {});
   let products: ProductRecommendationRow[];
   if (params.productsOverride) {
     products = params.productsOverride;
@@ -58,8 +67,17 @@ export async function runRecommendationPipeline(params: {
     perCategoryLimit: params.perCategoryLimit ?? 6,
   });
 
+  const wiringFromSelections = (aiSelections: AISelectionItem[] | null) =>
+    buildSolarWiringRecommendation({
+      calculations: params.calculations,
+      prefilter,
+      aiSelections,
+      products,
+      tuning,
+    });
+
   if (!params.runAi) {
-    return { prefilter };
+    return { prefilter, wiring: wiringFromSelections(null) };
   }
 
   try {
@@ -80,11 +98,12 @@ export async function runRecommendationPipeline(params: {
     return {
       prefilter,
       ai: { ...ai, selections: enforced },
+      wiring: wiringFromSelections(enforced),
     };
   } catch (e) {
     if (e instanceof AIInvocationError) {
       console.warn("[runRecommendationPipeline] KI-Auswahl übersprungen:", e.message);
-      return { prefilter };
+      return { prefilter, wiring: wiringFromSelections(null) };
     }
     throw e;
   }

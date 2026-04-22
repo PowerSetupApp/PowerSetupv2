@@ -74,7 +74,11 @@ export async function runGenerateForResultId(id: string): Promise<GenerateOutcom
           : "Die Berechnung ist mit diesen gespeicherten Eingaben fehlgeschlagen.";
       throw new GenerateResultError(500, msg);
     }
-    const pipeline = await runRecommendationPipeline({ calculations, runAi: true });
+    const pipeline = await runRecommendationPipeline({
+      calculations,
+      runAi: true,
+      tuningOverrides: algoOpts,
+    });
 
     await updateResultAfterGeneration({
       id,
@@ -89,6 +93,7 @@ export async function runGenerateForResultId(id: string): Promise<GenerateOutcom
               outputTokens: pipeline.ai.outputTokens,
             }
           : undefined,
+        wiring: pipeline.wiring ?? undefined,
       },
       aiModel: pipeline.ai?.model ?? null,
       inputTokens: pipeline.ai?.inputTokens ?? null,

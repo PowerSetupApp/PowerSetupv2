@@ -1,3 +1,7 @@
+import {
+  isIncompleteCategoryFilterValues,
+  productMissingAlgorithmDimensionSpec,
+} from "@/lib/admin/admin-catalog-product-completeness";
 import { buildProductPreviewFilterRows, type ProductPreviewFilterRow } from "@/lib/admin/product-preview-filters";
 import { readFromDatabase, type DbReadResult } from "@/lib/db/prisma-errors";
 import { getPrisma } from "@/lib/db/client";
@@ -22,6 +26,12 @@ export type AdminProductListRow = {
   price: number | null;
   isActive: boolean;
   updatedAt: Date;
+  /** PS-7: CategoryFilter-Keys (außer `brand`) fehlen oder sind leer in `filterValues`. */
+  incompleteFilterValues: boolean;
+  /** Kein Produktfoto oder kein Preis (Listen-Qualität). */
+  missingListingMeta: boolean;
+  /** Wie Katalogabdeckung: fehlende powerW / currentA / crossSectionMm2 in passender Kategorie. */
+  missingAlgorithmSpec: boolean;
 };
 
 /** Kategorie + Filter-Definitionen für das Produkt-Editor-Formular. */
@@ -190,22 +200,51 @@ export async function listAdminProducts(): Promise<DbReadResult<AdminProductList
         price: true,
         isActive: true,
         updatedAt: true,
-        category: { select: { name: true } },
+        filterValues: true,
+        powerW: true,
+        currentA: true,
+        crossSectionMm2: true,
+        category: {
+          select: {
+            name: true,
+            slug: true,
+            filters: {
+              orderBy: { sortOrder: "asc" },
+              select: { key: true },
+            },
+          },
+        },
       },
       // Kein verschachteltes orderBy über Relation (treibt mit driver adapter + manchen DBs zu „Invalid invocation“).
       orderBy: { name: "asc" },
     });
-    return rows.map((r) => ({
-      id: r.id,
-      name: r.name,
-      imageUrl: r.imageUrl,
-      categoryId: r.categoryId,
-      categoryName: r.category.name,
-      affiliateUrl: r.affiliateUrl,
-      price: decimalToNumber(r.price),
-      isActive: r.isActive,
-      updatedAt: r.updatedAt,
-    }));
+    return rows.map((r) => {
+      const filterKeys = r.category.filters.map((f) => f.key);
+      const incompleteFilterValues =
+        filterKeys.length > 0 && isIncompleteCategoryFilterValues(filterKeys, r.filterValues);
+      const price = decimalToNumber(r.price);
+      const missingListingMeta = !r.imageUrl || price == null;
+      const missingAlgorithmSpec = productMissingAlgorithmDimensionSpec({
+        categorySlug: r.category.slug,
+        powerW: r.powerW,
+        currentA: r.currentA,
+        crossSectionMm2: r.crossSectionMm2,
+      });
+      return {
+        id: r.id,
+        name: r.name,
+        imageUrl: r.imageUrl,
+        categoryId: r.categoryId,
+        categoryName: r.category.name,
+        affiliateUrl: r.affiliateUrl,
+        price,
+        isActive: r.isActive,
+        updatedAt: r.updatedAt,
+        incompleteFilterValues,
+        missingListingMeta,
+        missingAlgorithmSpec,
+      };
+    });
   });
 }
 

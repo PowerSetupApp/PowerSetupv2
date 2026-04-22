@@ -1,20 +1,46 @@
 "use client";
 
 import type { AlgorithmSettings } from "@/generated/prisma/client";
-import {
-  loadAlgorithmSettingsAction,
-  saveAlgorithmSettingsAction,
-  syncAlgorithmClassesAction,
-} from "@/app/admin/settings/actions";
+import { loadAlgorithmSettingsAction, saveAlgorithmSettingsAction } from "@/app/admin/settings/actions";
 import { AlgorithmFlowNarrative } from "@/components/admin/settings/algorithm-flow-narrative";
 import { AlgorithmSettingsMatrixEditor } from "@/components/admin/settings/algorithm-settings-matrix-editor";
 import { ALGORITHM_SETTINGS_GROUPS } from "@/components/admin/settings/algorithm-settings-groups";
+import { CABLE_CURRENT_SAFETY_FACTOR } from "@/lib/algorithm/constants";
 import type { AlgorithmMatrixFieldKey } from "@/lib/schemas/algorithm-settings-matrices";
+
+const DEFAULT_AMBIENT_TEMP_C = 30;
+
+function withCableAmpacityFormDefaults(data: Row): Row {
+  return {
+    ...data,
+    cableCurrentSafetyFactor:
+      typeof data.cableCurrentSafetyFactor === "number" && Number.isFinite(data.cableCurrentSafetyFactor)
+        ? data.cableCurrentSafetyFactor
+        : CABLE_CURRENT_SAFETY_FACTOR,
+    ambientTempC:
+      typeof data.ambientTempC === "number" && Number.isFinite(data.ambientTempC) ? data.ambientTempC : DEFAULT_AMBIENT_TEMP_C,
+  };
+}
+
+function coalesceScalarForForm(key: string, raw: unknown, type: "float" | "int" | "string"): unknown {
+  if (type === "string") return raw;
+  if (key === "cableCurrentSafetyFactor") {
+    if (raw === undefined || raw === null || (typeof raw === "number" && !Number.isFinite(raw))) {
+      return CABLE_CURRENT_SAFETY_FACTOR;
+    }
+  }
+  if (key === "ambientTempC") {
+    if (raw === undefined || raw === null || (typeof raw === "number" && !Number.isFinite(raw))) {
+      return DEFAULT_AMBIENT_TEMP_C;
+    }
+  }
+  return raw;
+}
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, RefreshCw, RotateCcw, Save } from "lucide-react";
+import { Loader2, RotateCcw, Save } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 type Row = AlgorithmSettings;
@@ -23,14 +49,13 @@ export function AlgorithmSettingsPanel() {
   const [settings, setSettings] = useState<Row | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [syncing, setSyncing] = useState(false);
   const [dirty, setDirty] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const data = await loadAlgorithmSettingsAction();
-      setSettings(data);
+      setSettings(withCableAmpacityFormDefaults(data));
       setDirty(false);
     } finally {
       setLoading(false);
@@ -60,18 +85,6 @@ export function AlgorithmSettingsPanel() {
       await load();
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleSync = async () => {
-    if (!settings) return;
-    setSyncing(true);
-    try {
-      const patch = await syncAlgorithmClassesAction();
-      setSettings({ ...settings, ...patch });
-      setDirty(true);
-    } finally {
-      setSyncing(false);
     }
   };
 
@@ -168,23 +181,19 @@ export function AlgorithmSettingsPanel() {
         {ALGORITHM_SETTINGS_GROUPS.map((group) => (
           <Card key={group.title}>
             <CardHeader className="pb-3">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <CardTitle className="text-lg">{group.title}</CardTitle>
-                  <CardDescription>{group.description}</CardDescription>
-                  {group.tooltip ? <p className="mt-2 text-xs text-muted-foreground">{group.tooltip}</p> : null}
-                </div>
-                {group.title === "Komponentenklassen" ? (
-                  <Button type="button" variant="outline" size="sm" onClick={() => void handleSync()} disabled={syncing}>
-                    <RefreshCw className={`size-3.5 ${syncing ? "animate-spin" : ""}`} aria-hidden />
-                    DB-Sync
-                  </Button>
-                ) : null}
+              <div>
+                <CardTitle className="text-lg">{group.title}</CardTitle>
+                <CardDescription>{group.description}</CardDescription>
+                {group.tooltip ? <p className="mt-2 text-xs text-muted-foreground">{group.tooltip}</p> : null}
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
               {group.fields.map((field) => {
-                const raw = (settings as Record<string, unknown>)[field.key];
+                const stored = (settings as Record<string, unknown>)[field.key];
+                const raw =
+                  field.type === "matrix"
+                    ? stored
+                    : coalesceScalarForForm(field.key, stored, field.type);
                 if (field.type === "matrix") {
                   return (
                     <div key={field.key} className="flex flex-col gap-2">

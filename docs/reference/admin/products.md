@@ -7,7 +7,10 @@ Sources: [`../old/src/app/admin/products/page.tsx`](../old/src/app/admin/product
 - Header: total count, **+ Neues Produkt**, optional **Import** / **Produkt importieren** (öffnet Dialog — siehe unten).
 - **ProductFilter:** text search, category dropdown “Alle Kategorien”.
 - **ProductsTable:**
-  - Checkbox **Nur unvollständige zeigen** — for each product, loads `CategoryFilter` rows for its `categoryId`; marks incomplete if any required filter key (except `brand`) is missing/empty in `filterValues`.
+  - **Lücken-Filter** (mehrere Checkboxen, **ODER**): Zeilen, die mindestens eine aktivierte Bedingung erfüllen.
+    - **Unvollständige Filter-Werte** — `CategoryFilter`-Keys der Kategorie (außer `brand`) fehlen oder sind leer in `filterValues` (PS-7).
+    - **Ohne Foto oder Preis** — kein `imageUrl` oder `price` ist leer.
+    - **Ohne Algorithmus-Spec** — gleiche Slug-/Feldregeln wie die Katalogabdeckung „ohne Spec“ (`powerW` / `currentA` / `crossSectionMm2` je nach Kategorie); unabhängig von „Aktiv“.
   - **Sichtbare aktualisieren (N)** — opens `UpdateProductDialog` for filtered rows (Amazon/metadata refresh).
   - Columns: thumbnail + name + `updatedAt`, category badge, price €, status (Aktiv/Inaktiv), actions: public site link, edit, row menu (delete, etc. via `ProductActions`).
 - **Row menu (⋯)** mindestens: **Bei Amazon ansehen**, **Bearbeiten**, **Löschen** (Löschen hervorgehoben/destructive).

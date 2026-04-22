@@ -42,6 +42,7 @@ describe("parseResultViewModel", () => {
     expect(vm.calculations).not.toBeNull();
     expect(vm.prefilter).not.toBeNull();
     expect(vm.aiSelections).toEqual([]);
+    expect(vm.solarWiring).toBeNull();
   });
 
   it("returns calculations=null for old-shape rows missing battery/solar", () => {
@@ -60,6 +61,7 @@ describe("parseResultViewModel", () => {
     };
     const vm = parseResultViewModel(row);
     expect(vm.calculations).toBeNull();
+    expect(vm.solarWiring).toBeNull();
   });
 
   it("maps persisted `reason` to reasonDe when reasonDe is absent", () => {
@@ -90,6 +92,7 @@ describe("parseResultViewModel", () => {
     };
     const vm = parseResultViewModel(row);
     expect(vm.aiSelections).toEqual([{ productId: "p2", bucket: "solar", reasonDe: "gute Wp" }]);
+    expect(vm.solarWiring).toBeNull();
   });
 
   it("keeps AI selections when reasonDe is missing (coerced to empty string)", () => {
@@ -120,5 +123,6 @@ describe("parseResultViewModel", () => {
     };
     const vm = parseResultViewModel(row);
     expect(vm.aiSelections).toEqual([{ productId: "p1", bucket: "battery", reasonDe: "" }]);
+    expect(vm.solarWiring).toBeNull();
   });
 });

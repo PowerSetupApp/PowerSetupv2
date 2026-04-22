@@ -437,6 +437,16 @@ export const SOLAR_BAG_ALIGNMENT_UPLIFT: Record<
 export const COPPER_RHO = 0.0178;
 
 /**
+ * MC4-typical PV-Leitung für starre Dachmodule (VDE-übliche Auslegung, String-
+ * Ströme typ. ≤ ca. 15 A). Querschnitt wird hier **nicht** über ΔU auf
+ * Bordspannung gerechnet — siehe `phases/cables.ts` (PV-Seite 35–120 V).
+ */
+export const SOLAR_CABLE_ROOF_MM2 = 6;
+
+/** MC4-typische PV-Leitung für Solartaschen / portable Felder (dünner, kurze Wege). */
+export const SOLAR_CABLE_PORTABLE_MM2 = 4;
+
+/**
  * DC cable / fuse headroom on sustained current (see `references/protection.md` +
  * `references/cables.md` in `mobile-home-electrics-basics`).
  */

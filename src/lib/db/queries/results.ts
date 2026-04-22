@@ -12,6 +12,8 @@ export type StoredRecommendationPayload = {
     inputTokens: number;
     outputTokens: number;
   };
+  /** PV-Reihe/Parallel + MPPT-Spannungscheck (nach finaler Produktwahl). */
+  wiring?: unknown;
 };
 
 export async function createResultFromFormData(formData: AlgorithmInput): Promise<{ id: string }> {

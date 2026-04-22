@@ -28,7 +28,7 @@ import {
   listAlgorithmTestPresets,
   updateAlgorithmTestPreset,
 } from "@/lib/db/queries/admin-algorithm-test-presets";
-import { getAlgorithmSettings, syncComponentClassesFromDB, updateAlgorithmSettings } from "@/lib/db/queries/admin-settings-algorithm";
+import { getAlgorithmSettings, updateAlgorithmSettings } from "@/lib/db/queries/admin-settings-algorithm";
 import { getAmazonPartnerTag, setAmazonPartnerTag } from "@/lib/db/queries/admin-settings-amazon";
 import { fetchAndSaveModelPricing, listModelPricing, updateModelPricingRow } from "@/lib/db/queries/admin-settings-pricing";
 import { listActiveProductsForRecommendation } from "@/lib/db/queries/products";
@@ -82,13 +82,6 @@ export async function saveAlgorithmSettingsAction(patch: Record<string, unknown>
   revalidatePath("/admin/settings");
 }
 
-export async function syncAlgorithmClassesAction() {
-  const data = await syncComponentClassesFromDB();
-  updateTag(CACHE_TAGS.algorithmSettings);
-  revalidatePath("/admin/settings");
-  return data;
-}
-
 export async function runAlgorithmTestAction(rawInput: unknown) {
   try {
     const input = parseAlgorithmInput(rawInput);
@@ -104,6 +97,7 @@ export async function runAlgorithmTestAction(rawInput: unknown) {
       runAi: false,
       perCategoryLimit: 8,
       productsOverride: products,
+      tuningOverrides: algoOpts,
     });
     const recommendationPreview: AlgorithmTestRecommendationPreviewPayload = {
       catalogOk: productsResult.ok,

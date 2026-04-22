@@ -98,7 +98,17 @@ export function computeAlgorithm(
   const inverter = sizeInverter(peakAcW, peakFactor);
   const controller = sizeController(solar, input);
   const portableController = sizePortableController(solar, input);
-  const cables = sizeCables(input, booster, charger, inverter, controller, peakDcW, tuning);
+  const cables = sizeCables(
+    input,
+    booster,
+    charger,
+    inverter,
+    controller,
+    portableController,
+    peakDcW,
+    solar,
+    tuning,
+  );
 
   const output: AlgorithmOutput = {
     battery,

@@ -137,7 +137,9 @@ export function Step8AlgorithmPreview({
             <li key={c.route} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
               <span className="text-muted-foreground">{c.displayName}</span>
               <span className="font-semibold text-foreground">
-                {c.recommendedCrossSection} mm² · {c.lengthM} m · {Math.round(c.currentA)} A
+                {c.sizingMethod === "fixed-solar"
+                  ? `${c.lengthM} m · ${Math.round(c.currentA)} A (PV-Leitung Standardquerschnitt)`
+                  : `${c.recommendedCrossSection} mm² · ${c.lengthM} m · ${Math.round(c.currentA)} A`}
               </span>
             </li>
           ))}

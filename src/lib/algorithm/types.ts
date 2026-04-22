@@ -393,6 +393,8 @@ export interface CableRecommendation {
   recommendedCrossSection: number;
   /** Critical routes use the 1 %-drop budget, standard routes use 3 %. */
   isCritical: boolean;
+  /** `fixed-solar` = PV→MPPT mit festem Branchen-mm² (kein ΔU auf Bordspannung). */
+  sizingMethod?: "voltage-drop" | "fixed-solar";
 }
 
 /** Full output (inputs.md Part C). */

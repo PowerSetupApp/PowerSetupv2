@@ -1,5 +1,6 @@
-import type { AISelectionItem } from "@/lib/recommendation/types";
 import type { ResultProductCard } from "@/lib/db/queries/products";
+import type { AISelectionItem } from "@/lib/recommendation/types";
+import type { SolarWiringRecommendation } from "@/lib/recommendation/wiring/types";
 import type { ResultProductDisplayLine } from "@/lib/results/build-product-display-lines";
 
 function reasonForProduct(productId: string, aiSelections: AISelectionItem[]): string | null {
@@ -12,9 +13,15 @@ export interface ProductRecommendationListProps {
   lines: ResultProductDisplayLine[];
   products: ResultProductCard[];
   aiSelections: AISelectionItem[];
+  solarWiring?: SolarWiringRecommendation | null;
 }
 
-export function ProductRecommendationList({ lines, products, aiSelections }: ProductRecommendationListProps) {
+export function ProductRecommendationList({
+  lines,
+  products,
+  aiSelections,
+  solarWiring,
+}: ProductRecommendationListProps) {
   if (lines.length === 0) {
     return (
       <section className="rounded-2xl border border-dashed border-border/80 p-6 text-center text-sm text-muted-foreground">
@@ -37,6 +44,19 @@ export function ProductRecommendationList({ lines, products, aiSelections }: Pro
           if (!p) return null;
           const reason = reasonForProduct(p.id, aiSelections);
           const context = line.contextDe?.trim();
+          const wiringBlock =
+            line.bucket === "solar" && solarWiring && solarWiring.description ? (
+              <p className="text-sm text-primary/90">
+                Empfohlene Verschaltung: {solarWiring.description}
+                {solarWiring.rationale !== "kein-feasible" ? (
+                  <>
+                    {" "}
+                    (MPP ca. {Math.round(solarWiring.arrayVoltageVmppV)} V, Voc Kälte ca.{" "}
+                    {Math.round(solarWiring.arrayVoltageVocColdV * 10) / 10} V)
+                  </>
+                ) : null}
+              </p>
+            ) : null;
           return (
             <li
               key={`${p.id}-${i}-${context ?? ""}`}
@@ -61,6 +81,7 @@ export function ProductRecommendationList({ lines, products, aiSelections }: Pro
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{p.categoryName}</p>
                 <p className="font-semibold leading-snug text-foreground">{p.name}</p>
                 {context ? <p className="text-sm text-primary/90">{context}</p> : null}
+                {wiringBlock}
                 {reason ? <p className="text-sm text-muted-foreground">{reason}</p> : null}
               </div>
               <div className="flex shrink-0 flex-col justify-center sm:items-end">

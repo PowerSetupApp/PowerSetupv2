@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Step8DebugFab } from "@/components/wizard/steps/step-8-debug-fab";
 import { Step8PreviewBlock } from "@/components/wizard/steps/step-8-preview-block";
 import { Step8SolarBatteryCard } from "@/components/wizard/steps/step-8-solar-battery-card";
+import { Step8WiringCard } from "@/components/wizard/steps/step-8-wiring-card";
 import type { Step8PreviewStatus } from "@/components/wizard/steps/use-step8-export-json";
 import { useStep8ExportJson } from "@/components/wizard/steps/use-step8-export-json";
 import { useWizardStep8CanonicalPreviews } from "@/components/wizard/steps/use-wizard-step8-canonical-previews";
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { isWizardCompleteForSubmission } from "@/lib/wizard/validation";
 import { useWizardStore } from "@/store/wizard";
 import type { AlgorithmOutput } from "@/lib/algorithm/types";
+import type { SolarWiringRecommendation } from "@/lib/recommendation/wiring/types";
 
 const AUTARKY_TOPUP_NOTE =
   "Bei deinen aktuellen Energiequellen deckt die Einspeisung (Solar/Lichtmaschine) bereits den Tagesbedarf — " +
@@ -33,6 +35,7 @@ export function Step8Review() {
   const [solarBranchOutput, setSolarBranchOutput] = useState<AlgorithmOutput | null>(null);
   const [debugOpen, setDebugOpen] = useState(false);
   const [hardFloorBinding, setHardFloorBinding] = useState(false);
+  const [wiringPreview, setWiringPreview] = useState<SolarWiringRecommendation | null>(null);
 
   const canSubmit = isWizardCompleteForSubmission(input);
   const canonical = useWizardStep8CanonicalPreviews(input, canSubmit);
@@ -74,6 +77,36 @@ export function Step8Review() {
     previewError,
     debugState,
   );
+
+  const formForRecommendation = useMemo(() => {
+    if (canonical.kind === "ok") return canonical.canonicalInput;
+    return input;
+  }, [canonical, input]);
+
+  useEffect(() => {
+    if (!canSubmit || !displayOutput?.solar.needed || displayOutput.solar.maxRoofWp <= 0) {
+      setWiringPreview(null);
+      return;
+    }
+    const ac = new AbortController();
+    void (async () => {
+      try {
+        const res = await fetch("/api/wizard/recommendation-preview", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ formData: formForRecommendation }),
+          signal: ac.signal,
+        });
+        const body = (await res.json()) as { wiring?: SolarWiringRecommendation | null };
+        if (!ac.signal.aborted) {
+          setWiringPreview(body.wiring ?? null);
+        }
+      } catch {
+        if (!ac.signal.aborted) setWiringPreview(null);
+      }
+    })();
+    return () => ac.abort();
+  }, [canSubmit, displayOutput, formForRecommendation]);
 
   const topUpCovers = useMemo(() => topUpCoversDailyWh(input), [input]);
 
@@ -130,6 +163,8 @@ export function Step8Review() {
         output={displayOutput}
         onAddBag200={addBag200}
       />
+
+      {wiringPreview && displayOutput?.solar.maxRoofWp ? <Step8WiringCard wiring={wiringPreview} /> : null}
 
       {showAutarkyNote ? <p className={wizardCallout()}>{AUTARKY_TOPUP_NOTE}</p> : null}
 

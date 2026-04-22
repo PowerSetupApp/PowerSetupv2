@@ -69,8 +69,25 @@ async function ResultPageBody({ params }: PageProps) {
 
       {ready && vm.calculations ? (
         <>
+          {vm.solarWiring?.warnings.some((w) => w.kind === "mppt-voltage-exceeded") ? (
+            <div
+              role="alert"
+              className="rounded-2xl border border-destructive/60 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+            >
+              <p className="font-semibold">PV-Spannung / MPPT</p>
+              <p className="mt-1">
+                Die gewählte Verschaltung oder der Laderegler passt elektrisch riskant: max. PV-Eingangsspannung
+                unterschritten. Bitte MPPT mit höherer max. PV-Spannung oder andere Modul-/String-Konfiguration prüfen.
+              </p>
+            </div>
+          ) : null}
           <SystemSummaryCard calculations={vm.calculations} />
-          <ProductRecommendationList lines={displayLines} products={products} aiSelections={vm.aiSelections} />
+          <ProductRecommendationList
+            lines={displayLines}
+            products={products}
+            aiSelections={vm.aiSelections}
+            solarWiring={vm.solarWiring}
+          />
           <Suspense fallback={<div className="h-32 animate-pulse rounded-2xl bg-muted/25" aria-hidden />}>
             <SchematicSection
               resultId={id}

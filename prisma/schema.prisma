@@ -379,6 +379,10 @@ model AlgorithmSettings {
   voltageDropCritical Float @default(1.0)
   voltageDropNormal   Float @default(3.0)
   copperResistivity   Float @default(0.0178)
+  /// Multiplier on route current before ampacity lookup (e.g. VDE continuous factor).
+  cableCurrentSafetyFactor Float @default(1.25)
+  /// Ambient temperature (°C) for ampacity derating; table reference is 30 °C.
+  ambientTempC Float @default(30)
 
   inverterClasses        String @default("500,800,1000,1500,2000,2500,3000,5000")
   chargerClasses         String @default("10,20,30,50,60")

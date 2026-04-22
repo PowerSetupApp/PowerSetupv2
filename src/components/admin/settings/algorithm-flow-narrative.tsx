@@ -305,8 +305,9 @@ export function AlgorithmFlowNarrative({ settings, onFieldChange }: AlgorithmFlo
             Kabel &amp; Komponentenlisten
           </h4>
           <p className={proseClass}>
-            Die Querschnitte und Komponentenklassen werden aus den obigen Gruppen „Komponentenklassen“ gespeist —
-            identisch zur Karten-Ansicht.
+            Eine Übersicht, welche Spec-Werte im aktiven Katalog vorkommen (Wechselrichter-W, Lade-Ströme, Kabel-mm²),
+            liegt unter <strong>Produkte</strong> als „Katalogabdeckung“. Die Berechnung selbst nutzt feste
+            Handelsgrößen für Kabel und bewertet Produkte gegen die numerischen Ergebnisse der Phasen oben.
           </p>
         </div>
 

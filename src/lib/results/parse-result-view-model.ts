@@ -1,6 +1,7 @@
 import type { AlgorithmOutput } from "@/lib/algorithm/types";
 import type { ResultRowForPage } from "@/lib/db/queries/results";
 import type { AISelectionItem, PrefilterResult } from "@/lib/recommendation/types";
+import type { SolarWiringRecommendation } from "@/lib/recommendation/wiring/types";
 
 import { buildProductDisplayLines, type ResultProductDisplayLine } from "./build-product-display-lines";
 
@@ -22,6 +23,16 @@ function isPrefilterResult(v: unknown): v is PrefilterResult {
     return false;
   }
   return true;
+}
+
+function isSolarWiringRecommendation(v: unknown): v is SolarWiringRecommendation {
+  if (!isRecord(v)) return false;
+  return (
+    typeof v.seriesCount === "number" &&
+    typeof v.parallelCount === "number" &&
+    typeof v.description === "string" &&
+    Array.isArray(v.warnings)
+  );
 }
 
 function parseAiSelections(ai: unknown): AISelectionItem[] {
@@ -66,6 +77,8 @@ export type ResultViewModel = {
   productDisplayLines: ResultProductDisplayLine[];
   /** Eindeutige IDs für Schaltplan/PDF. */
   productIdsForDisplay: string[];
+  /** PV-Reihe/Parallel + MPPT-Check (optional, ab Generierung mit Wiring-Feld). */
+  solarWiring: SolarWiringRecommendation | null;
 };
 
 export function parseResultViewModel(row: ResultRowForPage): ResultViewModel {
@@ -75,6 +88,16 @@ export function parseResultViewModel(row: ResultRowForPage): ResultViewModel {
   const aiSelections = rec?.ai ? parseAiSelections(rec.ai) : [];
   const productDisplayLines = buildProductDisplayLines(calculations, prefilter, aiSelections);
   const productIdsForDisplay = uniqueProductIds(productDisplayLines);
+  const wiringRaw = rec?.wiring;
+  const solarWiring =
+    wiringRaw != null && isSolarWiringRecommendation(wiringRaw) ? wiringRaw : null;
 
-  return { calculations, prefilter, aiSelections, productDisplayLines, productIdsForDisplay };
+  return {
+    calculations,
+    prefilter,
+    aiSelections,
+    productDisplayLines,
+    productIdsForDisplay,
+    solarWiring,
+  };
 }

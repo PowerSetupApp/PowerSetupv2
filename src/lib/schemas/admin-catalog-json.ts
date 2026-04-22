@@ -193,6 +193,8 @@ const ALGORITHM_SETTINGS_ALLOWED_KEYS = new Set([
   "voltageDropCritical",
   "voltageDropNormal",
   "copperResistivity",
+  "cableCurrentSafetyFactor",
+  "ambientTempC",
   "inverterClasses",
   "chargerClasses",
   "solarControllerClasses",

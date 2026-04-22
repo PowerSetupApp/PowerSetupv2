@@ -95,6 +95,8 @@ export const ALGORITHM_SETTINGS_GROUPS: AlgorithmSettingsGroup[] = [
       { key: "voltageDropCritical", label: "Kritisch", type: "float", suffix: "%" },
       { key: "voltageDropNormal", label: "Normal", type: "float", suffix: "%" },
       { key: "copperResistivity", label: "Kupfer ρ", type: "float", suffix: "Ω·mm²/m" },
+      { key: "cableCurrentSafetyFactor", label: "Kabel-Sicherheitsfaktor", type: "float", suffix: "×" },
+      { key: "ambientTempC", label: "Umgebungstemperatur (Fahrzeug)", type: "float", suffix: "°C" },
     ],
   },
   {
@@ -110,16 +112,6 @@ export const ALGORITHM_SETTINGS_GROUPS: AlgorithmSettingsGroup[] = [
       { key: "maxAutarchyDays", label: "Max. Autarkie-Tage", type: "matrix" },
       { key: "solarBagAlignmentUplift", label: "Solartaschen-Uplift", type: "matrix" },
       { key: "driveHoursPerDay", label: "Fahrstunden / Tag", type: "matrix" },
-    ],
-  },
-  {
-    title: "Komponentenklassen",
-    description: "Verfügbare Größen (kommasepariert)",
-    fields: [
-      { key: "inverterClasses", label: "Wechselrichter (W)", type: "string" },
-      { key: "chargerClasses", label: "Batterieladegeräte (A)", type: "string" },
-      { key: "solarControllerClasses", label: "Solar-Laderegler (A)", type: "string" },
-      { key: "cableSizes", label: "Kabelquerschnitte (mm²)", type: "string" },
     ],
   },
   {

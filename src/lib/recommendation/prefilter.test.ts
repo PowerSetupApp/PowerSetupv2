@@ -242,7 +242,8 @@ describe("prefilterProductsForRecommendation", () => {
       roofAreas: [{ id: "r1", name: "Dach", length: 220, width: 120 }],
       consumers: [{ id: "c1", name: "Kühlung", power: 80, daily: 10, voltage: 12 }],
     });
-    const products: ProductRecommendationRow[] = [35, 50, 95, 120].map((mm) => ({
+    const mmValues = [4, 6, 35, 50, 95, 120];
+    const products: ProductRecommendationRow[] = mmValues.map((mm) => ({
       id: `k${mm}`,
       name: `${mm}mm`,
       categorySlug: "cables",
@@ -266,6 +267,8 @@ describe("prefilterProductsForRecommendation", () => {
     expect(out.cableByRoute?.length ?? 0).toBe(activeRoutes.length);
     const allowed = new Set(products.map((p) => p.id));
     expect(out.cableByRoute?.every((c) => allowed.has(c.productId))).toBe(true);
+    const solarRun = out.cableByRoute?.find((c) => c.route === "solar_to_regulator");
+    expect(solarRun?.productId).toBe("k6");
   });
 });
 

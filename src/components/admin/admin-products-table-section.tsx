@@ -18,19 +18,34 @@ type Props = {
   categories: AdminProductCategoryRow[];
 };
 
-function isIncompleteProduct(r: AdminProductListRow): boolean {
-  return !r.imageUrl || r.price == null;
+function rowMatchesCompletenessFilters(
+  r: AdminProductListRow,
+  incompleteFiltersOnly: boolean,
+  listingGapsOnly: boolean,
+  algorithmSpecGapsOnly: boolean,
+): boolean {
+  const any = incompleteFiltersOnly || listingGapsOnly || algorithmSpecGapsOnly;
+  if (!any) return true;
+  return (
+    (incompleteFiltersOnly && r.incompleteFilterValues) ||
+    (listingGapsOnly && r.missingListingMeta) ||
+    (algorithmSpecGapsOnly && r.missingAlgorithmSpec)
+  );
 }
 
 export function AdminProductsTableSection({ rows, categories }: Props) {
   const router = useRouter();
   const [q, setQ] = useState("");
   const [categoryId, setCategoryId] = useState<string>("all");
-  const [incompleteOnly, setIncompleteOnly] = useState(false);
+  const [incompleteFiltersOnly, setIncompleteFiltersOnly] = useState(false);
+  const [listingGapsOnly, setListingGapsOnly] = useState(false);
+  const [algorithmSpecGapsOnly, setAlgorithmSpecGapsOnly] = useState(false);
 
   const filtered = useMemo(() => {
     return rows.filter((r) => {
-      if (incompleteOnly && !isIncompleteProduct(r)) return false;
+      if (!rowMatchesCompletenessFilters(r, incompleteFiltersOnly, listingGapsOnly, algorithmSpecGapsOnly)) {
+        return false;
+      }
       if (categoryId !== "all" && r.categoryId !== categoryId) return false;
       if (q.trim()) {
         const needle = q.trim().toLowerCase();
@@ -38,7 +53,7 @@ export function AdminProductsTableSection({ rows, categories }: Props) {
       }
       return true;
     });
-  }, [rows, categoryId, q, incompleteOnly]);
+  }, [rows, categoryId, q, incompleteFiltersOnly, listingGapsOnly, algorithmSpecGapsOnly]);
 
   return (
     <div className="space-y-4">
@@ -60,16 +75,14 @@ export function AdminProductsTableSection({ rows, categories }: Props) {
             triggerClassName="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
           />
         </div>
-        <label className="flex cursor-pointer items-center gap-2 pb-2 text-sm lg:pb-3">
-          <input
-            type="checkbox"
-            className="size-4 rounded border"
-            checked={incompleteOnly}
-            onChange={(e) => setIncompleteOnly(e.target.checked)}
-          />
-          <Filter className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-          Nur unvollständige zeigen
-        </label>
+        <CompletenessFilterGroup
+          incompleteFiltersOnly={incompleteFiltersOnly}
+          setIncompleteFiltersOnly={setIncompleteFiltersOnly}
+          listingGapsOnly={listingGapsOnly}
+          setListingGapsOnly={setListingGapsOnly}
+          algorithmSpecGapsOnly={algorithmSpecGapsOnly}
+          setAlgorithmSpecGapsOnly={setAlgorithmSpecGapsOnly}
+        />
         <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={() => router.refresh()}>
           <RefreshCw className="mr-2 size-4" aria-hidden />
           Sichtbare aktualisieren ({filtered.length})
@@ -145,6 +158,67 @@ export function AdminProductsTableSection({ rows, categories }: Props) {
         </table>
       </div>
       {filtered.length === 0 ? <p className="text-sm text-muted-foreground">Keine Einträge für die aktuelle Filterung.</p> : null}
+    </div>
+  );
+}
+
+function CompletenessFilterGroup({
+  incompleteFiltersOnly,
+  setIncompleteFiltersOnly,
+  listingGapsOnly,
+  setListingGapsOnly,
+  algorithmSpecGapsOnly,
+  setAlgorithmSpecGapsOnly,
+}: {
+  incompleteFiltersOnly: boolean;
+  setIncompleteFiltersOnly: (v: boolean) => void;
+  listingGapsOnly: boolean;
+  setListingGapsOnly: (v: boolean) => void;
+  algorithmSpecGapsOnly: boolean;
+  setAlgorithmSpecGapsOnly: (v: boolean) => void;
+}) {
+  return (
+    <div className="flex min-w-0 flex-1 flex-col gap-2 pb-2 lg:max-w-xl lg:pb-3">
+      <p className="text-xs font-medium text-muted-foreground">Lücken (mehrere möglich, ODER-Verknüpfung)</p>
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+        <label
+          className="flex cursor-pointer items-center gap-2 text-sm"
+          title="Fehlende oder leere CategoryFilter-Werte (Schlüssel brand zählt nicht), wie in PS-7."
+        >
+          <input
+            type="checkbox"
+            className="size-4 shrink-0 rounded border"
+            checked={incompleteFiltersOnly}
+            onChange={(e) => setIncompleteFiltersOnly(e.target.checked)}
+          />
+          <Filter className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+          Unvollständige Filter-Werte
+        </label>
+        <label
+          className="flex cursor-pointer items-center gap-2 text-sm"
+          title="Kein Produktfoto oder kein Preis hinterlegt."
+        >
+          <input
+            type="checkbox"
+            className="size-4 shrink-0 rounded border"
+            checked={listingGapsOnly}
+            onChange={(e) => setListingGapsOnly(e.target.checked)}
+          />
+          Ohne Foto oder Preis
+        </label>
+        <label
+          className="flex cursor-pointer items-center gap-2 text-sm"
+          title="Wie „Katalogabdeckung“: in Wechselrichter-/Solar-/Kabel-/Shore-Charger-Kategorien fehlen powerW, currentA oder crossSectionMm2."
+        >
+          <input
+            type="checkbox"
+            className="size-4 shrink-0 rounded border"
+            checked={algorithmSpecGapsOnly}
+            onChange={(e) => setAlgorithmSpecGapsOnly(e.target.checked)}
+          />
+          Ohne Algorithmus-Spec
+        </label>
+      </div>
     </div>
   );
 }

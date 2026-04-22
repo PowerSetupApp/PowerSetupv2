@@ -6,7 +6,7 @@
  * For each route, resolve (L, I, U) per the route table in inputs.md B.5, then:
  *   dUMaxV         = U * (1 % critical / 3 % standard)
  *   aVoltage      = 2 * L * I * ρ / dUMaxV   (mm²)
- *   aAmpacity     = min standard mm² for I * cableCurrentSafetyFactor
+ *   aAmpacity     = min standard mm² for I * cableCurrentSafetyFactor, with ambient derating on table ampacity
  *   minCrossSection = max(aVoltage, aAmpacity)
  *   recommendedCrossSection = next standard trade size ≥ min
  *
@@ -15,9 +15,9 @@
  * `ROUTES` order).
  */
 
-import { minStandardMm2ForDesignCurrentA } from "../cable-ampacity";
+import { ambientTempDerateFactor, minStandardMm2ForDesignCurrentA } from "../cable-ampacity";
 import { roundUpToStandardMm2 } from "../cable-standards";
-import { ROUTES } from "../constants";
+import { ROUTES, SOLAR_CABLE_PORTABLE_MM2, SOLAR_CABLE_ROOF_MM2 } from "../constants";
 import type { AlgorithmTuning } from "../algorithm-tuning";
 import type {
   AlgorithmInput,
@@ -26,6 +26,7 @@ import type {
   ChargerRecommendation,
   ControllerRecommendation,
   InverterRecommendation,
+  SolarRecommendation,
 } from "../types";
 
 /** Resolve (lengthM, currentA, voltage) for a single route. */
@@ -36,6 +37,7 @@ function resolveRoute(
   charger: ChargerRecommendation,
   inverter: InverterRecommendation,
   controller: ControllerRecommendation,
+  portableController: ControllerRecommendation,
   peakDcW: number,
   iInvDc: number,
 ): { lengthM: number; currentA: number; voltage: number } {
@@ -63,12 +65,6 @@ function resolveRoute(
       return {
         lengthM: cl.serviceToInverter,
         currentA: iInvDc,
-        voltage: input.systemVoltage,
-      };
-    case "solar_to_regulator":
-      return {
-        lengthM: cl.solarToRegulator,
-        currentA: controller.currentA,
         voltage: input.systemVoltage,
       };
     case "regulator_to_service":
@@ -100,7 +96,9 @@ export function sizeCables(
   charger: ChargerRecommendation,
   inverter: InverterRecommendation,
   controller: ControllerRecommendation,
+  portableController: ControllerRecommendation,
   peakDcW: number,
+  solar: SolarRecommendation,
   tuning: AlgorithmTuning,
 ): CableRecommendation[] {
   // Hoist the inverter's DC-input current once — it is used for both
@@ -111,6 +109,47 @@ export function sizeCables(
       : 0;
 
   return ROUTES.map(([routeId, displayName, isCritical]) => {
+    if (routeId === "solar_to_regulator") {
+      const cl = input.cableLengths;
+      const lengthM = cl.solarToRegulator;
+      const currentA =
+        solar.maxRoofWp > 0
+          ? controller.currentA
+          : solar.portableWp > 0
+            ? portableController.currentA
+            : 0;
+      const voltage = input.systemVoltage;
+      let fixedMm2 = 0;
+      if (lengthM > 0 && currentA > 0) {
+        if (solar.maxRoofWp > 0) fixedMm2 = SOLAR_CABLE_ROOF_MM2;
+        else if (solar.portableWp > 0) fixedMm2 = SOLAR_CABLE_PORTABLE_MM2;
+      }
+      if (fixedMm2 > 0) {
+        const rec = roundUpToStandardMm2(fixedMm2);
+        return {
+          route: routeId,
+          displayName,
+          lengthM,
+          currentA,
+          voltage,
+          minCrossSection: fixedMm2,
+          recommendedCrossSection: rec,
+          isCritical,
+          sizingMethod: "fixed-solar" as const,
+        };
+      }
+      return {
+        route: routeId,
+        displayName,
+        lengthM,
+        currentA: 0,
+        voltage,
+        minCrossSection: 0,
+        recommendedCrossSection: 0,
+        isCritical,
+      };
+    }
+
     const { lengthM, currentA, voltage } = resolveRoute(
       routeId,
       input,
@@ -118,6 +157,7 @@ export function sizeCables(
       charger,
       inverter,
       controller,
+      portableController,
       peakDcW,
       iInvDc,
     );
@@ -127,11 +167,13 @@ export function sizeCables(
     const duMaxV = (voltage * duMaxPct) / 100;
 
     const designA = currentA * tuning.cableCurrentSafetyFactor;
+    const ampacityDerate = ambientTempDerateFactor(tuning.ambientTempC);
     const aAmp =
       currentA > 0
         ? minStandardMm2ForDesignCurrentA(
             designA,
             tuning.cableAmpacityInstallMode,
+            ampacityDerate,
           )
         : 0;
 
@@ -159,6 +201,7 @@ export function sizeCables(
       minCrossSection,
       recommendedCrossSection: roundUpToStandardMm2(minCrossSection),
       isCritical,
+      sizingMethod: "voltage-drop" as const,
     };
   });
 }
