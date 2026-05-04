@@ -12,7 +12,10 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
-    "db:push": "prisma db push"
+    "db:push": "prisma db push",
+    "db:backup-migrate-neon": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/backup-migrate-to-neon.ps1",
+    "db:migrate-data-to-neon": "node ./scripts/migrate-data-prisma-to-neon.cjs",
+    "db:count-compare": "node ./scripts/db-count-compare.cjs"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.7.0",
@@ -25,6 +28,8 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@sparticuz/chromium": "^131.0.1",
     "@vercel/blob": "^2.3.3",
+    "amazon-creators-api": "^1.2.2",
+    "cheerio": "^1.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^16.6.1",

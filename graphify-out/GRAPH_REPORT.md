@@ -1,12 +1,12 @@
-# Graph Report - PowerSetup2  (2026-04-22)
+# Graph Report - PowerSetup2  (2026-04-24)
 
 ## Corpus Check
-- 355 files · ~307,170 words
+- 374 files · ~322,124 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1023 nodes · 1178 edges · 77 communities detected
-- Extraction: 73% EXTRACTED · 27% INFERRED · 0% AMBIGUOUS · INFERRED: 319 edges (avg confidence: 0.8)
+- 1095 nodes · 1297 edges · 80 communities detected
+- Extraction: 73% EXTRACTED · 27% INFERRED · 0% AMBIGUOUS · INFERRED: 344 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -22,8 +22,8 @@
 - [[_COMMUNITY_Community 9|Community 9]]
 - [[_COMMUNITY_Community 10|Community 10]]
 - [[_COMMUNITY_Community 11|Community 11]]
+- [[_COMMUNITY_Community 12|Community 12]]
 - [[_COMMUNITY_Community 13|Community 13]]
-- [[_COMMUNITY_Community 14|Community 14]]
 - [[_COMMUNITY_Community 15|Community 15]]
 - [[_COMMUNITY_Community 16|Community 16]]
 - [[_COMMUNITY_Community 17|Community 17]]
@@ -31,28 +31,21 @@
 - [[_COMMUNITY_Community 19|Community 19]]
 - [[_COMMUNITY_Community 20|Community 20]]
 - [[_COMMUNITY_Community 21|Community 21]]
+- [[_COMMUNITY_Community 22|Community 22]]
 - [[_COMMUNITY_Community 23|Community 23]]
 - [[_COMMUNITY_Community 24|Community 24]]
 - [[_COMMUNITY_Community 25|Community 25]]
-- [[_COMMUNITY_Community 26|Community 26]]
 - [[_COMMUNITY_Community 27|Community 27]]
+- [[_COMMUNITY_Community 28|Community 28]]
 - [[_COMMUNITY_Community 29|Community 29]]
-- [[_COMMUNITY_Community 33|Community 33]]
-- [[_COMMUNITY_Community 36|Community 36]]
-- [[_COMMUNITY_Community 37|Community 37]]
+- [[_COMMUNITY_Community 30|Community 30]]
+- [[_COMMUNITY_Community 31|Community 31]]
+- [[_COMMUNITY_Community 34|Community 34]]
 - [[_COMMUNITY_Community 38|Community 38]]
-- [[_COMMUNITY_Community 51|Community 51]]
-- [[_COMMUNITY_Community 53|Community 53]]
-- [[_COMMUNITY_Community 245|Community 245]]
-- [[_COMMUNITY_Community 246|Community 246]]
-- [[_COMMUNITY_Community 247|Community 247]]
-- [[_COMMUNITY_Community 248|Community 248]]
-- [[_COMMUNITY_Community 249|Community 249]]
-- [[_COMMUNITY_Community 250|Community 250]]
-- [[_COMMUNITY_Community 251|Community 251]]
-- [[_COMMUNITY_Community 252|Community 252]]
-- [[_COMMUNITY_Community 253|Community 253]]
-- [[_COMMUNITY_Community 254|Community 254]]
+- [[_COMMUNITY_Community 41|Community 41]]
+- [[_COMMUNITY_Community 42|Community 42]]
+- [[_COMMUNITY_Community 55|Community 55]]
+- [[_COMMUNITY_Community 57|Community 57]]
 - [[_COMMUNITY_Community 255|Community 255]]
 - [[_COMMUNITY_Community 256|Community 256]]
 - [[_COMMUNITY_Community 257|Community 257]]
@@ -87,40 +80,50 @@
 - [[_COMMUNITY_Community 286|Community 286]]
 - [[_COMMUNITY_Community 287|Community 287]]
 - [[_COMMUNITY_Community 288|Community 288]]
+- [[_COMMUNITY_Community 289|Community 289]]
+- [[_COMMUNITY_Community 290|Community 290]]
+- [[_COMMUNITY_Community 291|Community 291]]
+- [[_COMMUNITY_Community 292|Community 292]]
+- [[_COMMUNITY_Community 293|Community 293]]
+- [[_COMMUNITY_Community 294|Community 294]]
+- [[_COMMUNITY_Community 295|Community 295]]
+- [[_COMMUNITY_Community 296|Community 296]]
+- [[_COMMUNITY_Community 297|Community 297]]
+- [[_COMMUNITY_Community 298|Community 298]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `getPrisma()` - 50 edges
+1. `getPrisma()` - 51 edges
 2. `POST()` - 44 edges
-3. `readFromDatabase()` - 24 edges
-4. `computeAlgorithm()` - 21 edges
-5. `invalidateCatalogCache()` - 20 edges
-6. `importAdminDomainInner()` - 18 edges
-7. `GET()` - 17 edges
+3. `readFromDatabase()` - 25 edges
+4. `computeAlgorithm()` - 22 edges
+5. `invalidateCatalogCache()` - 21 edges
+6. `GET()` - 19 edges
+7. `importAdminDomainInner()` - 18 edges
 8. `runGenerateForResultId()` - 14 edges
-9. `scoreProduct()` - 12 edges
-10. `callAI()` - 11 edges
+9. `importProductFromAmazonAction()` - 13 edges
+10. `callAI()` - 12 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `loadAISettingsAction()` --calls--> `getAISettings()`  [INFERRED]
-  src\app\admin\settings\actions.ts → src\lib\db\queries\admin-settings-ai.ts
-- `generateProductSelection()` --calls--> `selectProductsHybrid()`  [INFERRED]
-  docs\reference\ai.ts → docs\reference\recommendation\selection\hybrid-selector.ts
-- `generateText()` --calls--> `generateAIReasons()`  [INFERRED]
-  docs\reference\ai.ts → docs\reference\recommendation\reasoning\ai-reasoner.ts
+- `loadAlgorithmSettingsAction()` --calls--> `getAlgorithmSettings()`  [INFERRED]
+  src\app\admin\settings\actions.ts → src\lib\db\queries\admin-settings-algorithm.ts
+- `loadAmazonSettingsAction()` --calls--> `getAmazonPartnerTag()`  [INFERRED]
+  src\app\admin\settings\actions.ts → src\lib\db\queries\admin-settings-amazon.ts
 - `generateAlgorithmReasons()` --calls--> `getTemplateReason()`  [INFERRED]
   docs\reference\recommendation\reasoning\algorithm-reasoner.ts → docs\reference\recommendation\reasoning\templates.ts
-- `loadBrandsWithTypes()` --calls--> `readFromDatabase()`  [INFERRED]
-  src\app\admin\brands\page.tsx → src\lib\db\prisma-errors.ts
+- `selectProductsHybrid()` --calls--> `GET()`  [INFERRED]
+  docs\reference\recommendation\selection\hybrid-selector.ts → src\app\api\admin\ping\route.ts
+- `enrichProducts()` --calls--> `GET()`  [INFERRED]
+  docs\reference\recommendation\utils\product-enricher.ts → src\app\api\admin\ping\route.ts
 
 ## Communities
 
 ### Community 0 - "Community 0"
-Cohesion: 0.09
-Nodes (49): runAdminCatalogDelete(), buildConsumerDeviceData(), createAdminBrand(), createAdminCategory(), createAdminCategoryFilter(), createAdminConsumerCategory(), createAdminConsumerDevice(), createAdminProduct() (+41 more)
+Cohesion: 0.07
+Nodes (54): saveAmazonSettingsAction(), runAdminCatalogDelete(), buildConsumerDeviceData(), createAdminBrand(), createAdminCategory(), createAdminCategoryFilter(), createAdminConsumerCategory(), createAdminConsumerDevice() (+46 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.06
-Nodes (31): getAdminBrandById(), getAdminCategoryForEditorById(), getAdminConsumerCategoryForEditorById(), getAdminConsumerDeviceForEditorById(), getAdminProductForEditorById(), getAdminProductPreviewById(), listAdminBrandFilterCategories(), listAdminBrands() (+23 more)
+Nodes (34): getAdminBrandById(), getAdminCategoryForEditorById(), getAdminCategorySlugById(), getAdminConsumerCategoryForEditorById(), getAdminConsumerDeviceForEditorById(), getAdminProductForEditorById(), getAdminProductPreviewById(), listAdminBrandFilterCategories() (+26 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.06
@@ -128,420 +131,430 @@ Nodes (28): consumeCreditsAndStoreSchematic(), getCreditBalance(), grantCreditsF
 
 ### Community 3 - "Community 3"
 Cohesion: 0.06
-Nodes (39): createAlgorithmTestUserPresetAction(), deleteAlgorithmTestUserPresetAction(), getAlgorithmTestPresetByIdAction(), listAlgorithmTestPresetsAction(), loadAISettingsAction(), loadAmazonSettingsAction(), loadGeminiImageModelsAction(), loadGeminiModelsAction() (+31 more)
+Nodes (31): shoreBatteryBridgeReliefDays(), sizeBattery(), topUpCoverageBaseCapForPsh(), sizeBooster(), sizeCables(), sizeCharger(), computeAlgorithm(), sizeController() (+23 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.07
-Nodes (30): shoreBatteryBridgeReliefDays(), sizeBattery(), topUpCoverageBaseCapForPsh(), sizeBooster(), sizeCables(), sizeCharger(), computeAlgorithm(), sizeController() (+22 more)
-
-### Community 5 - "Community 5"
 Cohesion: 0.08
 Nodes (37): batteryRowFits(), bmsDischargeAFromRow(), effectiveBatteryVoltageV(), nominalSystemVoltageFromCellVoltage(), productNominalSystemVoltageV(), requiredInverterDischargeA(), ambientTempDerateFactor(), continuousAmpacityAForStandardMm2() (+29 more)
 
+### Community 5 - "Community 5"
+Cohesion: 0.06
+Nodes (30): runAlgorithmTestAction(), saveAlgorithmSettingsAction(), normalizeAlgorithmSettingsImportRow(), backfillCableAmpacityColumnsIfNull(), ensureCableAmpacitySettings(), getAlgorithmSettings(), getAlgorithmSettingsCached(), stripUndefined() (+22 more)
+
 ### Community 6 - "Community 6"
 Cohesion: 0.06
-Nodes (31): loadAlgorithmSettingsAction(), runAlgorithmTestAction(), saveAlgorithmSettingsAction(), normalizeAlgorithmSettingsImportRow(), backfillCableAmpacityColumnsIfNull(), ensureCableAmpacitySettings(), getAlgorithmSettings(), getAlgorithmSettingsCached() (+23 more)
+Nodes (36): createAlgorithmTestUserPresetAction(), deleteAlgorithmTestUserPresetAction(), getAlgorithmTestPresetByIdAction(), listAlgorithmTestPresetsAction(), loadAlgorithmSettingsAction(), loadAmazonSettingsAction(), loadGeminiImageModelsAction(), loadGeminiModelsAction() (+28 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.08
-Nodes (26): getCatalogComponentDimensionStats(), syncComponentClassesFromDB(), generateAIReasons(), cleanReason(), generateAlgorithmReasons(), selectProductsAlgorithmically(), groupConsumerTemplatesByCategory(), countSystemSettings() (+18 more)
-
-### Community 8 - "Community 8"
 Cohesion: 0.11
 Nodes (29): importCatalogJsonAction(), exportAdminDomain(), importAdminDomain(), importAdminDomainInner(), invalidateCacheForDomain(), mapModelPricingForExport(), mapProductForExport(), buildExportEnvelope() (+21 more)
+
+### Community 8 - "Community 8"
+Cohesion: 0.1
+Nodes (21): loadAISettingsAction(), getAISettings(), buildPrompt(), generateProductSelection(), generateText(), generateAIReasons(), optimizeSpecsText(), renderPrompt() (+13 more)
 
 ### Community 9 - "Community 9"
 Cohesion: 0.12
 Nodes (23): coerceSelectionRow(), extractSelectionsArray(), flattenProductGroups(), mapProductGroupKeyToBucket(), normalizeBucket(), parseJsonLenient(), parseProductSelectionJson(), selectProductsWithAI() (+15 more)
 
 ### Community 10 - "Community 10"
-Cohesion: 0.11
-Nodes (21): getAISettings(), buildPrompt(), generateProductSelection(), generateText(), optimizeSpecsText(), renderPrompt(), backoffMs(), callAI() (+13 more)
+Cohesion: 0.12
+Nodes (21): getCatalogComponentDimensionStats(), syncComponentClassesFromDB(), groupConsumerTemplatesByCategory(), countSystemSettings(), deleteVercelBlobUrlIfOwned(), downloadAmazonProductImageToBlob(), hasBlobWriteToken(), hostnameOf() (+13 more)
 
 ### Community 11 - "Community 11"
-Cohesion: 0.23
-Nodes (13): appendMissingFuses(), buildProductDisplayLines(), ensurePortableControllerLine(), fuseLinesFromPrefilter(), linePresent(), sortAiByBucket(), isAlgorithmOutput(), isPrefilterResult() (+5 more)
+Cohesion: 0.12
+Nodes (19): backoffMs(), callAI(), chatBackendsOrder(), isMockAi(), mockCompletion(), sleep(), withRetries(), buildExtractionPrompt() (+11 more)
+
+### Community 12 - "Community 12"
+Cohesion: 0.13
+Nodes (16): creatorsItemResources(), fetchAmazonItemViaCreatorsApi(), extractAsinFromAmazonInput(), fetchAmazonItem(), isMockAmazonMode(), fetchMockAmazonItem(), absolutizeImageSrc(), buildScrapeContextText() (+8 more)
 
 ### Community 13 - "Community 13"
+Cohesion: 0.2
+Nodes (17): appendMissingFuses(), buildProductDisplayLines(), ensurePortableControllerLine(), fuseLinesFromPrefilter(), lineProductPresent(), meetsMin(), prefilterScoreFor(), pushAiOrUnmet() (+9 more)
+
+### Community 15 - "Community 15"
 Cohesion: 0.19
 Nodes (9): consumerFromTemplate(), defaultConsumer(), newConsumerId(), templateToConsumerVoltage(), addFromTemplate(), addManualConsumer(), duplicateConsumer(), pruneExpandedIds() (+1 more)
 
-### Community 14 - "Community 14"
+### Community 16 - "Community 16"
 Cohesion: 0.2
 Nodes (9): AdminMediaUnavailableError, deleteAdminMedia(), ensureBlobToken(), listAdminMedia(), handleDelete(), sanitizeFilename(), uploadAdminMedia(), adminMediaDeleteAction() (+1 more)
 
-### Community 15 - "Community 15"
+### Community 17 - "Community 17"
 Cohesion: 0.22
 Nodes (9): inputClassName(), labelClassName(), SolarRoofSection(), cn(), wizardCallout(), wizardCatalogScrollRegion(), wizardInsetPanel(), wizardScrollRegion() (+1 more)
 
-### Community 16 - "Community 16"
+### Community 18 - "Community 18"
 Cohesion: 0.29
 Nodes (7): areRequiredCableLengthsValid(), getRequiredCableLengthKeys(), useWizardResultSubmit(), canNavigateToStep(), completedWizardStepIds(), isWizardCompleteForSubmission(), validateWizardStep()
 
-### Community 17 - "Community 17"
+### Community 19 - "Community 19"
 Cohesion: 0.36
 Nodes (9): filterValuesAsRecord(), isCableCategorySlug(), isDcShoreChargerCategorySlug(), isEmptyFilterValueEntry(), isIncompleteCategoryFilterValues(), isInverterCategorySlug(), isSolarChargerSlug(), isSolarControllerCategorySlug() (+1 more)
 
-### Community 18 - "Community 18"
+### Community 20 - "Community 20"
 Cohesion: 0.33
 Nodes (5): pickOne(), randomCableLengths(), randomInt(), randomizeAlgorithmTestFilters(), snapCableLength()
 
-### Community 19 - "Community 19"
+### Community 21 - "Community 21"
+Cohesion: 0.42
+Nodes (8): batteryTypeToSelect(), buildRecommendationScalars(), mapAmazonExtractionToImportPayload(), matchBrandId(), normalizeBatteryColumn(), valueForFilterKey(), voltageNumberToSelect(), voltsToMultiselect()
+
+### Community 22 - "Community 22"
 Cohesion: 0.38
 Nodes (2): AmazonService, render()
 
-### Community 20 - "Community 20"
+### Community 23 - "Community 23"
 Cohesion: 0.52
 Nodes (6): asFilterValuesRecord(), buildProductPreviewFilterRows(), formatFilterScalar(), labelForExtraKey(), omitPreviewKeys(), withUnit()
 
-### Community 21 - "Community 21"
+### Community 24 - "Community 24"
+Cohesion: 0.33
+Nodes (3): parseStep(), WizardPageBody(), listWizardConsumerTemplates()
+
+### Community 25 - "Community 25"
 Cohesion: 0.38
 Nodes (5): autarchyPresetFromDays(), autarchyTopUpProfileFromSources(), getAutarchyWizardMaxDays(), presetDaysAdaptive(), handlePreset()
 
-### Community 23 - "Community 23"
+### Community 27 - "Community 27"
 Cohesion: 0.4
 Nodes (2): addBag(), newBagId()
 
-### Community 24 - "Community 24"
+### Community 28 - "Community 28"
 Cohesion: 0.33
 Nodes (2): clampRoofDimension(), parseDimension()
 
-### Community 25 - "Community 25"
+### Community 29 - "Community 29"
 Cohesion: 0.6
 Nodes (3): fmtAh(), fmtWp(), SystemSummaryCard()
 
-### Community 26 - "Community 26"
+### Community 30 - "Community 30"
 Cohesion: 0.7
 Nodes (4): buildSummary(), formatCurrent(), portableControllerFallback(), roofControllerFallback()
 
-### Community 27 - "Community 27"
+### Community 31 - "Community 31"
 Cohesion: 0.5
 Nodes (3): toggleSource(), defaultRoofArea(), newRoofId()
 
-### Community 29 - "Community 29"
+### Community 34 - "Community 34"
 Cohesion: 0.5
 Nodes (2): AdminConsumerDeviceForm(), useAdminConsumerDeviceForm()
 
-### Community 33 - "Community 33"
+### Community 38 - "Community 38"
 Cohesion: 0.83
 Nodes (3): isClickable(), isCompleted(), isCurrent()
 
-### Community 36 - "Community 36"
+### Community 41 - "Community 41"
 Cohesion: 0.83
 Nodes (3): baseBattery(), baseOutput(), baseSolar()
 
-### Community 37 - "Community 37"
+### Community 42 - "Community 42"
 Cohesion: 0.83
 Nodes (3): defaultCableLengths(), defaultTravelBehavior(), minimalInput()
 
-### Community 38 - "Community 38"
-Cohesion: 1.0
-Nodes (2): extractAsin(), scrapeAmazonProduct()
-
-### Community 51 - "Community 51"
+### Community 55 - "Community 55"
 Cohesion: 0.67
 Nodes (1): AIInvocationError
 
-### Community 53 - "Community 53"
+### Community 57 - "Community 57"
 Cohesion: 1.0
 Nodes (2): alignConsumersDcToSystem(), hydrateInput()
 
-### Community 245 - "Community 245"
+### Community 255 - "Community 255"
 Cohesion: 1.0
 Nodes (1): algorithm/camper_electrics_sizing.py =====================================  Pure
 
-### Community 246 - "Community 246"
+### Community 256 - "Community 256"
 Cohesion: 1.0
 Nodes (1): One rectangular roof patch; inputs.md A.2.1.
 
-### Community 247 - "Community 247"
+### Community 257 - "Community 257"
 Cohesion: 1.0
 Nodes (1): One portable solar bag; inputs.md A.2.2.
 
-### Community 248 - "Community 248"
+### Community 258 - "Community 258"
 Cohesion: 1.0
 Nodes (1): One electrical consumer; inputs.md A.3.1.      ``voltage == 230`` is the ONLY ma
 
-### Community 249 - "Community 249"
+### Community 259 - "Community 259"
 Cohesion: 1.0
 Nodes (1): Trip context; inputs.md A.4.
 
-### Community 250 - "Community 250"
+### Community 260 - "Community 260"
 Cohesion: 1.0
 Nodes (1): One-way lengths for every sized route; inputs.md A.6. All in metres,     each in
 
-### Community 251 - "Community 251"
+### Community 261 - "Community 261"
 Cohesion: 1.0
 Nodes (1): Full wizard payload; inputs.md Part A.
 
-### Community 252 - "Community 252"
+### Community 262 - "Community 262"
 Cohesion: 1.0
 Nodes (1): inputs.md C.7. One per route in ROUTES (always 7 entries).
 
-### Community 253 - "Community 253"
+### Community 263 - "Community 263"
 Cohesion: 1.0
 Nodes (1): Raise ValueError if value is not in allowed.
 
-### Community 254 - "Community 254"
+### Community 264 - "Community 264"
 Cohesion: 1.0
 Nodes (1): Raise ValueError if value is not in [lo, hi] (inclusive by default).
 
-### Community 255 - "Community 255"
+### Community 265 - "Community 265"
 Cohesion: 1.0
 Nodes (1): Raise ValueError if value is not a non-empty string.
 
-### Community 256 - "Community 256"
+### Community 266 - "Community 266"
 Cohesion: 1.0
 Nodes (1): Full structural + cross-field validation of AlgorithmInput.      Raises ValueErr
 
-### Community 257 - "Community 257"
+### Community 267 - "Community 267"
 Cohesion: 1.0
 Nodes (1): inputs.md A.7.1. Returns 0 when 'alternator' not selected.
 
-### Community 258 - "Community 258"
+### Community 268 - "Community 268"
 Cohesion: 1.0
 Nodes (1): inputs.md A.7.2. Returns one of ShoreAvailability literals.      Precedence:
 
-### Community 259 - "Community 259"
+### Community 269 - "Community 269"
 Cohesion: 1.0
 Nodes (1): PSH lookup. references/solar.md. See Assumption 1 at module top.
 
-### Community 260 - "Community 260"
+### Community 270 - "Community 270"
 Cohesion: 1.0
 Nodes (1): Split consumers into DC / AC Wh and peak W totals.      Returns:         (dc_wh,
 
-### Community 261 - "Community 261"
+### Community 271 - "Community 271"
 Cohesion: 1.0
 Nodes (1): Total Wp from rectangular roof areas * density * packing factor.
 
-### Community 262 - "Community 262"
+### Community 272 - "Community 272"
 Cohesion: 1.0
 Nodes (1): references/batteries.md + inputs.md C.1.      Formulas::          C_usable_Wh =
 
-### Community 263 - "Community 263"
+### Community 273 - "Community 273"
 Cohesion: 1.0
 Nodes (1): references/solar.md + inputs.md C.2.      Formulas::          roof_wp          =
 
-### Community 264 - "Community 264"
+### Community 274 - "Community 274"
 Cohesion: 1.0
 Nodes (1): references/alternator.md + inputs.md C.3.      Formulas::          i_out = min(
 
-### Community 265 - "Community 265"
+### Community 275 - "Community 275"
 Cohesion: 1.0
 Nodes (1): references/shore-power.md + inputs.md C.4.      Formulas::          target_c
 
-### Community 266 - "Community 266"
+### Community 276 - "Community 276"
 Cohesion: 1.0
 Nodes (1): references/inverter.md + inputs.md C.5.      Formula::          recommended_w =
 
-### Community 267 - "Community 267"
+### Community 277 - "Community 277"
 Cohesion: 1.0
 Nodes (1): references/solar.md "Sizing the MPPT" + inputs.md C.6.      Formulas::
 
-### Community 268 - "Community 268"
+### Community 278 - "Community 278"
 Cohesion: 1.0
 Nodes (1): references/cables.md + inputs.md C.7.      For each route, resolve (L, I, U) per
 
-### Community 269 - "Community 269"
+### Community 279 - "Community 279"
 Cohesion: 1.0
 Nodes (1): Size a camper 12/24/48 V electrical system.      See the module docstring for th
 
-### Community 270 - "Community 270"
+### Community 280 - "Community 280"
 Cohesion: 1.0
 Nodes (1): Tiny builder used by tests + worked example, DRYs the constructors.
 
-### Community 271 - "Community 271"
+### Community 281 - "Community 281"
 Cohesion: 1.0
 Nodes (1): Plan test 1: 12 V LFP, fridge 60 W / 24 h DC, laptop 90 W / 4 h AC,     2 m cabl
 
-### Community 272 - "Community 272"
+### Community 282 - "Community 282"
 Cohesion: 1.0
 Nodes (1): Plan test 2: no consumers -> all zeros, no crash.
 
-### Community 273 - "Community 273"
+### Community 283 - "Community 283"
 Cohesion: 1.0
 Nodes (1): Plan test 3: all DC -> inverter.needed False, standby NOT added.
 
-### Community 274 - "Community 274"
+### Community 284 - "Community 284"
 Cohesion: 1.0
 Nodes (1): Plan test 4: invalid inputs raise ValueError.
 
-### Community 275 - "Community 275"
+### Community 285 - "Community 285"
 Cohesion: 1.0
 Nodes (1): Plan test 5: adding a consumer never reduces battery.recommended_capacity_ah.
 
-### Community 276 - "Community 276"
+### Community 286 - "Community 286"
 Cohesion: 1.0
 Nodes (1): Plan test 6: Wh at 12 V -> Ah -> Wh comes back within 1e-9.
 
-### Community 277 - "Community 277"
+### Community 287 - "Community 287"
 Cohesion: 1.0
 Nodes (1): ``autarchy_days = 999`` is clamped to MAX_AUTARCHY_DAYS[trip_duration]     and e
 
-### Community 278 - "Community 278"
+### Community 288 - "Community 288"
 Cohesion: 1.0
 Nodes (1): full_time only when trip_duration=permanent AND charger_speed != slow.
 
-### Community 279 - "Community 279"
+### Community 289 - "Community 289"
 Cohesion: 1.0
 Nodes (1): References/cables.md worked example: 120 A continuous at 12 V, 3 m,     3 % drop
 
-### Community 280 - "Community 280"
+### Community 290 - "Community 290"
 Cohesion: 1.0
 Nodes (1): references/alternator.md worked example: 40 A / 24 V B2B from 12 V alt     draws
 
-### Community 281 - "Community 281"
+### Community 291 - "Community 291"
 Cohesion: 1.0
 Nodes (1): solar_shortfall_wh >= 0 even when yield > demand.
 
-### Community 282 - "Community 282"
+### Community 292 - "Community 292"
 Cohesion: 1.0
 Nodes (1): Roof area cm^2 -> m^2 -> Wp conversion.
 
-### Community 283 - "Community 283"
+### Community 293 - "Community 293"
 Cohesion: 1.0
 Nodes (1): Spec C: recommendation = '' and recommended_cross_section == min_cross_section.
 
-### Community 284 - "Community 284"
+### Community 294 - "Community 294"
 Cohesion: 1.0
 Nodes (1): Spec C.3 legacy: booster.current_a must equal booster.output_current_a.
 
-### Community 285 - "Community 285"
+### Community 295 - "Community 295"
 Cohesion: 1.0
 Nodes (1): Output always has 7 cables in the ROUTES order -- shape stability.
 
-### Community 286 - "Community 286"
+### Community 296 - "Community 296"
 Cohesion: 1.0
 Nodes (1): Execute every test above, print a summary line, raise on first failure.
 
-### Community 287 - "Community 287"
+### Community 297 - "Community 297"
 Cohesion: 1.0
 Nodes (1): Realistic camper: 12 V LFP, 2 roof panels, 200 W compressor fridge +     laptop
 
-### Community 288 - "Community 288"
+### Community 298 - "Community 298"
 Cohesion: 1.0
 Nodes (1): Pretty-print an AlgorithmOutput so the human can eyeball numbers.
 
 ## Knowledge Gaps
 - **44 isolated node(s):** `algorithm/camper_electrics_sizing.py =====================================  Pure`, `One rectangular roof patch; inputs.md A.2.1.`, `One portable solar bag; inputs.md A.2.2.`, `One electrical consumer; inputs.md A.3.1.      ``voltage == 230`` is the ONLY ma`, `Trip context; inputs.md A.4.` (+39 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **Thin community `Community 19`** (7 nodes): `AmazonService`, `.constructor()`, `.getItem()`, `.initialize()`, `amazon-service.ts`, `render()`, `mermaid-diagram.tsx`
+- **Thin community `Community 22`** (7 nodes): `AmazonService`, `.constructor()`, `.getItem()`, `.initialize()`, `amazon-service.ts`, `render()`, `mermaid-diagram.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 23`** (6 nodes): `step-8-solar-bags.tsx`, `addBag()`, `effectivePortableWp()`, `newBagId()`, `removeAt()`, `setPowerAt()`
+- **Thin community `Community 27`** (6 nodes): `step-8-solar-bags.tsx`, `addBag()`, `effectivePortableWp()`, `newBagId()`, `removeAt()`, `setPowerAt()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 24`** (6 nodes): `clampRoofDimension()`, `isPresetRoofName()`, `parseDimension()`, `RoofAreaRow()`, `constants.ts`, `roof-area-row.tsx`
+- **Thin community `Community 28`** (6 nodes): `clampRoofDimension()`, `isPresetRoofName()`, `parseDimension()`, `RoofAreaRow()`, `constants.ts`, `roof-area-row.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 29`** (4 nodes): `AdminConsumerDeviceForm()`, `admin-consumer-device-form.tsx`, `use-admin-consumer-device-form.ts`, `useAdminConsumerDeviceForm()`
+- **Thin community `Community 34`** (4 nodes): `AdminConsumerDeviceForm()`, `admin-consumer-device-form.tsx`, `use-admin-consumer-device-form.ts`, `useAdminConsumerDeviceForm()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 38`** (3 nodes): `scraper.ts`, `extractAsin()`, `scrapeAmazonProduct()`
+- **Thin community `Community 55`** (3 nodes): `types.ts`, `AIInvocationError`, `.constructor()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 51`** (3 nodes): `types.ts`, `AIInvocationError`, `.constructor()`
+- **Thin community `Community 57`** (3 nodes): `wizard.ts`, `alignConsumersDcToSystem()`, `hydrateInput()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 53`** (3 nodes): `wizard.ts`, `alignConsumersDcToSystem()`, `hydrateInput()`
+- **Thin community `Community 255`** (1 nodes): `algorithm/camper_electrics_sizing.py =====================================  Pure`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 245`** (1 nodes): `algorithm/camper_electrics_sizing.py =====================================  Pure`
+- **Thin community `Community 256`** (1 nodes): `One rectangular roof patch; inputs.md A.2.1.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 246`** (1 nodes): `One rectangular roof patch; inputs.md A.2.1.`
+- **Thin community `Community 257`** (1 nodes): `One portable solar bag; inputs.md A.2.2.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 247`** (1 nodes): `One portable solar bag; inputs.md A.2.2.`
+- **Thin community `Community 258`** (1 nodes): `One electrical consumer; inputs.md A.3.1.      ``voltage == 230`` is the ONLY ma`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 248`** (1 nodes): `One electrical consumer; inputs.md A.3.1.      ``voltage == 230`` is the ONLY ma`
+- **Thin community `Community 259`** (1 nodes): `Trip context; inputs.md A.4.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 249`** (1 nodes): `Trip context; inputs.md A.4.`
+- **Thin community `Community 260`** (1 nodes): `One-way lengths for every sized route; inputs.md A.6. All in metres,     each in`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 250`** (1 nodes): `One-way lengths for every sized route; inputs.md A.6. All in metres,     each in`
+- **Thin community `Community 261`** (1 nodes): `Full wizard payload; inputs.md Part A.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 251`** (1 nodes): `Full wizard payload; inputs.md Part A.`
+- **Thin community `Community 262`** (1 nodes): `inputs.md C.7. One per route in ROUTES (always 7 entries).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 252`** (1 nodes): `inputs.md C.7. One per route in ROUTES (always 7 entries).`
+- **Thin community `Community 263`** (1 nodes): `Raise ValueError if value is not in allowed.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 253`** (1 nodes): `Raise ValueError if value is not in allowed.`
+- **Thin community `Community 264`** (1 nodes): `Raise ValueError if value is not in [lo, hi] (inclusive by default).`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 254`** (1 nodes): `Raise ValueError if value is not in [lo, hi] (inclusive by default).`
+- **Thin community `Community 265`** (1 nodes): `Raise ValueError if value is not a non-empty string.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 255`** (1 nodes): `Raise ValueError if value is not a non-empty string.`
+- **Thin community `Community 266`** (1 nodes): `Full structural + cross-field validation of AlgorithmInput.      Raises ValueErr`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 256`** (1 nodes): `Full structural + cross-field validation of AlgorithmInput.      Raises ValueErr`
+- **Thin community `Community 267`** (1 nodes): `inputs.md A.7.1. Returns 0 when 'alternator' not selected.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 257`** (1 nodes): `inputs.md A.7.1. Returns 0 when 'alternator' not selected.`
+- **Thin community `Community 268`** (1 nodes): `inputs.md A.7.2. Returns one of ShoreAvailability literals.      Precedence:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 258`** (1 nodes): `inputs.md A.7.2. Returns one of ShoreAvailability literals.      Precedence:`
+- **Thin community `Community 269`** (1 nodes): `PSH lookup. references/solar.md. See Assumption 1 at module top.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 259`** (1 nodes): `PSH lookup. references/solar.md. See Assumption 1 at module top.`
+- **Thin community `Community 270`** (1 nodes): `Split consumers into DC / AC Wh and peak W totals.      Returns:         (dc_wh,`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 260`** (1 nodes): `Split consumers into DC / AC Wh and peak W totals.      Returns:         (dc_wh,`
+- **Thin community `Community 271`** (1 nodes): `Total Wp from rectangular roof areas * density * packing factor.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 261`** (1 nodes): `Total Wp from rectangular roof areas * density * packing factor.`
+- **Thin community `Community 272`** (1 nodes): `references/batteries.md + inputs.md C.1.      Formulas::          C_usable_Wh =`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 262`** (1 nodes): `references/batteries.md + inputs.md C.1.      Formulas::          C_usable_Wh =`
+- **Thin community `Community 273`** (1 nodes): `references/solar.md + inputs.md C.2.      Formulas::          roof_wp          =`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 263`** (1 nodes): `references/solar.md + inputs.md C.2.      Formulas::          roof_wp          =`
+- **Thin community `Community 274`** (1 nodes): `references/alternator.md + inputs.md C.3.      Formulas::          i_out = min(`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 264`** (1 nodes): `references/alternator.md + inputs.md C.3.      Formulas::          i_out = min(`
+- **Thin community `Community 275`** (1 nodes): `references/shore-power.md + inputs.md C.4.      Formulas::          target_c`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 265`** (1 nodes): `references/shore-power.md + inputs.md C.4.      Formulas::          target_c`
+- **Thin community `Community 276`** (1 nodes): `references/inverter.md + inputs.md C.5.      Formula::          recommended_w =`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 266`** (1 nodes): `references/inverter.md + inputs.md C.5.      Formula::          recommended_w =`
+- **Thin community `Community 277`** (1 nodes): `references/solar.md "Sizing the MPPT" + inputs.md C.6.      Formulas::`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 267`** (1 nodes): `references/solar.md "Sizing the MPPT" + inputs.md C.6.      Formulas::`
+- **Thin community `Community 278`** (1 nodes): `references/cables.md + inputs.md C.7.      For each route, resolve (L, I, U) per`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 268`** (1 nodes): `references/cables.md + inputs.md C.7.      For each route, resolve (L, I, U) per`
+- **Thin community `Community 279`** (1 nodes): `Size a camper 12/24/48 V electrical system.      See the module docstring for th`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 269`** (1 nodes): `Size a camper 12/24/48 V electrical system.      See the module docstring for th`
+- **Thin community `Community 280`** (1 nodes): `Tiny builder used by tests + worked example, DRYs the constructors.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 270`** (1 nodes): `Tiny builder used by tests + worked example, DRYs the constructors.`
+- **Thin community `Community 281`** (1 nodes): `Plan test 1: 12 V LFP, fridge 60 W / 24 h DC, laptop 90 W / 4 h AC,     2 m cabl`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 271`** (1 nodes): `Plan test 1: 12 V LFP, fridge 60 W / 24 h DC, laptop 90 W / 4 h AC,     2 m cabl`
+- **Thin community `Community 282`** (1 nodes): `Plan test 2: no consumers -> all zeros, no crash.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 272`** (1 nodes): `Plan test 2: no consumers -> all zeros, no crash.`
+- **Thin community `Community 283`** (1 nodes): `Plan test 3: all DC -> inverter.needed False, standby NOT added.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 273`** (1 nodes): `Plan test 3: all DC -> inverter.needed False, standby NOT added.`
+- **Thin community `Community 284`** (1 nodes): `Plan test 4: invalid inputs raise ValueError.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 274`** (1 nodes): `Plan test 4: invalid inputs raise ValueError.`
+- **Thin community `Community 285`** (1 nodes): `Plan test 5: adding a consumer never reduces battery.recommended_capacity_ah.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 275`** (1 nodes): `Plan test 5: adding a consumer never reduces battery.recommended_capacity_ah.`
+- **Thin community `Community 286`** (1 nodes): `Plan test 6: Wh at 12 V -> Ah -> Wh comes back within 1e-9.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 276`** (1 nodes): `Plan test 6: Wh at 12 V -> Ah -> Wh comes back within 1e-9.`
+- **Thin community `Community 287`** (1 nodes): ```autarchy_days = 999`` is clamped to MAX_AUTARCHY_DAYS[trip_duration]     and e`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 277`** (1 nodes): ```autarchy_days = 999`` is clamped to MAX_AUTARCHY_DAYS[trip_duration]     and e`
+- **Thin community `Community 288`** (1 nodes): `full_time only when trip_duration=permanent AND charger_speed != slow.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 278`** (1 nodes): `full_time only when trip_duration=permanent AND charger_speed != slow.`
+- **Thin community `Community 289`** (1 nodes): `References/cables.md worked example: 120 A continuous at 12 V, 3 m,     3 % drop`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 279`** (1 nodes): `References/cables.md worked example: 120 A continuous at 12 V, 3 m,     3 % drop`
+- **Thin community `Community 290`** (1 nodes): `references/alternator.md worked example: 40 A / 24 V B2B from 12 V alt     draws`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 280`** (1 nodes): `references/alternator.md worked example: 40 A / 24 V B2B from 12 V alt     draws`
+- **Thin community `Community 291`** (1 nodes): `solar_shortfall_wh >= 0 even when yield > demand.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 281`** (1 nodes): `solar_shortfall_wh >= 0 even when yield > demand.`
+- **Thin community `Community 292`** (1 nodes): `Roof area cm^2 -> m^2 -> Wp conversion.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 282`** (1 nodes): `Roof area cm^2 -> m^2 -> Wp conversion.`
+- **Thin community `Community 293`** (1 nodes): `Spec C: recommendation = '' and recommended_cross_section == min_cross_section.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 283`** (1 nodes): `Spec C: recommendation = '' and recommended_cross_section == min_cross_section.`
+- **Thin community `Community 294`** (1 nodes): `Spec C.3 legacy: booster.current_a must equal booster.output_current_a.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 284`** (1 nodes): `Spec C.3 legacy: booster.current_a must equal booster.output_current_a.`
+- **Thin community `Community 295`** (1 nodes): `Output always has 7 cables in the ROUTES order -- shape stability.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 285`** (1 nodes): `Output always has 7 cables in the ROUTES order -- shape stability.`
+- **Thin community `Community 296`** (1 nodes): `Execute every test above, print a summary line, raise on first failure.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 286`** (1 nodes): `Execute every test above, print a summary line, raise on first failure.`
+- **Thin community `Community 297`** (1 nodes): `Realistic camper: 12 V LFP, 2 roof panels, 200 W compressor fridge +     laptop`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 287`** (1 nodes): `Realistic camper: 12 V LFP, 2 roof panels, 200 W compressor fridge +     laptop`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 288`** (1 nodes): `Pretty-print an AlgorithmOutput so the human can eyeball numbers.`
+- **Thin community `Community 298`** (1 nodes): `Pretty-print an AlgorithmOutput so the human can eyeball numbers.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `POST()` connect `Community 2` to `Community 0`, `Community 1`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 14`?**
-  _High betweenness centrality (0.127) - this node is a cross-community bridge._
-- **Why does `runRecommendationPipeline()` connect `Community 9` to `Community 1`, `Community 2`, `Community 5`, `Community 6`?**
+- **Why does `POST()` connect `Community 2` to `Community 0`, `Community 1`, `Community 5`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 13`, `Community 16`?**
+  _High betweenness centrality (0.107) - this node is a cross-community bridge._
+- **Why does `getPrisma()` connect `Community 0` to `Community 1`, `Community 2`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 10`?**
   _High betweenness centrality (0.076) - this node is a cross-community bridge._
-- **Why does `getPrisma()` connect `Community 0` to `Community 1`, `Community 2`, `Community 3`, `Community 6`, `Community 7`, `Community 8`, `Community 10`?**
-  _High betweenness centrality (0.075) - this node is a cross-community bridge._
-- **Are the 47 inferred relationships involving `getPrisma()` (e.g. with `POST()` and `listAlgorithmTestPresets()`) actually correct?**
-  _`getPrisma()` has 47 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `runRecommendationPipeline()` connect `Community 9` to `Community 1`, `Community 2`, `Community 4`, `Community 5`?**
+  _High betweenness centrality (0.045) - this node is a cross-community bridge._
+- **Are the 48 inferred relationships involving `getPrisma()` (e.g. with `POST()` and `listAlgorithmTestPresets()`) actually correct?**
+  _`getPrisma()` has 48 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 28 inferred relationships involving `POST()` (e.g. with `isAdminExportDomain()` and `importAdminDomain()`) actually correct?**
   _`POST()` has 28 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 21 inferred relationships involving `readFromDatabase()` (e.g. with `loadBrandsWithTypes()` and `listAdminProductCategories()`) actually correct?**
-  _`readFromDatabase()` has 21 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 20 inferred relationships involving `computeAlgorithm()` (e.g. with `mergeAlgorithmTuning()` and `validate()`) actually correct?**
-  _`computeAlgorithm()` has 20 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 22 inferred relationships involving `readFromDatabase()` (e.g. with `loadBrandsWithTypes()` and `listAdminProductCategories()`) actually correct?**
+  _`readFromDatabase()` has 22 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 21 inferred relationships involving `computeAlgorithm()` (e.g. with `mergeAlgorithmTuning()` and `validate()`) actually correct?**
+  _`computeAlgorithm()` has 21 INFERRED edges - model-reasoned connections that need verification._

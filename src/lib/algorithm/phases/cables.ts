@@ -76,11 +76,9 @@ function resolveRoute(
     case "battery_to_fuse_box":
       return {
         lengthM: cl.batteryToFuseBox,
-        // DC distribution peak + the inverter's DC draw.
+        // Nur DC-Verteiler-Last: der Wechselrichterzug sitzt separat (service_to_inverter).
         currentA:
-          input.systemVoltage > 0
-            ? peakDcW / input.systemVoltage + iInvDc
-            : 0,
+          input.systemVoltage > 0 ? peakDcW / input.systemVoltage : 0,
         voltage: input.systemVoltage,
       };
     default:
@@ -101,8 +99,7 @@ export function sizeCables(
   solar: SolarRecommendation,
   tuning: AlgorithmTuning,
 ): CableRecommendation[] {
-  // Hoist the inverter's DC-input current once — it is used for both
-  // `service_to_inverter` and as a component of `battery_to_fuse_box`.
+  // Inverter-DC-Strang (Batterie → Wechselrichter); nur für `service_to_inverter`.
   const iInvDc =
     inverter.recommendedW > 0 && input.systemVoltage > 0
       ? inverter.recommendedW / (input.systemVoltage * tuning.inverterEfficiency)

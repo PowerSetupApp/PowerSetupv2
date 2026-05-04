@@ -1,10 +1,11 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { ExternalLink, Save } from "lucide-react";
 
+import { AdminProductDeleteButton } from "@/components/admin/admin-product-delete-button";
 import { AdminProductFormFields } from "@/components/admin/admin-product-form-fields";
 import { useAdminProductForm } from "@/components/admin/use-admin-product-form";
 import { adminCatalogUpdateProductAction } from "@/lib/admin/catalog-actions";
@@ -15,8 +16,10 @@ type Props = { initial: AdminProductEditorPayload };
 
 export function AdminProductEditForm({ initial }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [pending, startTransition] = useTransition();
   const [success, setSuccess] = useState<string | null>(null);
+  const importBrandHint = searchParams.get("suggestedBrand")?.trim() ?? null;
 
   const form = useAdminProductForm({
     name: initial.name,
@@ -60,7 +63,7 @@ export function AdminProductEditForm({ initial }: Props) {
           <h1 className="font-display text-2xl font-normal tracking-tight text-foreground">Produkt bearbeiten</h1>
           <p className="mt-1 text-sm text-muted-foreground">{form.name || "—"}</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {form.affiliateUrl.trim() ? (
             <Button asChild variant="outline" size="sm">
               <a href={form.affiliateUrl.trim()} target="_blank" rel="noopener noreferrer">
@@ -69,6 +72,7 @@ export function AdminProductEditForm({ initial }: Props) {
               </a>
             </Button>
           ) : null}
+          <AdminProductDeleteButton id={initial.id} name={form.name || initial.name || "Produkt"} />
           <Button asChild variant="ghost" size="sm">
             <Link href="/admin/products">Zur Liste</Link>
           </Button>
@@ -77,6 +81,12 @@ export function AdminProductEditForm({ initial }: Props) {
 
       {form.error ? <p className="text-sm text-destructive">{form.error}</p> : null}
       {success ? <p className="text-sm text-emerald-700 dark:text-emerald-400">{success}</p> : null}
+      {importBrandHint ? (
+        <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-foreground">
+          Import-Hinweis: erkannte Marke „{importBrandHint}“ passt zu keiner bestehenden Marke. Bitte Marke anlegen oder
+          im Filter „Marke“ zuordnen.
+        </p>
+      ) : null}
 
       <AdminProductFormFields form={form} categories={initial.categories} brands={initial.brands} />
 

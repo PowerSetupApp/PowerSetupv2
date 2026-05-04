@@ -418,6 +418,30 @@ export interface AlgorithmOutput {
    * quantities used by the formulas.
    */
   breakdown?: Record<string, number | string>;
+  /**
+   * Aggregierte Sicherungstypen (Bauform + fachliche Begründung), ohne Nennströme pro Slot.
+   * Bei älterem persistiertem JSON ohne Feld: Client mit `?? []` behandeln.
+   */
+  requiredFuseCategories: readonly RequiredFuseCategory[];
+}
+
+/** Sicherungstyp / Rolle (Ergebnis-Checkliste, kein Nennwert pro Slot). */
+export type RequiredFuseFamilyId =
+  | "ato_atc"
+  | "midi_ami"
+  | "mega_amg"
+  | "anl"
+  | "class_t"
+  | "shore_ac"
+  | "voltage_note";
+
+export interface RequiredFuseCategory {
+  id: string;
+  fuseFamily: RequiredFuseFamilyId;
+  /** Kürzel für die UI, z. B. „Class T / ANL (Haupt)“. */
+  familyLabelDe: string;
+  /** Freitext, warum dieser Typ eine Rolle spielt. */
+  reasonDe: string;
 }
 
 // ---------------------------------------------------------------------------

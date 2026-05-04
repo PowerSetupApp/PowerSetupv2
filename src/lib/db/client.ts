@@ -49,9 +49,15 @@ function normalizePgConnectionString(connectionString: string): string {
  * damit typische Cloud-Zertifikate unter Windows/CI zuverlässig funktionieren).
  */
 function poolConfigFromConnectionString(connectionString: string): PoolConfig {
+  const isNeonHost = /\.neon\.tech\b/i.test(connectionString);
+  const maxFromEnv = process.env.DATABASE_POOL_MAX;
+  const defaultMax = isNeonHost ? 3 : 10;
+  const max =
+    maxFromEnv && maxFromEnv.trim() !== "" ? Number.parseInt(maxFromEnv, 10) : defaultMax;
+
   const config: PoolConfig = {
     connectionString,
-    max: 10,
+    max: Number.isNaN(max) ? defaultMax : max,
     connectionTimeoutMillis: 15_000,
   };
 

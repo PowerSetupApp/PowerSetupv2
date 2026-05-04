@@ -17,5 +17,7 @@
 
 - [ ] Result-UUID nach Reload erreichbar (Retention 30 Tage, siehe `src/lib/results/result-helpers.ts`)
 - [ ] Affiliate-Links / Darstellung wie PRD
+- [x] Sicherungstyp-Checkliste (Bauform + Begründung, keine Nennwerte) auf der Ergebnis-Seite — `requiredFuseCategories` im Algorithmus, UI `FuseCategoryChecklist`
+- [x] Ehrliche Produkthits: kein „bester schlechter“ Katalog-Treffer unter Mindest-Score — `buildProductDisplayLines` mit `type: "unmet"`
 
 Vollständige Spec: bei Bedarf mit `/requirements` vertiefen.

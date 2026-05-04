@@ -17,6 +17,9 @@ src/generated/
 # TypeScript incremental build cache
 *.tsbuildinfo
 
+# DB-Backups (lokal, nie committen; Ordner `backups/` ggf. mit leerer `.gitkeep` im Repo)
+**/*.dump
+
 # Local Cursor IDE settings (machine-specific)
 .cursor/settings.json
 

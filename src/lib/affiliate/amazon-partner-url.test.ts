@@ -35,4 +35,10 @@ describe("applyAmazonPartnerTag", () => {
     );
     vi.unstubAllEnvs();
   });
+
+  it("uses explicit partner tag over env", () => {
+    vi.stubEnv("AMAZON_PARTNER_TAG", "env-tag-21");
+    expect(applyAmazonPartnerTag("https://amazon.de/dp/X", "db-tag-21")).toBe("https://amazon.de/dp/X?tag=db-tag-21");
+    vi.unstubAllEnvs();
+  });
 });

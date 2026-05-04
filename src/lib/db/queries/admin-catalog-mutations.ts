@@ -17,6 +17,10 @@ import type {
   AdminConsumerDeviceCreateInput,
   AdminConsumerDeviceUpdateInput,
 } from "@/lib/schemas/admin-consumer";
+import type { AmazonImportMappedPayload } from "@/lib/amazon/map-to-product-create";
+import { deleteVercelBlobUrlIfOwned } from "@/lib/blob/product-image";
+import { applyAmazonPartnerTag } from "@/lib/affiliate/amazon-partner-url";
+import { getAmazonPartnerTag } from "@/lib/db/queries/admin-settings-amazon";
 import type { AdminProductCreateInput } from "@/lib/schemas/admin-product-create";
 import type { AdminProductUpdateInput } from "@/lib/schemas/admin-product-update";
 
@@ -93,6 +97,62 @@ export async function createAdminProduct(input: AdminProductCreateInput): Promis
   }
 }
 
+export type AmazonImportCreateRow = AmazonImportMappedPayload & { categoryId: string };
+
+/**
+ * Legt ein Produkt nach Amazon-Import an — inkl. `filterValues` und Skalaren für den Prefilter.
+ */
+export async function createAdminProductFromAmazonImport(
+  row: AmazonImportCreateRow,
+): Promise<AdminCatalogMutationResultWithId> {
+  try {
+    const prisma = getPrisma();
+    const partnerTag = await getAmazonPartnerTag();
+    const affiliateUrl = applyAmazonPartnerTag(row.affiliateUrl, partnerTag);
+    const json = row.filterValues as Prisma.InputJsonValue;
+    const s = row.scalars;
+    const created = await prisma.product.create({
+      data: {
+        name: row.name,
+        description: row.description,
+        icon: null,
+        imageUrl: row.imageUrl,
+        affiliateUrl,
+        asin: row.asin,
+        price: row.price,
+        categoryId: row.categoryId,
+        specs: row.specs,
+        isActive: true,
+        brandId: row.brandId,
+        filterValues: json,
+        powerW: s.powerW,
+        capacityAh: s.capacityAh,
+        voltageV: s.voltageV,
+        batteryType: s.batteryType,
+        currentA: s.currentA,
+        crossSectionMm2: s.crossSectionMm2,
+        solarWp: s.solarWp,
+        supportedVoltages:
+          s.supportedVoltages == null ? undefined : (s.supportedVoltages as Prisma.InputJsonValue),
+        maxDischargeA: s.maxDischargeA,
+        waveform: s.waveform,
+        fuseType: s.fuseType,
+      },
+      select: { id: true },
+    });
+    invalidateCatalogCache();
+    return { ok: true, id: created.id };
+  } catch (e) {
+    if (e instanceof PrismaClientKnownRequestError && e.code === "P2002") {
+      const target = (e.meta as { target?: string[] } | undefined)?.target;
+      if (target?.includes("asin")) {
+        return { ok: false, message: "Diese ASIN ist bereits im Katalog vorhanden." };
+      }
+    }
+    return { ok: false, message: mapUniqueError("Das Produkt konnte nicht angelegt werden.", e) };
+  }
+}
+
 export async function updateAdminProductById(input: AdminProductUpdateInput): Promise<AdminCatalogMutationResult> {
   try {
     const prisma = getPrisma();
@@ -127,6 +187,11 @@ export async function updateAdminProductById(input: AdminProductUpdateInput): Pr
 export async function deleteAdminProductById(id: string): Promise<AdminCatalogMutationResult> {
   try {
     const prisma = getPrisma();
+    const existing = await prisma.product.findUnique({ where: { id }, select: { imageUrl: true } });
+    if (!existing) {
+      return { ok: false, message: "Das Produkt wurde nicht gefunden oder ist bereits gelöscht." };
+    }
+    await deleteVercelBlobUrlIfOwned(existing.imageUrl);
     await prisma.product.delete({ where: { id } });
     invalidateCatalogCache();
     return { ok: true };

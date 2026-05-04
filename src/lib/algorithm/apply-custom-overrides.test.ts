@@ -80,6 +80,7 @@ function baseOutput(): AlgorithmOutput {
     controller: { needed: true, type: "mppt", currentA: 25, maxInputWp: 300, scope: "roof" },
     portableController: { needed: false, type: "mppt", currentA: 0, maxInputWp: 0, scope: "portable" },
     cables: [cable],
+    requiredFuseCategories: [],
   };
 }
 

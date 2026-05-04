@@ -132,6 +132,18 @@ export async function listAdminProductCategories(): Promise<DbReadResult<AdminPr
   });
 }
 
+/** Slug für Amazon-Import / KI-Kontext (Kategorie existiert). */
+export async function getAdminCategorySlugById(categoryId: string): Promise<DbReadResult<string | null>> {
+  return readFromDatabase(async () => {
+    const prisma = getPrisma();
+    const r = await prisma.category.findUnique({
+      where: { id: categoryId },
+      select: { slug: true },
+    });
+    return r?.slug ?? null;
+  });
+}
+
 const SPECS_PREVIEW_MAX = 1200;
 
 export async function getAdminProductPreviewById(id: string): Promise<DbReadResult<AdminProductPreviewRow | null>> {

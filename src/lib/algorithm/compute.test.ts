@@ -108,12 +108,10 @@ describe("compute_algorithm — hand-computable case", () => {
   //     recAh   = minAh * 1.25            =    268.32 Ah
   //   inverter (low sim -> 1.25):
   //     recW    = 90 * 1.25               =    112.5 W
-  //   cable battery_to_fuse_box (critical, 1 % drop, 12 V):
-  //     iInvDc  = 112.5 / (12 * 0.9)      =     10.4167 A
-  //     peakDc  = 60 / 12                 =      5.0    A
-  //     iTotal  = 15.4167 A
+  //   cable battery_to_fuse_box (critical, 1 % drop, 12 V) — nur DC-Strang, ohne WR:
+  //     I b2f   = 60/12 = 5 A  (Laptop 230V geht über service_to_inverter, nicht b2f)
   //     dUMax   = 12 * 0.01               =      0.12 V
-  //     minMm²  = 2 * 2 * 15.4167 * 0.0178 / 0.12 = 9.147 mm²
+  //     minMm²  = 2 * 2 * 5 * 0.0178 / 0.12 = 2.967 mm²
   const consumers: Consumer[] = [
     { id: "fridge", name: "Fridge", power: 60, daily: 24, voltage: 12 },
     { id: "laptop", name: "Laptop", power: 90, daily: 4, voltage: 230 },
@@ -159,7 +157,7 @@ describe("compute_algorithm — hand-computable case", () => {
     const b2f = out.cables.find((c) => c.route === "battery_to_fuse_box");
     expect(b2f).toBeDefined();
     expect(b2f!.isCritical).toBe(true);
-    const expectedI = 60 / 12 + 112.5 / (12 * 0.9);
+    const expectedI = 60 / 12;
     expect(b2f!.currentA).toBeCloseTo(expectedI, 9);
     const expectedMinMm2 = (2 * 2 * expectedI * COPPER_RHO) / (12 * 0.01);
     expect(b2f!.minCrossSection).toBeCloseTo(expectedMinMm2, 9);

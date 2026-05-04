@@ -1,7 +1,7 @@
 import type { ResultProductCard } from "@/lib/db/queries/products";
 import type { AISelectionItem } from "@/lib/recommendation/types";
 import type { SolarWiringRecommendation } from "@/lib/recommendation/wiring/types";
-import type { ResultProductDisplayLine } from "@/lib/results/build-product-display-lines";
+import type { ResultProductLine } from "@/lib/results/build-product-display-lines";
 
 function reasonForProduct(productId: string, aiSelections: AISelectionItem[]): string | null {
   const hit = aiSelections.find((s) => s.productId === productId);
@@ -10,7 +10,7 @@ function reasonForProduct(productId: string, aiSelections: AISelectionItem[]): s
 }
 
 export interface ProductRecommendationListProps {
-  lines: ResultProductDisplayLine[];
+  lines: ResultProductLine[];
   products: ResultProductCard[];
   aiSelections: AISelectionItem[];
   solarWiring?: SolarWiringRecommendation | null;
@@ -30,18 +30,49 @@ export function ProductRecommendationList({
     );
   }
 
+  const productById = new Map(products.map((c) => [c.id, c]));
+
   return (
     <section className="flex flex-col gap-4">
       <div>
         <h2 className="font-display text-xl font-semibold tracking-tight text-foreground">Empfohlene Produkte</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Auswahl aus dem Katalog; Links können Affiliate-Links (Amazon) sein.
+          Auswahl aus dem Katalog; Links können Affiliate-Links (Amazon) sein. Fehlt ein sinnvoller
+          Treffer, erscheint ein Hinweis statt „beste schwache“ Alternative.
         </p>
       </div>
       <ul className="flex flex-col gap-4">
         {lines.map((line, i) => {
-          const p = products[i];
-          if (!p) return null;
+          if (line.type === "unmet") {
+            return (
+              <li
+                key={`unmet-${i}-${line.bucket}-${line.contextDe ?? ""}`}
+                className="rounded-2xl border border-amber-500/50 bg-amber-500/10 px-4 py-3 text-sm text-foreground"
+                role="status"
+              >
+                {line.contextDe ? (
+                  <p className="font-medium text-foreground">
+                    {line.contextDe}
+                    <span className="text-muted-foreground"> — {line.messageDe}</span>
+                  </p>
+                ) : (
+                  <p>{line.messageDe}</p>
+                )}
+              </li>
+            );
+          }
+          const p = productById.get(line.productId);
+          if (!p) {
+            return (
+              <li
+                key={`miss-${i}-${line.productId}`}
+                className="rounded-2xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-foreground"
+              >
+                Produkt (ID) konnte nicht aus dem Katalog geladen werden — bitte Seite neu laden oder
+                Admin prüfen.
+              </li>
+            );
+          }
           const reason = reasonForProduct(p.id, aiSelections);
           const context = line.contextDe?.trim();
           const wiringBlock =

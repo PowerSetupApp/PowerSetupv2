@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { FuseCategoryChecklist } from "@/components/result/fuse-category-checklist";
 import { ProductRecommendationList } from "@/components/result/product-recommendation-list";
 import { ResultGenerateRetry } from "@/components/result/result-generate-retry";
 import { SchematicSection } from "@/components/result/schematic-section";
@@ -42,7 +43,9 @@ async function ResultPageBody({ params }: PageProps) {
 
   const expired = isResultExpired(row.expiresAt);
   const vm = parseResultViewModel(row);
-  const orderedIds = vm.productDisplayLines.map((l) => l.productId);
+  const orderedIds = vm.productDisplayLines
+    .filter((l) => l.type === "product")
+    .map((l) => l.productId);
   const productsResult = await listProductsByIdsForResult(orderedIds);
   const products = productsResult.ok ? productsResult.data : [];
   const displayLines =
@@ -82,6 +85,7 @@ async function ResultPageBody({ params }: PageProps) {
             </div>
           ) : null}
           <SystemSummaryCard calculations={vm.calculations} />
+          <FuseCategoryChecklist items={vm.calculations.requiredFuseCategories ?? []} />
           <ProductRecommendationList
             lines={displayLines}
             products={products}

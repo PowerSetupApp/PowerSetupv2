@@ -3,7 +3,7 @@ import type { ResultRowForPage } from "@/lib/db/queries/results";
 import type { AISelectionItem, PrefilterResult } from "@/lib/recommendation/types";
 import type { SolarWiringRecommendation } from "@/lib/recommendation/wiring/types";
 
-import { buildProductDisplayLines, type ResultProductDisplayLine } from "./build-product-display-lines";
+import { buildProductDisplayLines, type ResultProductLine } from "./build-product-display-lines";
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null;
@@ -65,8 +65,14 @@ function parseAiSelections(ai: unknown): AISelectionItem[] {
 }
 
 /** Eindeutige Produkt-IDs für Schaltplan/PDF (ohne doppelte Kabel-SKUs). */
-function uniqueProductIds(lines: ResultProductDisplayLine[]): string[] {
-  return [...new Set(lines.map((l) => l.productId))];
+function uniqueProductIds(lines: ResultProductLine[]): string[] {
+  return [
+    ...new Set(
+      lines
+        .filter((l): l is Extract<ResultProductLine, { type: "product" }> => l.type === "product")
+        .map((l) => l.productId),
+    ),
+  ];
 }
 
 export type ResultViewModel = {
@@ -74,7 +80,7 @@ export type ResultViewModel = {
   prefilter: PrefilterResult | null;
   aiSelections: AISelectionItem[];
   /** Reihenfolge inkl. mehrfacher IDs (z. B. mehrere Kabel-Strecken). */
-  productDisplayLines: ResultProductDisplayLine[];
+  productDisplayLines: ResultProductLine[];
   /** Eindeutige IDs für Schaltplan/PDF. */
   productIdsForDisplay: string[];
   /** PV-Reihe/Parallel + MPPT-Check (optional, ab Generierung mit Wiring-Feld). */

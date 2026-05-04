@@ -1,7 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import * as z from "zod";
 
+import { extractAsinFromAmazonInput } from "@/lib/amazon/asin";
+import { extractAmazonProductForCategory } from "@/lib/amazon/extractor";
+import { applyTechnicalDetailNumericInference } from "@/lib/amazon/infer-from-item";
+import { fetchAmazonItem } from "@/lib/amazon/index";
+import { mapAmazonExtractionToImportPayload } from "@/lib/amazon/map-to-product-create";
+import { resolveImportedProductImageUrl } from "@/lib/blob/product-image";
 import type {
   AdminCatalogMutationResult,
   AdminCatalogMutationResultWithId,
@@ -13,6 +20,7 @@ import {
   createAdminConsumerCategory,
   createAdminConsumerDevice,
   createAdminProduct,
+  createAdminProductFromAmazonImport,
   deleteAdminBrandById,
   deleteAdminCategoryById,
   deleteAdminCategoryFilterById,
@@ -28,10 +36,13 @@ import {
   upsertAdminBrandFilterCategory,
 } from "@/lib/db/queries/admin-catalog-mutations";
 import {
+  getAdminCategorySlugById,
   getAdminProductPreviewById,
+  listAdminBrands,
   listAdminCategoryFiltersByCategoryId,
 } from "@/lib/db/queries/admin-catalog-read";
 import type { AdminCategoryFilterEditorRow, AdminProductPreviewRow } from "@/lib/db/queries/admin-catalog-read";
+import { getAmazonPartnerTag } from "@/lib/db/queries/admin-settings-amazon";
 import {
   adminBrandCategoryMappingSchema,
   adminBrandCreateSchema,
@@ -53,6 +64,84 @@ import { adminProductCreateSchema } from "@/lib/schemas/admin-product-create";
 import { adminProductUpdateSchema } from "@/lib/schemas/admin-product-update";
 
 const INVALID_INPUT_MESSAGE = "Bitte Eingaben prüfen.";
+
+const amazonImportProductSchema = z.object({
+  asinOrUrl: z.string().min(1),
+  categoryId: z.string().uuid(),
+  mode: z.enum(["api", "scrape"]),
+});
+
+export type ImportProductFromAmazonActionResult =
+  | { ok: true; productId: string; suggestedBrandName: string | null }
+  | { ok: false; message: string };
+
+/**
+ * Amazon-Import (Creators API oder Scraping) mit KI-Extraktion und Befüllung von Filtern + Prefilter-Skalaren.
+ */
+export async function importProductFromAmazonAction(
+  input: unknown,
+): Promise<ImportProductFromAmazonActionResult> {
+  const parsed = amazonImportProductSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, message: INVALID_INPUT_MESSAGE };
+  }
+  const { asinOrUrl, categoryId, mode } = parsed.data;
+
+  const slugRes = await getAdminCategorySlugById(categoryId);
+  if (!slugRes.ok) return { ok: false, message: slugRes.message };
+  if (!slugRes.data) {
+    return { ok: false, message: "Kategorie nicht gefunden." };
+  }
+
+  const filtersRes = await listAdminCategoryFiltersByCategoryId(categoryId);
+  if (!filtersRes.ok) return { ok: false, message: filtersRes.message };
+
+  const brandsRes = await listAdminBrands();
+  if (!brandsRes.ok) return { ok: false, message: brandsRes.message };
+  const brands = brandsRes.data.filter((b) => b.isActive).map((b) => ({ id: b.id, name: b.name }));
+
+  const asin = extractAsinFromAmazonInput(asinOrUrl);
+  if (!asin) {
+    return { ok: false, message: "Ungültige ASIN oder Amazon-URL." };
+  }
+
+  const partnerTag = await getAmazonPartnerTag();
+  let item;
+  try {
+    item = await fetchAmazonItem(asin, mode, partnerTag);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Amazon-Abruf fehlgeschlagen.";
+    return { ok: false, message: msg };
+  }
+  if (!item) {
+    return {
+      ok: false,
+      message:
+        mode === "scrape"
+          ? `Produkt mit ASIN „${asin}“ über Scraping nicht gefunden.`
+          : `Produkt mit ASIN „${asin}“ über die Amazon-API nicht gefunden.`,
+    };
+  }
+
+  let extracted;
+  try {
+    extracted = await extractAmazonProductForCategory(item, slugRes.data);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "KI-Extraktion fehlgeschlagen.";
+    return { ok: false, message: msg };
+  }
+
+  const extractedInferred = applyTechnicalDetailNumericInference(extracted, item);
+  const mapped = mapAmazonExtractionToImportPayload(extractedInferred, item, filtersRes.data, brands);
+  const imageUrl = await resolveImportedProductImageUrl(mapped.imageUrl, asin, item.detailPageUrl ?? null);
+  const out = await createAdminProductFromAmazonImport({ ...mapped, categoryId, imageUrl });
+  if (!out.ok) {
+    return { ok: false, message: out.message };
+  }
+  revalidatePath("/admin/products");
+  revalidatePath(`/admin/products/${out.id}`);
+  return { ok: true, productId: out.id, suggestedBrandName: mapped.suggestedBrandName };
+}
 
 // ============================================================
 // Read actions
@@ -105,7 +194,10 @@ export async function adminCatalogUpdateProductAction(input: unknown): Promise<A
 
 export async function adminCatalogDeleteProductAction(id: string): Promise<AdminCatalogMutationResult> {
   const out = await deleteAdminProductById(id);
-  if (out.ok) revalidatePath("/admin/products");
+  if (out.ok) {
+    revalidatePath("/admin/products");
+    revalidatePath(`/admin/products/${id}`);
+  }
   return out;
 }
 

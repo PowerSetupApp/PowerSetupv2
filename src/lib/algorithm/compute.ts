@@ -31,6 +31,7 @@ import { sizeCharger } from "./phases/charger";
 import { sizeController, sizePortableController } from "./phases/controller";
 import { sizeInverter } from "./phases/inverter";
 import { sizeSolar } from "./phases/solar";
+import { buildRequiredFuseCategories } from "./required-fuse-categories";
 import type { AlgorithmInput, AlgorithmOutput } from "./types";
 import { validate } from "./validate";
 
@@ -110,6 +111,17 @@ export function computeAlgorithm(
     tuning,
   );
 
+  const requiredFuseCategories = buildRequiredFuseCategories(input, {
+    battery,
+    solar,
+    booster,
+    charger,
+    inverter,
+    controller,
+    portableController,
+    cables,
+  });
+
   const output: AlgorithmOutput = {
     battery,
     solar,
@@ -119,6 +131,7 @@ export function computeAlgorithm(
     controller,
     portableController,
     cables,
+    requiredFuseCategories,
   };
 
   if (explain) {
