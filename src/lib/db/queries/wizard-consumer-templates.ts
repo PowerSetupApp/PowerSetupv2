@@ -1,4 +1,5 @@
 import type { ConsumerVoltage } from "@/lib/algorithm/types";
+import { normalizeIconKey } from "@/lib/icons/normalize-icon-key";
 
 import { getPrisma } from "../client";
 import { readFromDatabase, type DbReadResult } from "../prisma-errors";
@@ -68,8 +69,8 @@ export async function listWizardConsumerTemplates(): Promise<
       categoryId: d.category.id,
       categoryName: d.category.name,
       categorySortOrder: d.category.sortOrder,
-      categoryIcon: d.category.icon,
-      deviceIcon: d.icon,
+      categoryIcon: normalizeIconKey(d.category.icon),
+      deviceIcon: normalizeIconKey(d.icon),
       defaultPower: d.defaultPower,
       defaultHoursPerDay: d.defaultHoursPerDay,
       defaultVoltage: parseDefaultVoltage(d.defaultVoltage),

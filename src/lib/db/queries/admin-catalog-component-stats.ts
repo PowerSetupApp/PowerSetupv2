@@ -8,7 +8,21 @@ import * as z from "zod";
 import { isSolarChargerSlug } from "@/lib/admin/admin-catalog-product-completeness";
 import { getPrisma } from "@/lib/db/client";
 
+import type { Prisma } from "@/generated/prisma/client";
+
 import type { AlgorithmSettingsPatch } from "@/lib/db/queries/admin-settings-algorithm";
+
+const inverterCategoryWhere: Prisma.CategoryWhereInput = {
+  OR: [{ slug: { contains: "inverter" } }, { slug: { contains: "wechselrichter" } }],
+};
+
+const solarCategoryWhere: Prisma.CategoryWhereInput = {
+  OR: [
+    { slug: { contains: "solar" } },
+    { slug: { contains: "mppt" } },
+    { slug: { contains: "photovoltaik" } },
+  ],
+};
 
 const valueCountSchema = z.object({
   value: z.number(),
@@ -39,18 +53,6 @@ export const catalogComponentDimensionStatsSchema = z.object({
 });
 
 export type CatalogComponentDimensionStats = z.infer<typeof catalogComponentDimensionStatsSchema>;
-
-const inverterCategoryWhere = {
-  OR: [{ slug: { contains: "inverter" } }, { slug: { contains: "wechselrichter" } }],
-} as const;
-
-const solarCategoryWhere = {
-  OR: [
-    { slug: { contains: "solar" } },
-    { slug: { contains: "mppt" } },
-    { slug: { contains: "photovoltaik" } },
-  ],
-} as const;
 
 /**
  * Distinct Spec-Werte + Lücken für den Admin-Katalog (read-only).

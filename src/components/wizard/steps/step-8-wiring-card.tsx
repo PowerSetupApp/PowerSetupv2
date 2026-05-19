@@ -24,7 +24,7 @@ export function Step8WiringCard({ wiring }: { wiring: SolarWiringRecommendation 
       : `Laderegler bis ca. ${Math.round(wiring.mpptMaxInputV)} V PV-Eingang — MPP-String ca. ${Math.round(wiring.arrayVoltageVmppV)} V, Kälte-Leerlauf ca. ${Math.round(wiring.arrayVoltageVocColdV * 10) / 10} V (mit Reserve).`;
 
   return (
-    <section className="flex flex-col gap-2">
+    <section className="flex flex-col gap-4">
       <span className={wizardSectionLabel()}>PV-Verschaltung (Katalog)</span>
       <div className={cn(wizardInsetPanel(), "flex flex-col gap-2 text-sm")}>
         <p>

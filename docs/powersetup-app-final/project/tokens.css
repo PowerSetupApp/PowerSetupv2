@@ -1,0 +1,234 @@
+/* ==========================================================================
+   PowerSetup Design System — Core Tokens
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* ---------- Color: Base palette ---------- */
+
+  /* Sand — the canvas. Subtly warm, crisp, high-contrast steps. */
+  --sand-50:   #FBFAF7;
+  --sand-100:  #F4F1EA;
+  --sand-200:  #E4DED1;
+  --sand-300:  #C9C0AD;
+  --sand-400:  #A69B84;
+  --sand-500:  #7B7261;
+  --sand-600:  #554E42;
+  --sand-700:  #3A342C;
+  --sand-800:  #221F1A;
+  --sand-900:  #0F0D0B;
+
+  /* Charcoal — the ink. Near-neutral grey with a faint warm tint. */
+  --charcoal-50:   #F2F2F0;
+  --charcoal-100:  #DEDDD9;
+  --charcoal-200:  #A9A7A0;
+  --charcoal-300:  #6E6C65;
+  --charcoal-400:  #3D3B36;
+  --charcoal-500:  #1E1D1A;
+  --charcoal-600:  #121210;
+  --charcoal-700:  #080807;
+
+  /* Solar Amber — the single bright accent. */
+  --amber-50:   #FFF7E6;
+  --amber-100:  #FFE9B8;
+  --amber-200:  #FFD379;
+  --amber-300:  #FFB93D;
+  --amber-400:  #F59E0B;  /* primary */
+  --amber-500:  #D97F05;
+  --amber-600:  #A85F03;
+  --amber-700:  #7A4402;
+
+  /* Forest — "genug Kapazität" / success. */
+  --forest-50:   #EEF5EE;
+  --forest-100:  #D3E6D4;
+  --forest-300:  #7FB088;
+  --forest-500:  #3E7548;
+  --forest-700:  #254B2C;
+
+  /* Rust — warning / overdraw. */
+  --rust-50:    #FAEEE8;
+  --rust-100:   #F2D4C4;
+  --rust-300:   #D88863;
+  --rust-500:   #B45A2C;
+  --rust-700:   #7A3A18;
+
+  /* ---------- Color: Semantic ---------- */
+
+  --bg-1: var(--sand-50);         /* canvas */
+  --bg-2: #FFFFFF;                /* paper / raised */
+  --bg-3: var(--sand-100);        /* subtle panel */
+  --bg-inverse: var(--charcoal-600);
+
+  --fg-1: var(--charcoal-600);    /* primary text */
+  --fg-2: var(--charcoal-400);    /* secondary text */
+  --fg-3: var(--charcoal-300);    /* tertiary / captions */
+  --fg-inverse: var(--sand-50);
+  --fg-on-amber: var(--charcoal-700);
+
+  --border-1: var(--sand-200);    /* default hairline */
+  --border-2: var(--sand-300);    /* emphasized */
+  --border-focus: var(--amber-400);
+
+  --brand: var(--amber-400);
+  --brand-hover: var(--amber-500);
+  --brand-fg: var(--charcoal-700);
+
+  --success: var(--forest-500);
+  --success-bg: var(--forest-50);
+  --warning: var(--amber-500);
+  --warning-bg: var(--amber-50);
+  --danger: var(--rust-500);
+  --danger-bg: var(--rust-50);
+
+  /* ---------- Typography: families ---------- */
+
+  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-body:    'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* ---------- Typography: scale (fluid-ish) ---------- */
+
+  --text-xs:   0.75rem;   /* 12px — metadata, tags */
+  --text-sm:   0.875rem;  /* 14px — captions, helper text */
+  --text-base: 1rem;      /* 16px — body */
+  --text-md:   1.125rem;  /* 18px — lead body */
+  --text-lg:   1.375rem;  /* 22px — small heads */
+  --text-xl:   1.75rem;   /* 28px — section heads */
+  --text-2xl:  2.25rem;   /* 36px — page titles */
+  --text-3xl:  3rem;      /* 48px — hero on app */
+  --text-4xl:  4rem;      /* 64px — marketing hero */
+  --text-5xl:  5.5rem;    /* 88px — oversized display */
+
+  --leading-tight:  1.1;
+  --leading-snug:   1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed:1.65;
+
+  --tracking-tight:  -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide:   0.02em;
+  --tracking-ultra:  0.12em;  /* ALL CAPS eyebrows */
+
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+
+  /* ---------- Spacing (8pt grid) ---------- */
+
+  --sp-0:   0;
+  --sp-1:   4px;
+  --sp-2:   8px;
+  --sp-3:   12px;
+  --sp-4:   16px;
+  --sp-5:   24px;
+  --sp-6:   32px;
+  --sp-7:   40px;
+  --sp-8:   48px;
+  --sp-9:   64px;
+  --sp-10:  80px;
+  --sp-12:  96px;
+  --sp-14:  128px;
+  --sp-16:  160px;
+
+  /* ---------- Radii ---------- */
+
+  --radius-xs:   4px;
+  --radius-sm:   6px;   /* inputs */
+  --radius-md:   8px;   /* buttons */
+  --radius-lg:   12px;  /* cards */
+  --radius-xl:   16px;  /* hero panels */
+  --radius-2xl:  24px;
+  --radius-full: 999px;
+
+  /* ---------- Shadows (warm-tinted) ---------- */
+
+  --shadow-sm: 0 1px 2px 0 rgba(52, 44, 27, 0.06),
+               0 1px 1px 0 rgba(52, 44, 27, 0.04);
+  --shadow-md: 0 2px 4px 0 rgba(52, 44, 27, 0.06),
+               0 4px 12px -2px rgba(52, 44, 27, 0.08);
+  --shadow-lg: 0 4px 8px 0 rgba(52, 44, 27, 0.06),
+               0 12px 28px -4px rgba(52, 44, 27, 0.12);
+  --shadow-inner: inset 0 2px 4px 0 rgba(52, 44, 27, 0.08);
+
+  /* ---------- Motion ---------- */
+
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast:   120ms;
+  --duration-base:   200ms;
+  --duration-slow:   320ms;
+
+  /* ---------- Misc ---------- */
+
+  --container-max: 1200px;
+  --form-max: 720px;
+  --topo-pattern: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'><g fill='none' stroke='%238E7852' stroke-width='0.5' opacity='0.15'><path d='M0 60 Q30 30 60 60 T120 60'/><path d='M0 80 Q30 50 60 80 T120 80'/><path d='M0 40 Q30 10 60 40 T120 40'/><path d='M0 100 Q30 70 60 100 T120 100'/><path d='M0 20 Q30 -10 60 20 T120 20'/></g></svg>");
+}
+
+/* ==========================================================================
+   Semantic element defaults
+   ========================================================================== */
+
+html, body {
+  background: var(--bg-1);
+  color: var(--fg-1);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  color: var(--fg-1);
+  margin: 0;
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+  font-weight: var(--weight-semibold);
+  text-wrap: balance;
+}
+
+h1 { font-size: var(--text-4xl); }
+h2 { font-size: var(--text-2xl); }
+h3 { font-size: var(--text-xl); }
+h4 { font-size: var(--text-lg); }
+h5 { font-size: var(--text-md); font-weight: var(--weight-medium); }
+h6 { font-size: var(--text-sm); font-weight: var(--weight-semibold); letter-spacing: var(--tracking-ultra); text-transform: uppercase; color: var(--fg-2); }
+
+p {
+  margin: 0;
+  line-height: var(--leading-relaxed);
+  text-wrap: pretty;
+}
+
+code, kbd, samp, pre {
+  font-family: var(--font-mono);
+  font-size: 0.95em;
+}
+
+.eyebrow {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-ultra);
+  text-transform: uppercase;
+  color: var(--fg-2);
+}
+
+.mono { font-family: var(--font-mono); }
+.num  { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* Focus ring — used everywhere that takes focus */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+::selection {
+  background: var(--amber-200);
+  color: var(--charcoal-700);
+}

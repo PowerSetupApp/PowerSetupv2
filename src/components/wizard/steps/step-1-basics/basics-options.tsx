@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 
 import type { CardOption } from "@/components/ui/card-selection";
-import { wizardCallout } from "@/components/wizard/wizard-surfaces";
 import type { BatteryPreference, SystemVoltage, VehicleVoltage } from "@/lib/algorithm/types";
 
 export const STEP1_TITLE = "System-Basis";
@@ -41,7 +40,7 @@ export const SYSTEM_CARDS: CardOption<SystemVoltage>[] = [
   {
     value: 24,
     title: "24 V (sinnvoll)",
-    description: "Weniger Strom bei gleicher Leistung",
+    description: "Weniger Kabelquerschnitt nötig bei gleicher Leistung",
     icon: <BatteryMedium className="h-6 w-6" aria-hidden />,
   },
   {
@@ -67,7 +66,7 @@ export const VEHICLE_CARDS: CardOption<VehicleVoltage>[] = [
   },
   {
     value: 48,
-    title: "48 V Starter",
+    title: "48 V",
     description: "Selten — z. B. moderne Nutzfahrzeug-Plattformen",
     icon: <Battery className="h-6 w-6" aria-hidden />,
   },
@@ -94,31 +93,33 @@ export const BATTERY_CARDS: CardOption<BatteryPreference>[] = [
   },
 ];
 
-export function SystemVoltageHint() {
+/** Text für Popover neben „Welche Systemspannung nutzt du?“ */
+export function SystemVoltageHintBody() {
   return (
-    <p className={wizardCallout()}>
+    <>
       <strong>12 V</strong> ist Standard. <strong>24 V</strong> lohnt sich bei hohem Gleichstrombedarf (weniger
       Verluste); oft reichen dünnere Leitungen — weniger Kosten, einfachere Verarbeitung. <strong>48 V</strong> ist oft
       unpraktisch, weil viel Camping-Zubehör nicht kompatibel ist.
-    </p>
+    </>
   );
 }
 
-export function VehicleVoltageHint() {
+/** Text für Popover neben „Fahrzeugspannung“ */
+export function VehicleVoltageHintBody() {
   return (
-    <p className={wizardCallout()}>
+    <>
       PKW, Campervans und Wohnmobile haben meistens <strong>12 V</strong>. Große LKWs und Expeditionsmobile oft{" "}
       <strong>24 V</strong>. <strong>48 V</strong>-Starterbordnetze sind eher die Ausnahme.
-    </p>
+    </>
   );
 }
 
-export function BatteryPreferenceHint() {
+/** Text für Popover neben „Welchen Batterietyp planst du?“ — Panel-Akzent über `panelClassName` in WizardSectionHint */
+export function BatteryPreferenceHintBody() {
   return (
-    <p className={wizardCallout()}>
+    <>
       <strong>Empfehlung:</strong> LiFePO₄-Batterien sind zwar teurer in der Anschaffung, aber deutlich leichter,
-      halten deutlich länger und nutzen fast die volle Kapazität (gegenüber oft ~50 % nutzbar bei AGM/Gel im
-      Alltag).
-    </p>
+      halten deutlich länger und nutzen fast die volle Kapazität (gegenüber oft ~50 % nutzbar bei AGM/Gel im Alltag).
+    </>
   );
 }

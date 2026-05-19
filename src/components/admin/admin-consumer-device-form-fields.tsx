@@ -1,9 +1,11 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { IconPicker } from "@/components/ui/icon-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SimpleSelect } from "@/components/ui/simple-select";
+import type { IconKey } from "@/lib/icons/icon-keys";
 
 import type { AdminConsumerDeviceFormState } from "./use-admin-consumer-device-form";
 
@@ -39,12 +41,11 @@ export function AdminConsumerDeviceFormFields({ form, categories }: Props) {
               />
             </div>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="d-icon">Icon (Emoji)</Label>
-              <Input id="d-icon" value={f.icon ?? ""} onChange={(e) => update("icon", e.target.value)} />
-            </div>
-            <div className="space-y-2">
+          <div className="space-y-3">
+            <Label id="d-icon-label">Icon</Label>
+            <IconPicker id="d-icon" value={f.icon} onChange={(key: IconKey | null) => update("icon", key)} />
+          </div>
+          <div className="space-y-2 max-w-xs">
               <Label htmlFor="d-sort">Sortierung</Label>
               <Input
                 id="d-sort"
@@ -54,7 +55,6 @@ export function AdminConsumerDeviceFormFields({ form, categories }: Props) {
                 inputMode="numeric"
               />
             </div>
-          </div>
         </CardContent>
       </Card>
 

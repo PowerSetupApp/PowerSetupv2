@@ -27,7 +27,7 @@ export function CatalogTemplateRow({ template, onAdd, addedCount }: CatalogTempl
         addedCount > 0 && "bg-primary/[0.06] dark:bg-primary/[0.09]",
       )}
     >
-      <DeviceIconSlot icon={template.deviceIcon} />
+      <DeviceIconSlot icon={template.deviceIcon} active={addedCount > 0} />
       <div className="min-w-0 flex-1 pr-0.5 sm:pr-1">
         <p className="line-clamp-2 font-medium leading-snug text-foreground">{template.name}</p>
         <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">

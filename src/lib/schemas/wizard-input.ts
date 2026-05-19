@@ -67,9 +67,10 @@ const cableLengthsSchema = z.object({
   batteryToFuseBox: finitePositiveUpTo(MAX_CABLE_LENGTH_M),
 });
 const brandPreferencesSchema = z.object({
-  charger: z.string().nullable(),
-  battery: z.string().nullable(),
-  solar: z.string().nullable(),
+  charger: z.string().nullable().default(null),
+  battery: z.string().nullable().default(null),
+  solar: z.string().nullable().default(null),
+  inverter: z.string().nullable().default(null),
 });
 const overrideNumber = () => finitePositive().max(MAX_OVERRIDE_NUMBER).nullable();
 const customOverridesSchema = z.object({
@@ -82,24 +83,25 @@ const customOverridesSchema = z.object({
 });
 
 /** Request-Body für `POST /api/results` (Wizard-Formular = `AlgorithmInput`). */
-export const algorithmInputSchema = z
-  .object({
-    systemVoltage: systemVoltageSchema,
-    vehicleVoltage: vehicleVoltageSchema,
-    batteryPreference: batteryPreferenceSchema,
-    energySources: z.array(energySourceSchema),
-    roofModuleType: roofModuleTypeSchema,
-    roofAreas: z.array(roofAreaSchema),
-    solarBags: z.array(solarBagSchema),
-    chargerSpeed: chargerSpeedSchema,
-    consumers: z.array(consumerSchema),
-    simultaneousLoad: simultaneousLoadSchema,
-    travelBehavior: travelBehaviorSchema,
-    autarchyDays: autarchyDaysSchema,
-    cableLengths: cableLengthsSchema,
-    brandPreferences: brandPreferencesSchema,
-    customOverrides: customOverridesSchema,
-  });
+export const algorithmInputSchema = z.object({
+  vehicleName: z.string().trim().max(60).optional(),
+  systemVoltage: systemVoltageSchema,
+  vehicleVoltage: vehicleVoltageSchema,
+  batteryPreference: batteryPreferenceSchema,
+  energySources: z.array(energySourceSchema),
+  roofModuleType: roofModuleTypeSchema,
+  roofAreas: z.array(roofAreaSchema),
+  solarBags: z.array(solarBagSchema),
+  chargerSpeed: chargerSpeedSchema,
+  consumers: z.array(consumerSchema),
+  simultaneousLoad: simultaneousLoadSchema,
+  travelBehavior: travelBehaviorSchema,
+  autarchyDays: autarchyDaysSchema,
+  cableLengths: cableLengthsSchema,
+  brandPreferences: brandPreferencesSchema,
+  customOverrides: customOverridesSchema,
+  solarFocus: z.enum(["solar", "balanced", "battery"]).default("balanced"),
+});
 
 export function parseAlgorithmInput(data: unknown): AlgorithmInput {
   return algorithmInputSchema.parse(data);

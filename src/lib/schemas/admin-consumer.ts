@@ -1,5 +1,7 @@
 import * as z from "zod";
 
+import { iconKeyFieldSchema } from "@/lib/icons/icon-schema";
+
 const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const consumerCategoryBase = z.object({
@@ -8,7 +10,7 @@ const consumerCategoryBase = z.object({
     .string()
     .min(1, "Slug erforderlich")
     .regex(slugRegex, "Slug nur a-z, 0-9 und Bindestriche"),
-  icon: z.string().nullable(),
+  icon: iconKeyFieldSchema,
   sortOrder: z.number().int().nonnegative(),
 });
 
@@ -23,7 +25,7 @@ export type AdminConsumerCategoryUpdateInput = z.infer<typeof adminConsumerCateg
 const consumerDeviceBase = z.object({
   name: z.string().min(1, "Name erforderlich"),
   categoryId: z.string().uuid(),
-  icon: z.string().nullable(),
+  icon: iconKeyFieldSchema,
   defaultPower: z.number().int().positive(),
   defaultVoltage: z.string().min(1),
   defaultHoursPerDay: z.number().finite().nonnegative(),

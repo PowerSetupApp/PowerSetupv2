@@ -11,8 +11,10 @@ import {
 } from "@/lib/admin/catalog-actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { IconPicker } from "@/components/ui/icon-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { IconKey } from "@/lib/icons/icon-keys";
 
 type Initial = {
   id?: string;
@@ -91,8 +93,12 @@ export function AdminConsumerCategoryForm({ initial }: Props) {
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="cc-icon">Icon (Emoji)</Label>
-              <Input id="cc-icon" value={icon} onChange={(e) => setIcon(e.target.value)} />
+              <Label id="cc-icon-label">Icon</Label>
+              <IconPicker
+                id="cc-icon"
+                value={icon || null}
+                onChange={(key: IconKey | null) => setIcon(key ?? "")}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="cc-sort">Sortierung</Label>
