@@ -1,21 +1,26 @@
 "use client";
 
-import { useLayoutEffect } from "react";
+import { useLayoutEffect, type ReactNode } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Chip } from "@/components/ui/chip";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { labelClassName } from "@/components/wizard/field-styles";
-import { WizardStepHeader } from "@/components/wizard/wizard-step-header";
+import { wizardFormSection, wizardSectionLabel } from "@/components/wizard/wizard-surfaces";
 import type { EnergySource } from "@/lib/algorithm/types";
 import { useWizardStore } from "@/store/wizard";
 
+import {
+  AlternatorSourceIcon,
+  ShorePowerSourceIcon,
+  SolarSourceIcon,
+} from "./energy-source-icons";
 import { SolarRoofSection } from "./solar-roof-section";
 import { defaultRoofArea } from "./roof-utils";
 
-const SOURCES: { id: EnergySource; label: string }[] = [
-  { id: "solar", label: "Solar" },
-  { id: "alternator", label: "Lichtmaschine / Booster" },
-  { id: "shore_power", label: "Landstrom" },
+const SOURCES: { id: EnergySource; label: string; icon: ReactNode }[] = [
+  { id: "solar", label: "Solar", icon: <SolarSourceIcon /> },
+  { id: "alternator", label: "Lichtmaschine / Booster", icon: <AlternatorSourceIcon /> },
+  { id: "shore_power", label: "Landstrom (230 V)", icon: <ShorePowerSourceIcon /> },
 ];
 
 export function Step2Energy() {
@@ -24,6 +29,7 @@ export function Step2Energy() {
 
   const hasSolar = input.energySources.includes("solar");
   const hasShore = input.energySources.includes("shore_power");
+  const hasAlternator = input.energySources.includes("alternator");
 
   useLayoutEffect(() => {
     if (hasSolar && input.roofAreas.length === 0) {
@@ -52,37 +58,46 @@ export function Step2Energy() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      <WizardStepHeader
-        title="Energiequellen"
-        description={`Wähle mindestens eine Quelle. Mit Solar legen wir eine erste Dachfläche an — weitere Flächen kannst du bei Bedarf ergänzen. Booster- und Leitungsberechnungen nutzen deine Spannungen aus Schritt 1: Bordnetz ${input.systemVoltage} V, Starter ${input.vehicleVoltage} V.`}
-      />
-      <div className="flex flex-wrap gap-2">
-        {SOURCES.map((s) => {
-          const active = input.energySources.includes(s.id);
-          return (
-            <Button
-              key={s.id}
-              type="button"
-              variant={active ? "default" : "outline"}
-              size="sm"
-              className="min-h-10 rounded-full px-4 transition duration-200 ease-out"
-              onClick={() => toggleSource(s.id)}
-            >
-              {s.label}
-            </Button>
-          );
-        })}
-      </div>
+    <div className="flex flex-col gap-10">
+      <section className={wizardFormSection()} aria-labelledby="step2-energy-sources">
+        <div className="space-y-1">
+          <h3 id="step2-energy-sources" className={wizardSectionLabel()}>
+            Welche Energiequellen hast du?
+          </h3>
+          <p className="text-xs leading-relaxed text-fg-2">Mehrfachauswahl. Mindestens eine Quelle ist nötig.</p>
+        </div>
+        <div className="flex flex-wrap gap-2.5" role="group" aria-labelledby="step2-energy-sources">
+          {SOURCES.map((s) => {
+            const active = input.energySources.includes(s.id);
+            return (
+              <button
+                key={s.id}
+                type="button"
+                aria-pressed={active}
+                className="rounded-full border-0 bg-transparent p-0"
+                onClick={() => toggleSource(s.id)}
+              >
+                <Chip tone={active ? "amber" : "neutral"} size="md" className="gap-1.5 px-3.5 py-2" icon={s.icon}>
+                  {s.label}
+                </Chip>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
       {hasSolar && input.roofAreas.length > 0 ? (
-        <SolarRoofSection
-          roofAreas={input.roofAreas}
-          roofModuleType={input.roofModuleType}
-          patchInput={patchInput}
-        />
+        <SolarRoofSection roofAreas={input.roofAreas} roofModuleType={input.roofModuleType} patchInput={patchInput} />
       ) : null}
+
+      {hasAlternator ? (
+        <div className="rounded-lg border border-border-1 bg-bg-3/60 px-4 py-3 text-sm text-fg-2">
+          DC-DC-Booster wird bei der Auslegung automatisch berücksichtigt.
+        </div>
+      ) : null}
+
       {hasShore ? (
-        <div>
+        <div className="space-y-2">
           <span className={labelClassName()}>Ladegeschwindigkeit (Landstrom)</span>
           <SegmentedControl
             options={[

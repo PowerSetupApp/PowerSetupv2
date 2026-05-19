@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Step8DebugFab } from "@/components/wizard/steps/step-8-debug-fab";
 import { Step8PreviewBlock } from "@/components/wizard/steps/step-8-preview-block";
 import { Step8SolarBatteryCard } from "@/components/wizard/steps/step-8-solar-battery-card";
@@ -9,7 +10,6 @@ import type { Step8PreviewStatus } from "@/components/wizard/steps/use-step8-exp
 import { useStep8ExportJson } from "@/components/wizard/steps/use-step8-export-json";
 import { useWizardStep8CanonicalPreviews } from "@/components/wizard/steps/use-wizard-step8-canonical-previews";
 import { useWizardStep8DebugTrace } from "@/components/wizard/steps/use-wizard-step8-debug-trace";
-import { WizardStepHeader } from "@/components/wizard/wizard-step-header";
 import { wizardCallout, wizardInsetPanel } from "@/components/wizard/wizard-surfaces";
 import { topUpCoversDailyWh } from "@/lib/wizard/top-up-covers-daily";
 import { cn } from "@/lib/utils";
@@ -120,14 +120,31 @@ export function Step8Review() {
 
   return (
     <div className="relative flex flex-col gap-6 pb-4">
-      <WizardStepHeader
-        title="Übersicht"
-        description="Prüfe Solar, Batterie und Kabel. Entwickler-Tools (JSON, Zwischenwerte) erreichst du über das Symbol unten rechts."
-      />
+      <section className="rounded-lg border border-border-1 bg-sand-50/90 p-4 dark:bg-charcoal-600/30">
+        <p className="font-display text-xs font-semibold uppercase tracking-wide text-fg-3">
+          Solar / Batterie-Fokus
+        </p>
+        <p className="mt-1 text-sm text-fg-2">
+          Steuert deine Produktpräferenz (persistiert mit dem Ergebnis). Keine Änderung der Mindestauslegung.
+        </p>
+        <div className="mt-4">
+          <SegmentedControl
+            size="lg"
+            options={[
+              { value: "solar", label: "Mehr Solar" },
+              { value: "balanced", label: "Ausgewogen" },
+              { value: "battery", label: "Mehr Batterie" },
+            ]}
+            value={input.solarFocus}
+            onChange={(solarFocus) => patchInput({ solarFocus })}
+          />
+        </div>
+      </section>
+
       <dl className={cn(wizardInsetPanel(), "grid gap-4 text-sm sm:grid-cols-2")}>
         <div className="flex flex-col gap-1 sm:flex-row sm:justify-between sm:gap-4">
-          <dt className="text-muted-foreground">Bordspannung</dt>
-          <dd className="font-semibold text-foreground">{input.systemVoltage} V</dd>
+          <dt className="text-fg-2">Bordspannung</dt>
+          <dd className="font-semibold text-fg-1">{input.systemVoltage} V</dd>
         </div>
         <div className="flex flex-col gap-1 sm:flex-row sm:justify-between sm:gap-4">
           <dt className="text-muted-foreground">Energie</dt>

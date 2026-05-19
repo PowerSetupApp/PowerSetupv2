@@ -1,22 +1,47 @@
-import {
+import { Prisma } from "@/generated/prisma/client";
+
+/** Dieselbe Runtime wie `getPrisma()` — vermeidet fehlgeschlagenes `instanceof` durch doppeltes Webpack-Bundle. */
+const {
   PrismaClientInitializationError,
   PrismaClientKnownRequestError,
   PrismaClientValidationError,
-} from "@prisma/client/runtime/client";
+} = Prisma;
+
+/** Prisma-Codes, bei denen read-only Queries sinnvoll `database_unavailable` liefern. */
+const PRISMA_INFRASTRUCTURE_CODES = new Set([
+  "P1000",
+  "P1001",
+  "P1002",
+  "P1003",
+  "P1008",
+  "P1011",
+  "P1017",
+  "P2021",
+  "P2022",
+]);
 
 /** Sammelt Text aus Error, AggregateError (pg) und verschachtelten Ursachen. */
-export function collectErrorText(error: unknown): string {
+export function collectErrorText(error: unknown, depth = 0): string {
+  if (depth > 6) return "";
   if (error instanceof AggregateError) {
     const parts = [error.message];
     for (const e of error.errors) {
-      parts.push(e instanceof Error ? e.message : String(e));
+      parts.push(collectErrorText(e, depth + 1));
     }
     return parts.join(" | ");
   }
   if (error instanceof Error) {
-    const withCause =
-      error.cause instanceof Error ? `${error.message} | ${error.cause.message}` : error.message;
-    return withCause;
+    const parts = [error.message];
+    const code = (error as Error & { code?: unknown }).code;
+    if (typeof code === "string") parts.push(code);
+    if (error.cause !== undefined) {
+      parts.push(collectErrorText(error.cause, depth + 1));
+    }
+    return parts.join(" | ");
+  }
+  if (error && typeof error === "object") {
+    const code = (error as { code?: unknown }).code;
+    if (typeof code === "string") return code;
   }
   return String(error);
 }
@@ -35,19 +60,81 @@ function isPrismaQueryOrSchemaMismatch(error: unknown): boolean {
   );
 }
 
+/** DB hinter Prisma-Schema (P2021/P2022) — auch wenn `code`/`instanceof` im Bundle fehlen. */
+function isPrismaSchemaDriftMessage(error: unknown): boolean {
+  const t = collectErrorText(error);
+  if (/does not exist in the current database/i.test(t)) return true;
+  if (/The table `[^`]+` does not exist/i.test(t)) return true;
+  if (/The column `[^`]+` does not exist/i.test(t)) return true;
+  return /\bP202[12]\b/.test(t);
+}
+
+/**
+ * Prisma-Fehlercode auch ohne funktionierendes `instanceof PrismaClientKnownRequestError`
+ * (Next/Webpack können mehrere Kopien von `@prisma/client/runtime` bundeln — `instanceof` bricht dann).
+ */
+function prismaKnownRequestCode(error: unknown): string | undefined {
+  let current: unknown = error;
+  for (let depth = 0; depth < 6 && current; depth++) {
+    if (current && typeof current === "object") {
+      const raw = (current as { code?: unknown }).code;
+      if (typeof raw === "string" && /^P\d{4}$/.test(raw)) return raw;
+    }
+    if (current instanceof Error && current.cause !== undefined) {
+      current = current.cause;
+      continue;
+    }
+    break;
+  }
+  const fromText = collectErrorText(error).match(/\b(P\d{4})\b/);
+  return fromText?.[1];
+}
+
+function isPrismaInfrastructureCode(code: string | undefined): boolean {
+  return code !== undefined && PRISMA_INFRASTRUCTURE_CODES.has(code);
+}
+
+/** Prisma/pg meldet oft nur den Invocation-Header ohne Detail (Next.js, Driver-Adapter). */
+const BARE_PRISMA_INVOCATION = /^\s*Invalid `prisma\.\w+\.\w+\(\)` invocation:\s*$/;
+const PRISMA_INVOCATION_PREFIX = /^\s*Invalid `prisma\.\w+\.\w+\(\)` invocation:/;
+const PRISMA_VALIDATION_DETAIL =
+  /Unknown argument|Unknown field|Provided List<Json>|Expected .* found Json|does not exist in the current database|The column `|The table `/i;
+
+function primaryErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message.trim();
+  return collectErrorText(error).trim();
+}
+
+/**
+ * P1001/P2022 ohne Detailtext — auch wenn `error.name`/`instanceof` im Bundle nicht stimmen.
+ */
+function isBarePrismaInvocationMessage(error: unknown): boolean {
+  const msg = primaryErrorMessage(error);
+  if (BARE_PRISMA_INVOCATION.test(msg)) return true;
+  if (!PRISMA_INVOCATION_PREFIX.test(msg)) return false;
+  return !PRISMA_VALIDATION_DETAIL.test(msg);
+}
+
 /** True when Prisma/pg indicates the DB host is unreachable or TLS failed. */
 export function isDatabaseUnreachableError(error: unknown): boolean {
-  // Bekannte Codes zuerst: P2022-Meldungen enthalten oft „Invalid `prisma…` invocation“ und
-  // würden sonst fälschlich als reine Query-/Schemafehler klassifiziert (readFromDatabase wirft).
+  // Bekannte Codes **vor** `isPrismaQueryOrSchemaMismatch`: P2022/P2021-Meldungen enthalten oft
+  // „Invalid `prisma…` invocation“ und würden sonst als Validierungs-/Queryfehler durchrutschen,
+  // wenn `instanceof PrismaClientKnownRequestError` am gebündelten Typ scheitert.
+  const prismaCode = prismaKnownRequestCode(error);
+  if (isPrismaInfrastructureCode(prismaCode)) {
+    return true;
+  }
+  if (isPrismaSchemaDriftMessage(error)) {
+    return true;
+  }
   if (error instanceof PrismaClientKnownRequestError) {
-    if (error.code === "P1001" || error.code === "P1017") return true;
-    // Migration fehlt / DB hinter dem Client (Spalte oder Tabelle existiert nicht)
-    if (error.code === "P2022" || error.code === "P2021") return true;
+    if (isPrismaInfrastructureCode(error.code)) return true;
+  }
+  if (isBarePrismaInvocationMessage(error)) {
+    return true;
   }
   if (isPrismaQueryOrSchemaMismatch(error)) {
-    return false;
-  }
-  if (error instanceof PrismaClientKnownRequestError) {
+    // „Invalid `prisma…` invocation“ mit Validierungs-/Schema-Detail ⇒ echter Query-Fehler
     return false;
   }
   if (error instanceof PrismaClientInitializationError) {
@@ -86,7 +173,16 @@ function databaseUnavailableMessage(error: unknown): string {
   if (error instanceof Error && error.message === "DATABASE_URL is not set") {
     return "DATABASE_URL ist nicht gesetzt. Lege die Variable in `.env.local` an (siehe `.env.example`) und starte den Dev-Server neu.";
   }
-  if (error instanceof PrismaClientKnownRequestError && (error.code === "P2022" || error.code === "P2021")) {
+  const driftCode = prismaKnownRequestCode(error);
+  const driftViaInstance =
+    error instanceof PrismaClientKnownRequestError &&
+    (error.code === "P2022" || error.code === "P2021");
+  if (
+    driftCode === "P2022" ||
+    driftCode === "P2021" ||
+    driftViaInstance ||
+    isPrismaSchemaDriftMessage(error)
+  ) {
     return (
       "Die Datenbank passt nicht zum aktuellen Prisma-Schema (fehlende Spalte oder Tabelle). " +
       "Lokal: `npx prisma migrate dev` — Deployment: `npx prisma migrate deploy`.\n\n" +
@@ -118,7 +214,10 @@ export async function readFromDatabase<T>(fn: () => Promise<T>): Promise<DbReadR
         message: databaseUnavailableMessage(error),
       };
     }
-    if (isDatabaseUnreachableError(error)) {
+    if (
+      isDatabaseUnreachableError(error) ||
+      isBarePrismaInvocationMessage(error)
+    ) {
       return {
         ok: false,
         reason: "database_unavailable",

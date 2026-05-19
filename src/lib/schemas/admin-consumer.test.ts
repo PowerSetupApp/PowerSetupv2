@@ -20,6 +20,17 @@ describe("adminConsumerCategoryCreateSchema", () => {
     expect(parsed.success).toBe(true);
   });
 
+  it("maps category emoji icon to key", () => {
+    const parsed = adminConsumerCategoryCreateSchema.safeParse({
+      name: "Küche",
+      slug: "kueche",
+      icon: "🍳",
+      sortOrder: 0,
+    });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) expect(parsed.data.icon).toBe("cooking-pot");
+  });
+
   it("rejects uppercase slug", () => {
     const parsed = adminConsumerCategoryCreateSchema.safeParse({
       name: "X",
@@ -85,6 +96,17 @@ describe("adminConsumerDeviceCreateSchema", () => {
     expect(
       adminConsumerDeviceCreateSchema.safeParse({ ...base, averageLoadPercent: 33 }).success,
     ).toBe(true);
+  });
+
+  it("maps legacy emoji icon to key", () => {
+    const parsed = adminConsumerDeviceCreateSchema.safeParse({ ...base, icon: "💡" });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) expect(parsed.data.icon).toBe("lightbulb");
+  });
+
+  it("rejects unknown icon value", () => {
+    const parsed = adminConsumerDeviceCreateSchema.safeParse({ ...base, icon: "not-a-real-icon" });
+    expect(parsed.success).toBe(false);
   });
 
   it("rejects averageLoadPercent outside 1..100", () => {

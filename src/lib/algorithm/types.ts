@@ -43,6 +43,9 @@ export type WinterLocation =
 export type StandingDuration = "short" | "medium" | "long";
 export type CoolingMethod = "compressor" | "absorber";
 
+/** UI: Solar- vs. Batterie-Fokus (Step 8) — reine Präferenz, kein Ersatz für `customOverrides`. */
+export type SolarFocusPreference = "solar" | "balanced" | "battery";
+
 /** Derived signal (A.7.2) — never a user input. */
 export type ShoreAvailability =
   | "never"
@@ -143,6 +146,7 @@ export interface BrandPreferences {
   charger: string | null;
   battery: string | null;
   solar: string | null;
+  inverter: string | null;
 }
 
 /**
@@ -167,6 +171,9 @@ export interface CustomOverrides {
 
 /** Full wizard payload (inputs.md Part A). */
 export interface AlgorithmInput {
+  /** Freitext, nur Anzeige / Bauplan — Algorithmus ignoriert. */
+  vehicleName?: string;
+
   // A.1 system basis
   systemVoltage: SystemVoltage;
   vehicleVoltage: VehicleVoltage;
@@ -195,6 +202,9 @@ export interface AlgorithmInput {
   // Wizard-only payload (algorithm ignores)
   brandPreferences: BrandPreferences;
   customOverrides: CustomOverrides;
+
+  /** Nur Persistenz / spätere Empfehlungslogik — nicht in `customOverrides` (Ah/Wp) spiegeln. */
+  solarFocus: SolarFocusPreference;
 }
 
 // ---------------------------------------------------------------------------
@@ -462,6 +472,7 @@ export const DEFAULT_BRAND_PREFERENCES: BrandPreferences = {
   charger: null,
   battery: null,
   solar: null,
+  inverter: null,
 };
 
 export const DEFAULT_CUSTOM_OVERRIDES: CustomOverrides = {
@@ -474,6 +485,7 @@ export const DEFAULT_CUSTOM_OVERRIDES: CustomOverrides = {
 };
 
 export const DEFAULT_ALGORITHM_INPUT: AlgorithmInput = {
+  vehicleName: "",
   systemVoltage: 12,
   vehicleVoltage: 12,
   batteryPreference: "lifepo4",
@@ -499,4 +511,5 @@ export const DEFAULT_ALGORITHM_INPUT: AlgorithmInput = {
   cableLengths: DEFAULT_CABLE_LENGTHS,
   brandPreferences: DEFAULT_BRAND_PREFERENCES,
   customOverrides: DEFAULT_CUSTOM_OVERRIDES,
+  solarFocus: "balanced",
 };

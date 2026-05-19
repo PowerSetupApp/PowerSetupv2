@@ -8,10 +8,10 @@ import { CardSelection } from "@/components/ui/card-selection";
 import {
   wizardCallout,
   wizardCatalogScrollRegion,
+  wizardFormSection,
   wizardSectionLabel,
 } from "@/components/wizard/wizard-surfaces";
 import { cn } from "@/lib/utils";
-import { WizardStepHeader } from "@/components/wizard/wizard-step-header";
 import type { Consumer } from "@/lib/algorithm/types";
 import type { WizardConsumerTemplate } from "@/lib/db/queries/wizard-consumer-templates";
 import { groupConsumerTemplatesByCategory } from "@/lib/wizard/group-consumer-templates";
@@ -92,15 +92,11 @@ export function Step3Consumers({ templates = [], catalogError = null }: Step3Con
 
   return (
     <div className="flex flex-col gap-6">
-      <WizardStepHeader
-        title="Verbraucher"
-        description="Wähle Geräte aus dem Katalog oder füge eigene Verbraucher hinzu."
-      />
       <p className={wizardCallout()}>
         Unter „Deine Verbraucher“ weiter unten: Katalog-Geräte einzeln anpassen (Leistung, Nutzung/Tag) und bei Bedarf manuell ergänzen.
       </p>
       {templates.length > 0 ? (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-5">
           <p className={wizardSectionLabel()}>Katalog nach Kategorie</p>
           <div className={wizardCatalogScrollRegion()}>
             <div className="px-3 pb-2 pt-1 sm:px-4">
@@ -150,11 +146,11 @@ export function Step3Consumers({ templates = [], catalogError = null }: Step3Con
       )}
       <div
         className={cn(
-          "flex flex-col gap-3",
+          "flex flex-col gap-5",
           templates.length > 0 && "border-t border-border/60 pt-5",
         )}
       >
-        <p className={wizardSectionLabel("mb-0 text-foreground")}>Deine Verbraucher</p>
+        <p className={wizardSectionLabel("text-foreground")}>Deine Verbraucher</p>
         {input.consumers.map((c) => (
           <ConsumerCard
             key={c.id}
@@ -178,7 +174,7 @@ export function Step3Consumers({ templates = [], catalogError = null }: Step3Con
         Verbraucher hinzufügen
       </Button>
       {has230Consumers ? (
-        <section className="space-y-3" aria-labelledby={ID_SIMULTANEOUS_230}>
+        <section className={wizardFormSection()} aria-labelledby={ID_SIMULTANEOUS_230}>
           <h3 id={ID_SIMULTANEOUS_230} className={wizardSectionLabel()}>
             {SECTION_SIMULTANEOUS_230}
           </h3>

@@ -29,7 +29,7 @@ export function Step8SolarBatteryCard({
   const [open, setOpen] = useState(true);
 
   return (
-    <section className="flex flex-col gap-3">
+    <section className="flex flex-col gap-4">
       <button
         type="button"
         className="flex w-full items-center justify-between text-left"

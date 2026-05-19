@@ -99,13 +99,13 @@ function normalizeBatteryColumn(raw: string | null): string | null {
 function valueForFilterKey(
   key: string,
   extracted: AmazonExtractedProduct,
-): string | number | boolean | string[] | null | undefined {
+): string | number | boolean | string[] | number[] | null | undefined {
   const direct = extracted[key as keyof AmazonExtractedProduct];
   if (typeof direct === "number" || typeof direct === "string" || typeof direct === "boolean") {
     return direct;
   }
   if (Array.isArray(direct)) {
-    return direct as string[] | number[];
+    return direct;
   }
   if (key === "maxPowerWp") {
     return extracted.solarWp ?? extracted.powerW ?? null;

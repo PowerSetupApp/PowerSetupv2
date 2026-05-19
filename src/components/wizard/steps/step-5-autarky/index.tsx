@@ -6,7 +6,6 @@ import { Info } from "lucide-react";
 import { CardSelection } from "@/components/ui/card-selection";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { WizardStepHeader } from "@/components/wizard/wizard-step-header";
 import { wizardCallout, wizardInsetPanel } from "@/components/wizard/wizard-surfaces";
 import { cn } from "@/lib/utils";
 import {
@@ -24,8 +23,6 @@ import {
   autarchyProfileAlertDescription,
   AUTARCHY_LIMIT_ALERT_TITLE,
   AUTARCHY_TECH_NOTE,
-  STEP5_DESCRIPTION,
-  STEP5_TITLE,
 } from "./autarky-options";
 
 export function Step5Autarky() {
@@ -69,9 +66,7 @@ export function Step5Autarky() {
   const topUpCoversDaily = useMemo(() => topUpCoversDailyWh(input), [input]);
 
   return (
-    <div className="flex flex-col gap-8">
-      <WizardStepHeader title={STEP5_TITLE} description={STEP5_DESCRIPTION} />
-
+    <div className="flex flex-col gap-10">
       <div className="space-y-6">
         <div
           className={cn(

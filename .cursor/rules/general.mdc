@@ -9,7 +9,7 @@ alwaysApply: true
 ## Projektkontext
 
 Lies vor jeder Aufgabe:
-- `AGENTS.md` — Überblick, Skills, kritische Regeln
+- `AGENTS.md` — Session-Start, Arbeitsprinzipien, Projektüberblick + Graphify-Regeln
 - Projekt-Kontext / Architektur / Fachbegriffe: über **Graphify** abfragen (Knowledge Graph aus dem Repo)
 
 **Kanonisch für Arbeitsabläufe:** `.agents/skills/<bereich>/SKILL.md` (requirements, architecture, frontend, backend, qa, deploy). Inhalt dort pflegen; `.cursor/rules/*.mdc` sind nur kurze Verweise + Globs für Cursor.

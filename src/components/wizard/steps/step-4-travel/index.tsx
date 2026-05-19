@@ -3,8 +3,8 @@
 import { useEffect, useMemo } from "react";
 
 import { CardSelection } from "@/components/ui/card-selection";
-import { WizardStepHeader } from "@/components/wizard/wizard-step-header";
-import { wizardCallout, wizardSectionLabel } from "@/components/wizard/wizard-surfaces";
+import { wizardCallout, wizardFormSection, wizardSectionLabel } from "@/components/wizard/wizard-surfaces";
+import { cn } from "@/lib/utils";
 import { useWizardStore } from "@/store/wizard";
 
 import {
@@ -15,8 +15,6 @@ import {
   SEASON_CARDS,
   STANDING_ALTERNATOR_HINT,
   STANDING_CARDS,
-  STEP4_DESCRIPTION,
-  STEP4_TITLE,
   tripDurationCards,
   WINTER_CARDS,
 } from "./travel-options";
@@ -47,10 +45,8 @@ export function Step4Travel() {
   }, [permanentDisabled, tb.tripDuration, setTravelBehavior]);
 
   return (
-    <div className="flex flex-col gap-8">
-      <WizardStepHeader title={STEP4_TITLE} description={STEP4_DESCRIPTION} />
-
-      <section className="space-y-3" aria-labelledby={ID_SEASON}>
+    <div className="flex flex-col gap-10">
+      <section className={wizardFormSection()} aria-labelledby={ID_SEASON}>
         <h3 id={ID_SEASON} className={wizardSectionLabel()}>
           {SECTION_SEASON}
         </h3>
@@ -63,7 +59,7 @@ export function Step4Travel() {
         />
       </section>
 
-      <section className="space-y-3" aria-labelledby={ID_DURATION}>
+      <section className={wizardFormSection()} aria-labelledby={ID_DURATION}>
         <h3 id={ID_DURATION} className={wizardSectionLabel()}>
           {SECTION_DURATION}
         </h3>
@@ -77,7 +73,10 @@ export function Step4Travel() {
       </section>
 
       {showWinterSection ? (
-        <section className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300" aria-labelledby={ID_WINTER}>
+        <section
+          className={cn(wizardFormSection(), "animate-in fade-in slide-in-from-top-2 duration-300")}
+          aria-labelledby={ID_WINTER}
+        >
           <h3 id={ID_WINTER} className={wizardSectionLabel()}>
             {SECTION_WINTER}
           </h3>
@@ -93,7 +92,7 @@ export function Step4Travel() {
 
       {hasAlternator ? (
         <section
-          className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300"
+          className={cn(wizardFormSection(), "animate-in fade-in slide-in-from-top-2 duration-300")}
           aria-labelledby={ID_STANDING}
         >
           <h3 id={ID_STANDING} className={wizardSectionLabel()}>

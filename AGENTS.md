@@ -1,88 +1,82 @@
 # PowerSetup — Agent Context
 
-Mobile-first Next.js 16 Web-App. Camping-Elektrik-Planer für Anfänger.
-8-Schritt Wizard → Algorithmus → KI-Empfehlungen → PDF-Schaltplan.
+Behavioral guidelines to reduce common LLM coding mistakes. Apply these first, then project-specific rules below.
 
-**Zwei Oberflächen:** Endnutzer sehen **nur** Wizard + Ergebnis (und Folgeflows wie PDF). Der **Admin** (`/admin/`*) ist ausschließlich für Betreiber — anderes Publikum, andere UI-Priorität (funktional vollständig laut Spec). Kurzüberblick: [docs/reference/ADMIN-AGENT-BRIEF.md](docs/reference/ADMIN-AGENT-BRIEF.md).
+Tradeoff: these guidelines bias toward caution over speed. For trivial tasks, use judgment.
 
-## Immer zuerst lesen
+## 1. Think Before Coding
 
-- [features/INDEX.md](features/INDEX.md) — **Feature-Specs** PS-1 … PS-9 (kuratierte Umsetzungs-Checklisten)
-- [REWRITE_PLAN.md](REWRITE_PLAN.md) — **Phasen & Zielstruktur** (Rewrite, Ordnerbaum, Alt→Neu)
-- Projekt-Kontext / Architektur-Atlas / Fachbegriffe: über **Graphify** abfragen (Knowledge Graph aus dem Repo)
+Don't assume. Don't hide confusion. Surface tradeoffs.
 
-## Referenz-Material (read-only, nie bearbeiten)
+Before implementing:
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them - don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
 
-- `docs/reference/algorithm/` — Original-Algorithmus (9 Phasen, 2500 Zeilen)
-- `docs/reference/schema.prisma` — Original Prisma Schema (15 Modelle)
-- `docs/reference/schemas/` — Original Zod-Schemas
-- `docs/reference/amazon/` — Amazon Creators API + Scraper
-- `docs/reference/recommendation/` — Original Recommendation Engine
-- `docs/reference/old/` — Legacy-App `**src/`** (read-only Snapshot, weitgehend vollständig)
-- `docs/reference/admin/` — **Funktions-Inventar Admin** (Markdown pro Bereich; bei fachlicher Änderung aktualisieren)
-- `docs/reference/ADMIN-AGENT-BRIEF.md` — **Einstieg Admin vs Nutzer**, Links zu PS-7 + Detaildocs
-- `features/PS-7-admin-panel.md` — **Admin-Umsetzungscheckliste** (Definition of Done)
+## 2. Simplicity First
 
-## Skills
+Minimum code that solves the problem. Nothing speculative.
 
-Quelltext für alle Skills liegt unter `**.agents/skills/<name>/SKILL.md`** — dort aktualisieren. Die Cursor-Regeln unter `.cursor/rules/` verweisen nur noch darauf (keine doppelte Pflege).
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
 
-**Kern (PowerSetup):**
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
 
-- `/requirements` — Neues Feature planen, Spec schreiben → [.agents/skills/requirements/SKILL.md](.agents/skills/requirements/SKILL.md)
-- `/architecture` — Technisches Design, Architektur-Entscheidungen → [.agents/skills/architecture/SKILL.md](.agents/skills/architecture/SKILL.md)
-- `/frontend` — React/Next.js UI bauen; bei **sichtbarer Oberfläche** zuerst [.agents/skills/frontend/SKILL.md](.agents/skills/frontend/SKILL.md) **und** die dort verlinkten Anhänge `design-anthropic-frontend.md` + `ui-ux-pro-max.md` mitdenken (optional: `scripts/search.py`). Cursor-Pflicht: `.cursor/rules/frontend.mdc`.
-- `/backend` — API Routes, Prisma Queries, DB-Logik → [.agents/skills/backend/SKILL.md](.agents/skills/backend/SKILL.md)
-- `/qa` — Testen + Security Audit → [.agents/skills/qa/SKILL.md](.agents/skills/qa/SKILL.md)
-- `/deploy` — Vercel Deployment (nur manuell) → [.agents/skills/deploy/SKILL.md](.agents/skills/deploy/SKILL.md)
-- [algorithm-architect](.agents/skills/algorithm-architect/SKILL.md) — Regelbasierte Berechnungen (Eingaben → Ergebnis), Sizing, Scoring, Ranking; Wizard/Algorithmus-Logik in `src/lib/algorithm/`
-- [mobile-home-electrics-basics](.agents/skills/mobile-home-electrics-basics/SKILL.md) — Referenz Physik/Formeln Camping-Elektrik (12/24/48 V, Kabel, Batterie, Solar, Schutz); bei Fachfragen und als Basis für den Algorithmus
+## 3. Surgical Changes
 
-### Zusätzlich installiert (skills.sh, vollständige Regeln im jeweiligen Ordner)
+Touch only what you must. Clean up only your own mess.
 
-Kurzverweise in den PowerSetup-Skills oben; keine Regeln hier duplizieren.
+When editing existing code:
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it - don't delete it.
 
+When your changes create orphans:
+- Remove imports/variables/functions that your changes made unused.
+- Don't remove pre-existing dead code unless asked.
 
-| Skill                                                                      | skills.sh                                                                                             | Wann nutzen                                                                                                                                    |
-| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| [web-design-guidelines](.agents/skills/web-design-guidelines/SKILL.md)     | [skills.sh/…/web-design-guidelines](https://skills.sh/vercel-labs/agent-skills/web-design-guidelines) | UI/A11y-Audit gegen Vercel Web Interface Guidelines                                                                                            |
-| [next-cache-components](.agents/skills/next-cache-components/SKILL.md)     | [skills.sh/…/next-cache-components](https://skills.sh/vercel-labs/next-skills/next-cache-components)  | Next.js 16+ `cacheComponents` / `'use cache'` / Tags                                                                                           |
-| [pdf](.agents/skills/pdf/SKILL.md)                                         | [skills.sh/anthropics/skills/pdf](https://skills.sh/anthropics/skills/pdf)                            | PDF erzeugen, splitten, extrahieren, Formulare (nicht nur „eine Route“)                                                                        |
-| [stripe-best-practices](.agents/skills/stripe-best-practices/SKILL.md)     | [skills.sh/…/stripe-best-practices](https://skills.sh/stripe/agent-toolkit/stripe-best-practices)     | Optional: Webhooks/Checkout/Billing-Muster (Produkt nutzt **PayPal** für Credits — siehe [REWRITE_PLAN.md](REWRITE_PLAN.md) Tech Stack / PS-6) |
-| [systematic-debugging](.agents/skills/systematic-debugging/SKILL.md)       | [skills.sh/…/systematic-debugging](https://skills.sh/obra/superpowers/systematic-debugging)           | Bugs, flaky Tests, Build-Fails — vor dem Fix                                                                                                   |
-| [test-driven-development](.agents/skills/test-driven-development/SKILL.md) | [skills.sh/…/test-driven-development](https://skills.sh/obra/superpowers/test-driven-development)     | Neue oder geänderte Logik in `src/lib/` oder APIs — rot-grün-refactor                                                                          |
+The test: every changed line should trace directly to the user's request.
 
+## 4. Goal-Driven Execution
 
-## Tests & CI
+Define success criteria. Loop until verified.
 
-- **Unit / Integration:** Vitest ist die sinnvolle Standardwahl für TypeScript und Next.js; Details und Ablauf: [.agents/skills/test-driven-development/SKILL.md](.agents/skills/test-driven-development/SKILL.md). Cursor-Regel bei Testdateien: `.cursor/rules/testing.mdc`.
-- **E2E (optional):** Playwright erst sinnvoll, wenn kritische User-Flows stabil regressionstestbar sein sollen; der **interne Browser in Cursor** ersetzt das nicht (kein automatisierter Gatekeeper in CI).
-- **GitHub Actions:** Liegt `.github/workflows/ci.yml` im Repo, prüfen ob `package.json` an der **Wurzel** existiert — ohne Wurzel-App überspringt der Workflow Install/Test (dieses Kontext-Repo bleibt grün). Sobald die PowerSetup-App hier oder in einem anderen Repo mit CI liegt: `npm run lint` / `npm run test` per `package.json` anbinden (`--if-present` ist im Workflow schon berücksichtigt).
+Transform tasks into verifiable goals:
+- "Add validation" -> "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" -> "Write a test that reproduces it, then make it pass"
+- "Refactor X" -> "Ensure tests pass before and after"
 
-## Kritische Regeln
+For multi-step tasks, state a brief plan:
 
-- Kein direkter `prisma`-Import außerhalb `src/lib/db/queries/` (nie in API Routes oder Komponenten)
-- Kein `any` — alle Types Zod-inferred
-- **Zeilenbudget:** UI-Komponenten max. **~150 Zeilen** pro Datei (Rest auslagern); **API-Route-Dateien** (`route.ts`) max. **~80 Zeilen** — Logik nach `src/lib/` delegieren
-- Einzige Berechnungsquelle: `POST /api/generate/[id]`
-- Neue Features zuerst via `/requirements` spezifizieren, dann coden
+1. [Step] -> verify: [check]
+2. [Step] -> verify: [check]
+3. [Step] -> verify: [check]
 
-## Produkt-Flow (Kernlogik)
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
-```
-Wizard-Eingaben
-     ↓
-src/lib/algorithm/calculate.ts  (9 Phasen, pure functions)
-→ Berechnet Specs: z.B. "Batterie mind. 200Ah, LiFePO4, 12V"
-     ↓
-src/lib/recommendation/prefilter.ts
-→ Filtert Prisma-DB nach Specs + Scoring
-→ Top N Produkte pro Kategorie
-     ↓
-src/lib/recommendation/ai-selector.ts
-→ Gemini 2.0 primär, OpenAI GPT-4o Fallback
-→ Wählt beste 2-3 pro Kategorie + Erklärung
-     ↓
-Ergebnis-Seite + optionaler PDF-Schaltplan (kostenpflichtig)
-```
+These guidelines are working if fewer unnecessary changes land in diffs, fewer rewrites happen due to overcomplication, and clarifying questions happen before implementation mistakes.
+
+## Graphify
+
+This project has a graphify knowledge graph at `graphify-out/`.
+- Before architecture/codebase answers, read `graphify-out/GRAPH_REPORT.md`.
+- If `graphify-out/wiki/index.md` exists, use it before reading many raw files.
+- For cross-module relation questions, prefer `graphify query`, `graphify path`, and `graphify explain`.
+- After modifying code files in this session, run `graphify update .`.
+
+## Projekt-Kontext
+
+Mobile-first Next.js 16 app for camping electrical planning: 8-step wizard -> algorithm -> AI recommendations -> optional PDF wiring plan.
+User flow and admin flow are separate (`/admin/*` is operator-only).
+
+- Main feature/spec index: [features/INDEX.md](features/INDEX.md)
+- Rewrite plan and target structure: [REWRITE_PLAN.md](REWRITE_PLAN.md)
+- Admin overview: [docs/reference/ADMIN-AGENT-BRIEF.md](docs/reference/ADMIN-AGENT-BRIEF.md)
+- Admin checklist: [features/PS-7-admin-panel.md](features/PS-7-admin-panel.md)
+- Detailed workflows and skills: [.cursor/rules/general.mdc](.cursor/rules/general.mdc) and `.agents/skills/`
 

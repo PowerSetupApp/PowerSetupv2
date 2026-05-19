@@ -7,23 +7,33 @@ const wizardInsetSurface = "rounded-xl border border-border/60 bg-muted/15";
  * Wizard step surfaces — use instead of stacking `rounded-2xl border` boxes.
  *
  * - `wizardCallout` — short hints / disclaimers (left accent, no full frame).
- * - `wizardSectionLabel` — uppercase section title above grouped content (wizard step sections).
+ * - `wizardSectionLabel` — Zwischenüberschrift über Formabschnitten (~1rem / --text-base, kein All-Caps).
+ * - `wizardFormSection` — vertikaler Rhythmus (flex gap) für Überschrift + Felder ohne Margin-Collapse.
  * - `wizardScrollRegion` — one scrollable list panel (single border).
  * - `wizardCatalogScrollRegion` — like scroll region, leicht primary-getönt (Katalog vs. eigene Einträge).
  * - `wizardInsetPanel` — same chrome as scroll region, for static grouped controls (no max-height).
  */
 export function wizardCallout(className?: string) {
   return cn(
-    "rounded-r-md border-l-[3px] border-primary/30 bg-muted/20 py-2.5 pl-3 pr-2 text-sm leading-relaxed text-muted-foreground sm:pl-4",
+    "rounded-r-md border-l-[3px] border-amber-500/30 bg-amber-50/80 py-2.5 pl-3 pr-2 text-sm leading-relaxed text-fg-2 sm:pl-4 dark:border-amber-500/40 dark:bg-amber-500/10",
     className,
   );
 }
 
+/**
+ * Klasse `wizard-section-heading` bricht globales `h3 { font-size: var(--text-xl) }` (globals.css) — Fließtext-Größe ~1rem.
+ * Kein `margin-bottom`: Abstand nach unten über `wizardFormSection()` oder Parent-`gap-*`, damit kein Margin-Collapse mit `space-y-*`.
+ */
 export function wizardSectionLabel(className?: string) {
   return cn(
-    "mb-2 block text-sm font-semibold uppercase tracking-wide text-foreground/80",
+    "wizard-section-heading mb-0 block text-base font-semibold leading-snug tracking-tight text-fg-1",
     className,
   );
+}
+
+/** Form-Abschnitt: Überschrift + Hilfstext + Controls — festes vertikales gap (kein Collapse wie bei `space-y-*`). */
+export function wizardFormSection(className?: string) {
+  return cn("flex flex-col gap-5", className);
 }
 
 export function wizardScrollRegion(className?: string) {

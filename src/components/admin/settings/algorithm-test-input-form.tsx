@@ -557,12 +557,13 @@ export function AlgorithmTestInputForm({ value, onChange, disabled }: AlgorithmT
 
       <section className="space-y-3">
         <h3 className="text-sm font-semibold text-foreground">Marken-Präferenzen (IDs, optional)</h3>
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {(
             [
               ["charger", "Ladegerät / Booster"],
               ["battery", "Batterie"],
               ["solar", "Solar"],
+              ["inverter", "Wechselrichter"],
             ] as const
           ).map(([key, label]) => (
             <div key={key} className="space-y-2">

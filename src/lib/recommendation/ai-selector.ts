@@ -44,6 +44,8 @@ function mapProductGroupKeyToBucket(key: string): RecommendationBucket {
   return "other";
 }
 
+type DecoratedProductRow = Record<string, unknown> & { bucket: unknown };
+
 function flattenProductGroups(productGroups: unknown): unknown[] {
   if (!productGroups || typeof productGroups !== "object" || Array.isArray(productGroups)) {
     return [];
@@ -53,13 +55,13 @@ function flattenProductGroups(productGroups: unknown): unknown[] {
   for (const [groupKey, rows] of Object.entries(groups)) {
     if (!Array.isArray(rows)) continue;
     const bucket = mapProductGroupKeyToBucket(groupKey);
-    const decorated = rows.map((row) => {
+    const decorated = rows.map((row): DecoratedProductRow | null => {
       if (!row || typeof row !== "object") return null;
       const r = row as Record<string, unknown>;
       return { ...r, bucket: r.bucket ?? r.category ?? bucket };
     });
     const sorted = decorated
-      .filter((x): x is Record<string, unknown> => x !== null)
+      .filter((x): x is DecoratedProductRow => x !== null)
       .sort((a, b) => {
         const ar = a.isRecommended === true ? 0 : 1;
         const br = b.isRecommended === true ? 0 : 1;

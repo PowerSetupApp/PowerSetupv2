@@ -32,7 +32,7 @@ export function SegmentedControl<T extends string | number = string>({
   };
 
   return (
-    <div className={cn("inline-flex rounded-xl bg-muted p-1", className)}>
+    <div className={cn("inline-flex rounded-[var(--radius-md)] border border-border-1 bg-sand-100 p-1 dark:bg-charcoal-600", className)}>
       {options.map((option) => (
         <button
           key={String(option.value)}
@@ -40,11 +40,11 @@ export function SegmentedControl<T extends string | number = string>({
           onClick={() => onChange(option.value)}
             className={cn(
             "flex min-w-[80px] items-center justify-center gap-2 rounded-lg px-6 transition-[color,background-color,box-shadow,transform] duration-200 ease-out motion-reduce:transition-none",
-            "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+            "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-1",
             sizeClasses[size],
             value === option.value
-              ? "bg-background font-medium text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground",
+              ? "bg-bg-2 font-medium text-fg-1 shadow-[var(--shadow-sm)] dark:bg-charcoal-500"
+              : "text-fg-2 hover:text-fg-1",
           )}
         >
           {option.icon ? <span>{option.icon}</span> : null}

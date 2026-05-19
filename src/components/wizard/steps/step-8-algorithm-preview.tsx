@@ -109,7 +109,7 @@ export function Step8AlgorithmPreview({
     onAddBag200 !== undefined;
 
   return (
-    <section className="flex flex-col gap-3">
+    <section className="flex flex-col gap-4">
       <span className={wizardSectionLabel()}>Berechnetes Ergebnis (Vorschau)</span>
       <div className="grid gap-3 sm:grid-cols-2">
         {rows.map((row) => (
